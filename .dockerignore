@@ -1,0 +1,16 @@
+# Contexto de build mínimo — nada além do código-fonte entra na imagem.
+.git
+node_modules
+.next
+out
+coverage
+*.tsbuildinfo
+
+# SEGURANÇA: garante que nenhum arquivo de ambiente seja copiado para a imagem.
+.env
+.env.*
+
+# Artefatos locais irrelevantes para o container
+.infisical.json
+.idea
+.vscode

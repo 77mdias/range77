@@ -1,0 +1,41 @@
+# =============================================================================
+# ValCoach AI — orquestração do ambiente de DESENVOLVIMENTO local.
+#
+# FLUXO DE SEGREDOS (outside-in): a CLI do Infisical roda na MÁQUINA
+# HOSPEDEIRA e injeta as variáveis na sessão deste compose. As chaves em
+# `environment:` abaixo estão SEM valor: o Compose resolve cada uma a partir
+# do shell herdado do `infisical run` e OMITE silenciosamente as que não
+# existirem (documentado no comportamento RemoveEmpty do Compose).
+# Nenhum arquivo .env é lido em nenhum momento.
+#
+# Uso:
+#   infisical run --env=dev -- docker compose up --build
+# =============================================================================
+services:
+  web:
+    build: .
+    # PID 1 adequado para encerramento limpo do `next dev`.
+    init: true
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app                          # código-fonte com live-reload
+      - node_modules:/app/node_modules  # deps do container isoladas do host
+      - next_cache:/app/.next           # cache do Turbopack persistente
+    environment:
+      # Pass-through — resolvidas do shell criado pelo `infisical run`.
+      - APP_ENV
+      - NODE_ENV
+      - DATABASE_URL
+      - HENRIKDEV_API_KEY
+      - MINIMAX_API_KEY
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  node_modules:
+  next_cache:

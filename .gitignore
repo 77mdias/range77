@@ -1,0 +1,21 @@
+# Dependências e builds
+node_modules/
+.next/
+out/
+coverage/
+
+# TypeScript incremental
+*.tsbuildinfo
+next-env.d.ts
+
+# SEGURANÇA: nenhum arquivo de ambiente deve existir neste repositório.
+# No dev local as variáveis são injetadas pelo Infisical (máquina hospedeira);
+# em produção são configuradas manualmente no painel da Vercel.
+.env
+.env.*
+!.env.example
+
+# Sistema/IDE
+.DS_Store
+.idea/
+.vscode/
