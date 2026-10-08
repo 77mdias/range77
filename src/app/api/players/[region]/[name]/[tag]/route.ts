@@ -2,8 +2,8 @@ import { cacheLife, cacheTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { EnvironmentValidationError } from '@/config/env';
 import type { ApiErrorBody } from '@/contracts/coach';
-import { HENRIKDEV_AFFINITIES } from '@/contracts/henrikdev';
 import { CombatMetricsError } from '@/services/analytics/combat';
+import { parsePlayerRouteParams } from '@/lib/validation/player-params';
 import {
   buildPlayerCombatInsight,
   PlayerNoMatchesError,
@@ -22,8 +22,6 @@ import { HenrikDevApiError } from '@/services/henrikdev/client';
 const MIN_SAMPLE = 1;
 const MAX_SAMPLE = 10;
 const DEFAULT_SAMPLE = 5;
-const RIOT_TAG_PATTERN = /^[a-z0-9]{1,6}$/i;
-const MAX_NAME_LENGTH = 32;
 
 interface RouteContext {
   params: Promise<{ region: string; name: string; tag: string }>;
@@ -151,30 +149,9 @@ export async function GET(
   // Next 16: APIs de requisição são assíncronas — params É uma Promise.
   const { region, name, tag } = await params;
 
-  const affinity = typeof region === 'string' ? region.trim().toLowerCase() : '';
-  if (!(HENRIKDEV_AFFINITIES as readonly string[]).includes(affinity)) {
-    return errorResponse(
-      400,
-      'INVALID_PARAMS',
-      `Região inválida: "${region}". Afinidades aceitas: ${HENRIKDEV_AFFINITIES.join(', ')}.`,
-    );
-  }
-
-  const trimmedName = typeof name === 'string' ? name.trim() : '';
-  if (trimmedName === '' || trimmedName.length > MAX_NAME_LENGTH) {
-    return errorResponse(
-      400,
-      'INVALID_PARAMS',
-      `Nome do Riot ID inválido (vazio ou acima de ${MAX_NAME_LENGTH} caracteres).`,
-    );
-  }
-
-  if (typeof tag !== 'string' || !RIOT_TAG_PATTERN.test(tag)) {
-    return errorResponse(
-      400,
-      'INVALID_PARAMS',
-      'Tag do Riot ID inválida (use 1–6 caracteres alfanuméricos).',
-    );
+  const parsed = parsePlayerRouteParams({ region, name, tag });
+  if (!parsed.ok) {
+    return errorResponse(400, 'INVALID_PARAMS', parsed.message);
   }
 
   const sizeParam = new URL(request.url).searchParams.get('size');
@@ -192,7 +169,7 @@ export async function GET(
   }
 
   try {
-    const insight = await getCachedInsight(affinity, trimmedName, tag, size);
+    const insight = await getCachedInsight(parsed.region, parsed.name, parsed.tag, size);
     return NextResponse.json(insight);
   } catch (error) {
     return mapServiceError(error);

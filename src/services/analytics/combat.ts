@@ -162,7 +162,7 @@ export const COMBAT_BENCHMARKS: CombatBenchmarkSet = {
 };
 
 /** Arredondamento determinístico (evita 20.000000000000004 no JSON). */
-function roundTo(value: number, decimals: number): number {
+export function roundTo(value: number, decimals: number): number {
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
 }
@@ -226,7 +226,7 @@ function classifyImpact(acs: number): ImpactClass {
 }
 
 /** Primeira faixa cujo `min` ≤ valor; senão, o fallback (última faixa). */
-function rateMetric(
+export function rateMetric(
   value: number,
   bands: readonly RatingBand[],
   fallback: ContextualRating,

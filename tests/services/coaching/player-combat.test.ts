@@ -148,7 +148,7 @@ describe('buildPlayerCombatInsight — persistência de snapshots', () => {
         insertSnapshot: async (record) => {
           inserted.push(record);
         },
-        getLatestSnapshot: async () => null,
+        getRecentSnapshots: async () => [],
       },
     };
   };
@@ -189,7 +189,7 @@ describe('buildPlayerCombatInsight — persistência de snapshots', () => {
       insertSnapshot: async () => {
         throw new Error('neon fora do ar');
       },
-      getLatestSnapshot: async () => null,
+      getRecentSnapshots: async () => [],
     };
 
     const insight = await buildPlayerCombatInsight({

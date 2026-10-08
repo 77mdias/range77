@@ -43,8 +43,11 @@ export interface CombatSnapshotPlayerKey {
 
 export interface CombatSnapshotStore {
   insertSnapshot(record: CombatSnapshotRecord): Promise<void>;
-  /** Snapshot mais recente do jogador (ou null) — leitura para o chatbot. */
-  getLatestSnapshot(player: CombatSnapshotPlayerKey): Promise<CombatSnapshotRow | null>;
+  /** Snapshots mais recentes PRIMEIRO (DESC por created_at), no máximo `limit`. */
+  getRecentSnapshots(
+    player: CombatSnapshotPlayerKey,
+    limit: number,
+  ): Promise<CombatSnapshotRow[]>;
 }
 
 export function createCombatSnapshotStore(
@@ -55,8 +58,8 @@ export function createCombatSnapshotStore(
       await db.insert(playerCombatSnapshots).values(record);
     },
 
-    async getLatestSnapshot({ region, nameKey, tagKey }) {
-      const rows = await db
+    async getRecentSnapshots({ region, nameKey, tagKey }, limit) {
+      return db
         .select()
         .from(playerCombatSnapshots)
         .where(
@@ -67,8 +70,7 @@ export function createCombatSnapshotStore(
           ),
         )
         .orderBy(desc(playerCombatSnapshots.createdAt))
-        .limit(1);
-      return rows[0] ?? null;
+        .limit(limit);
     },
   };
 }
