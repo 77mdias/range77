@@ -106,6 +106,17 @@ export function describeUpstreamError(
   };
 }
 
+/** Traduz um descritor mapeado no envelope `ApiErrorBody` (uso em RSC). */
+export function mappedToApiErrorBody(mapped: MappedErrorDescriptor): ApiErrorBody {
+  return {
+    error: {
+      code: mapped.code,
+      message: mapped.message,
+      ...(mapped.hint !== undefined ? { hint: mapped.hint } : {}),
+    },
+  };
+}
+
 /** Traduz o erro em resposta HTTP + log no servidor (diagnóstico sem body). */
 export function mapUpstreamError(
   error: unknown,

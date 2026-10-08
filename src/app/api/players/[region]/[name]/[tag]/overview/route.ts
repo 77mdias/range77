@@ -1,17 +1,16 @@
-import { cacheLife, cacheTag } from 'next/cache';
 import { NextResponse } from 'next/server';
+import { getCachedPlayerOverview } from '@/lib/cache/tracker';
 import { errorResponse, mapUpstreamError } from '@/lib/http/api-error';
 import { parsePlayerRouteParams } from '@/lib/validation/player-params';
 import { PlayerNoMatchesError } from '@/services/coaching/player-combat';
-import { buildPlayerOverview } from '@/services/tracker/player-overview';
 
 /**
  * ROTA: GET /api/players/[region]/[name]/[tag]/overview
  *
  * Visão geral do perfil: histórico de partidas + agregações por agente/mapa +
- * streaks + tendência + o envelope de coaching já existente. Cacheado com
- * `'use cache'` (stale 60s / revalidate 300s / expire 1h) para proteger o
- * limite da HenrikDev. Next 16: `params` é uma Promise e DEVE ser aguardada.
+ * streaks + tendência + o envelope de coaching já existente. O cache Data
+ * (`'use cache'`, stale 60s / revalidate 300s / expire 1h) é COMPARTILHADO com
+ * a página do perfil. Next 16: `params` é uma Promise e DEVE ser aguardada.
  */
 
 const MIN_SAMPLE = 1;
@@ -20,19 +19,6 @@ const DEFAULT_SAMPLE = 5;
 
 interface RouteContext {
   params: Promise<{ region: string; name: string; tag: string }>;
-}
-
-/** Envelope cacheado por jogador+amostra (tag permite invalidação futura). */
-async function getCachedOverview(
-  region: string,
-  name: string,
-  tag: string,
-  size: number,
-) {
-  'use cache';
-  cacheLife({ stale: 60, revalidate: 300, expire: 3600 });
-  cacheTag(`player-overview:${region}:${name.toLowerCase()}:${tag.toLowerCase()}:${size}`);
-  return buildPlayerOverview({ region, name, tag, size });
 }
 
 export async function GET(
@@ -61,7 +47,7 @@ export async function GET(
   }
 
   try {
-    const overview = await getCachedOverview(parsed.region, parsed.name, parsed.tag, size);
+    const overview = await getCachedPlayerOverview(parsed.region, parsed.name, parsed.tag, size);
     return NextResponse.json(overview);
   } catch (error) {
     if (error instanceof PlayerNoMatchesError) {

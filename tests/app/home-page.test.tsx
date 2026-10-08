@@ -1,32 +1,34 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import HomePage from '@/app/page';
 
 /**
- * SUITE TDD — home provisória (fase 1a): hero display, barra de busca
- * PLACEHOLDER (wiring real na fase 2) e faixa de features. O contrato da
- * busca fixa as 6 regiões do tracker — a fase 2 o torna funcional.
+ * SUITE TDD — home (fase 2): hero display, busca FUNCIONAL (SearchBar +
+ * navegação) com as 6 regiões do tracker e faixa de features.
  */
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
+import HomePage from '@/app/page';
 
 const REGIONS = ['eu', 'na', 'ap', 'kr', 'latam', 'br'] as const;
 
 const html = () => renderToStaticMarkup(<HomePage />);
 
-describe('HomePage (provisória)', () => {
+describe('HomePage (fase 2)', () => {
   it('renderiza o hero com título display', () => {
     const output = html();
     expect(output).toContain('<h1');
     expect(output).toContain('ANALISE');
   });
 
-  it('renderiza a barra de busca placeholder com todas as regiões do tracker', () => {
+  it('renderiza a barra de busca com todas as regiões do tracker', () => {
     const output = html();
     for (const region of REGIONS) {
       expect(output).toContain(`<option value="${region}"`);
     }
   });
 
-  it('busca placeholder: input para Riot ID (nome#tag) e botão Buscar', () => {
+  it('busca: input para Riot ID (nome#tag) e botão Buscar', () => {
     const output = html();
     expect(output).toContain('placeholder="Nome#Tag"');
     expect(output).toContain('Buscar');

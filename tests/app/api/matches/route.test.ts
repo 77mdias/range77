@@ -5,6 +5,8 @@ import { HenrikDevApiError } from '@/services/henrikdev/client';
  * SUITE TDD — rota GET /api/matches/[region]/[matchId].
  */
 
+vi.mock('next/cache', () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }));
+
 vi.mock('@/services/tracker/match-detail', () => ({ getMatchDetail: vi.fn() }));
 
 import { GET } from '@/app/api/matches/[region]/[matchId]/route';
