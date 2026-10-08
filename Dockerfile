@@ -17,6 +17,11 @@ RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
+# WORKDIR cria /app como root; o COPY --chown só altera os ARQUIVOS copiados,
+# não o diretório. Sem esta linha, `npm install` como node falha com EACCES
+# ao tentar mkdir /app/node_modules.
+RUN chown node:node /app
+
 # Dependências primeiro (cache de camadas). Lockfile mantém a resolução
 # exata — inclusive next@16.4.0 — sem novas resoluções de versão.
 COPY --chown=node:node package.json package-lock.json* ./
