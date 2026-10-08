@@ -62,7 +62,7 @@ describe('GET /api/players/[region]/[name]/[tag]', () => {
       region: 'br',
       name: 'Player One',
       tag: 'BR1',
-      size: 10,
+      size: 5,
     });
   });
 
@@ -182,5 +182,19 @@ describe('GET /api/players/[region]/[name]/[tag]', () => {
     expect(response.status).toBe(500);
     expect(body.error.code).toBe('INTERNAL_ERROR');
     expect(body.error.message).not.toMatch(/boom/);
+  });
+
+  it('loga o erro mapeado no servidor (diagnóstico sem precisar do body)', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      vi.mocked(buildPlayerCombatInsight).mockRejectedValueOnce(new Error('boom interno'));
+
+      await GET(request(), context());
+
+      expect(errorSpy).toHaveBeenCalled();
+      expect(String(errorSpy.mock.calls[0]?.[0])).toMatch(/api\/players/);
+    } finally {
+      errorSpy.mockRestore();
+    }
   });
 });

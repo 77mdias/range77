@@ -67,7 +67,7 @@ describe('buildPlayerCombatInsight', () => {
       name: 'Player',
       tag: 'BR1',
       mode: 'competitive',
-      size: 10,
+      size: 5,
     });
 
     expect(insight.player).toEqual({ region: 'br', name: 'Player', tag: 'BR1', platform: 'pc' });
@@ -88,6 +88,7 @@ describe('buildPlayerCombatInsight', () => {
       name: 'Player',
       tag: 'BR1',
       client: makeFakeClient([unrated]),
+      snapshotStore: null,
     });
 
     await expect(attempt).rejects.toBeInstanceOf(PlayerNoMatchesError);
@@ -103,6 +104,7 @@ describe('buildPlayerCombatInsight', () => {
         name: 'Player',
         tag: 'BR1',
         client: makeFakeClient(upstream),
+        snapshotStore: null,
       }),
     ).rejects.toBe(upstream);
   });
@@ -170,7 +172,7 @@ describe('buildPlayerCombatInsight — persistência de snapshots', () => {
       tag: 'BR1',
       nameKey: 'player',
       tagKey: 'br1',
-      sampleSize: 10,
+      sampleSize: 5,
       kdr: 2,
       acs: 182,
       matches: 1,
@@ -225,5 +227,16 @@ describe('buildPlayerCombatInsight — persistência de snapshots', () => {
         client: makeFakeClient([rawMatch]),
       }),
     ).rejects.toBeInstanceOf(EnvironmentValidationError);
+  });
+
+  it('exige DATABASE_URL ANTES de gastar tempo com a HenrikDev (fail fast de config)', async () => {
+    vi.stubEnv('DATABASE_URL', '');
+    const client = makeFakeClient([rawMatch]);
+
+    await expect(
+      buildPlayerCombatInsight({ region: 'br', name: 'Player', tag: 'BR1', client }),
+    ).rejects.toBeInstanceOf(EnvironmentValidationError);
+
+    expect(client.fetchPlayerMatches).not.toHaveBeenCalled();
   });
 });

@@ -21,7 +21,7 @@ import { HenrikDevApiError } from '@/services/henrikdev/client';
 
 const MIN_SAMPLE = 1;
 const MAX_SAMPLE = 10;
-const DEFAULT_SAMPLE = 10;
+const DEFAULT_SAMPLE = 5;
 const RIOT_TAG_PATTERN = /^[a-z0-9]{1,6}$/i;
 const MAX_NAME_LENGTH = 32;
 
@@ -54,62 +54,94 @@ function errorResponse(
   );
 }
 
-/** Traduz erros das camadas internas em respostas HTTP "mastigadas". */
-function mapServiceError(error: unknown): NextResponse<ApiErrorBody> {
+interface MappedErrorDescriptor {
+  readonly status: number;
+  readonly code: string;
+  readonly message: string;
+  readonly hint?: string;
+  readonly detail?: string;
+}
+
+function describeError(error: unknown): MappedErrorDescriptor {
   if (error instanceof HenrikDevApiError) {
+    const detail = `HenrikDevApiError status=${error.status} code=${String(error.code ?? '?')}: ${error.message}`;
     if (error.status === 404) {
-      return errorResponse(
-        404,
-        'PLAYER_NOT_FOUND',
-        'Jogador não encontrado na HenrikDev.',
-        'Confira o Riot ID (nome#tag) e a região da conta.',
-      );
+      return {
+        status: 404,
+        code: 'PLAYER_NOT_FOUND',
+        message: 'Jogador não encontrado na HenrikDev.',
+        hint: 'Confira o Riot ID (nome#tag) e a região da conta.',
+        detail,
+      };
     }
     if (error.status === 429) {
-      return errorResponse(
-        503,
-        'UPSTREAM_RATE_LIMITED',
-        'Limite de requisições da HenrikDev atingido.',
-        'Aguarde alguns segundos e tente novamente.',
-      );
+      return {
+        status: 503,
+        code: 'UPSTREAM_RATE_LIMITED',
+        message: 'Limite de requisições da HenrikDev atingido.',
+        hint: 'Aguarde alguns segundos e tente novamente.',
+        detail,
+      };
     }
     if (error.status === 401) {
-      return errorResponse(
-        500,
-        'CONFIG_ERROR',
-        'A HenrikDev rejeitou a chave da API.',
-        'Verifique a variável HENRIKDEV_API_KEY no Infisical (dev) ou no painel da Vercel (prod).',
-      );
+      return {
+        status: 500,
+        code: 'CONFIG_ERROR',
+        message: 'A HenrikDev rejeitou a chave da API.',
+        hint: 'Verifique a variável HENRIKDEV_API_KEY no Infisical (dev) ou no painel da Vercel (prod).',
+        detail,
+      };
     }
     if (error.status === 0) {
-      return errorResponse(
-        502,
-        'UPSTREAM_UNREACHABLE',
-        'Não foi possível contactar a HenrikDev.',
-        'Falha de rede ou timeout — tente novamente em instantes.',
-      );
+      return {
+        status: 502,
+        code: 'UPSTREAM_UNREACHABLE',
+        message: 'Não foi possível contactar a HenrikDev.',
+        hint: 'Falha de rede ou timeout — tente novamente em instantes.',
+        detail,
+      };
     }
-    return errorResponse(502, 'UPSTREAM_ERROR', `Erro upstream da HenrikDev: ${error.message}`);
+    return {
+      status: 502,
+      code: 'UPSTREAM_ERROR',
+      message: `Erro upstream da HenrikDev: ${error.message}`,
+      detail,
+    };
   }
 
   if (error instanceof PlayerNoMatchesError) {
-    return errorResponse(
-      404,
-      'NO_VALID_MATCHES',
-      error.message,
-      'O jogador existe, mas não há partidas competitivas concluídas recentes.',
-    );
+    return {
+      status: 404,
+      code: 'NO_VALID_MATCHES',
+      message: error.message,
+      hint: 'O jogador existe, mas não há partidas competitivas concluídas recentes.',
+    };
   }
 
   if (error instanceof EnvironmentValidationError) {
-    return errorResponse(500, 'CONFIG_ERROR', error.message);
+    return { status: 500, code: 'CONFIG_ERROR', message: error.message, detail: error.message };
   }
 
   if (error instanceof CombatMetricsError) {
-    return errorResponse(500, 'ANALYTICS_ERROR', error.message);
+    return { status: 500, code: 'ANALYTICS_ERROR', message: error.message, detail: error.message };
   }
 
-  return errorResponse(500, 'INTERNAL_ERROR', 'Erro interno inesperado.');
+  return {
+    status: 500,
+    code: 'INTERNAL_ERROR',
+    message: 'Erro interno inesperado.',
+    detail: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+  };
+}
+
+/** Traduz erros das camadas internas em respostas HTTP "mastigadas" + log. */
+function mapServiceError(error: unknown): NextResponse<ApiErrorBody> {
+  const mapped = describeError(error);
+  console.error(
+    `[api/players] ${mapped.code} → HTTP ${mapped.status}: ${mapped.message}` +
+      (mapped.detail !== undefined ? ` | causa: ${mapped.detail}` : ''),
+  );
+  return errorResponse(mapped.status, mapped.code, mapped.message, mapped.hint);
 }
 
 export async function GET(

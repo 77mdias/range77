@@ -41,8 +41,12 @@ export class PlayerNoMatchesError extends Error {
   }
 }
 
-/** Amostra padrão: 10 partidas (máximo por requisição na v4). */
-export const DEFAULT_MATCH_SAMPLE_SIZE = 10;
+/**
+ * Amostra padrão: 5 partidas. O payload v4 de partidas COMPLETAS é pesado
+ * (MBs por resposta); 5 equilibrara latência do chatbot e significância
+ * estatística. Ajustável via ?size= (1–10).
+ */
+export const DEFAULT_MATCH_SAMPLE_SIZE = 5;
 
 export interface PlayerCombatInsight extends CoachInsight<CombatRawMetrics> {
   readonly player: {
@@ -77,6 +81,14 @@ export async function buildPlayerCombatInsight(
 ): Promise<PlayerCombatInsight> {
   const { region, name, tag, size = DEFAULT_MATCH_SAMPLE_SIZE } = params;
 
+  // Fail fast de CONFIGURAÇÃO antes de qualquer I/O caro: um problema de
+  // variável de ambiente deve falhar em milissegundos (com remediação),
+  // nunca depois de um fetch de 10s na HenrikDev.
+  const store =
+    params.snapshotStore === null
+      ? null
+      : (params.snapshotStore ?? createCombatSnapshotStore());
+
   const client =
     params.client ??
     createHenrikDevClient({ apiKey: requireEnv(loadAppEnv(), 'HENRIKDEV_API_KEY') });
@@ -109,10 +121,9 @@ export async function buildPlayerCombatInsight(
     },
   };
 
-  // Write-through best-effort: criação do store propaganda erros de CONFIG
-  // (fail fast com remediação); falhas de ESCRITA não derrubam o envelope.
-  if (params.snapshotStore !== null) {
-    const store = params.snapshotStore ?? createCombatSnapshotStore();
+  // Write-through best-effort: criação do store já ocorreu no fail fast
+  // inicial; falhas de ESCRITA não derrubam o envelope.
+  if (store !== null) {
     const record: CombatSnapshotRecord = {
       region: result.player.region,
       name: result.player.name,

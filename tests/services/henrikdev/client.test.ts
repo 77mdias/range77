@@ -136,4 +136,19 @@ describe('createHenrikDevClient', () => {
       makeClient().fetchPlayerMatches({ affinity: 'br', platform: 'pc', name: 'P', tag: '1' }),
     ).rejects.toMatchObject({ code: 'MALFORMED_RESPONSE', message: /malformada/ });
   });
+
+  it('timeout durante o download do corpo vira NETWORK_ERROR (nunca um 500 interno)', async () => {
+    // O corpo v4 é pesado (MBs); o abort pode disparar DEPOIS dos headers,
+    // durante o stream do body — o parse precisa estar sob a mesma proteção.
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => {
+        throw new DOMException('The operation was aborted due to timeout', 'TimeoutError');
+      },
+    } as unknown as Response);
+
+    await expect(
+      makeClient().fetchPlayerMatches({ affinity: 'br', platform: 'pc', name: 'P', tag: '1' }),
+    ).rejects.toMatchObject({ status: 0, code: 'NETWORK_ERROR' });
+  });
 });

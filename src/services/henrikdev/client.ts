@@ -49,7 +49,11 @@ export interface HenrikDevClient {
 }
 
 const DEFAULT_BASE_URL = 'https://api.henrikdev.xyz';
-const DEFAULT_TIMEOUT_MS = 10_000;
+/**
+ * O payload v4 de N partidas completas chega a MBs (kills, rounds, stats por
+ * round). 15s cobre downloads grandes em links medianos sem travar a rota.
+ */
+const DEFAULT_TIMEOUT_MS = 15_000;
 
 export function createHenrikDevClient(options: HenrikDevClientOptions): HenrikDevClient {
   const baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
@@ -72,12 +76,38 @@ export function createHenrikDevClient(options: HenrikDevClientOptions): HenrikDe
         url.searchParams.set('start', String(params.start));
       }
 
-      let response: Response;
+      // fetch E leitura do corpo ficam sob a mesma proteção: o payload é
+      // grande e o abort pode disparar DEPOIS dos headers, durante o stream
+      // do body — um TimeoutError no json() precisava ser NETWORK_ERROR,
+      // não um 500 interno não identificado.
+      let parsed: unknown;
       try {
-        response = await doFetch(url, {
+        const response = await doFetch(url, {
           headers: { Authorization: options.apiKey },
           signal: AbortSignal.timeout(timeoutMs),
         });
+
+        if (!response.ok) {
+          let message = `HenrikDev respondeu ${response.status}`;
+          let code: number | string | undefined;
+          try {
+            const body = (await response.json()) as {
+              errors?: Array<{ message?: unknown; code?: unknown }>;
+            };
+            const first = body?.errors?.[0];
+            if (first !== undefined && typeof first.message === 'string') {
+              message = first.message;
+            }
+            if (first !== undefined && typeof first.code === 'number') {
+              code = first.code;
+            }
+          } catch {
+            // corpo não-JSON — mantém a mensagem fallback com o status
+          }
+          throw new HenrikDevApiError(response.status, message, code);
+        }
+
+        parsed = await response.json();
       } catch (error) {
         if (error instanceof HenrikDevApiError) {
           throw error;
@@ -90,29 +120,7 @@ export function createHenrikDevClient(options: HenrikDevClientOptions): HenrikDe
         );
       }
 
-      if (!response.ok) {
-        let message = `HenrikDev respondeu ${response.status}`;
-        let code: number | string | undefined;
-        try {
-          const body = (await response.json()) as {
-            errors?: Array<{ message?: unknown; code?: unknown }>;
-          };
-          const first = body?.errors?.[0];
-          if (first !== undefined && typeof first.message === 'string') {
-            message = first.message;
-          }
-          if (first !== undefined && typeof first.code === 'number') {
-            code = first.code;
-          }
-        } catch {
-          // corpo não-JSON — mantém a mensagem fallback com o status
-        }
-        throw new HenrikDevApiError(response.status, message, code);
-      }
-
-      const body = (await response.json()) as
-        | HenrikDevMatchesResponseV4
-        | readonly HenrikDevMatchV4[];
+      const body = parsed as HenrikDevMatchesResponseV4 | readonly HenrikDevMatchV4[];
       const data = Array.isArray(body) ? body : (body as HenrikDevMatchesResponseV4)?.data;
       if (!Array.isArray(data)) {
         throw new HenrikDevApiError(
