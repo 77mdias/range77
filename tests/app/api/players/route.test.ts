@@ -1,0 +1,186 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { HenrikDevApiError } from '@/services/henrikdev/client';
+
+/**
+ * SUITE TDD — rota GET /api/players/[region]/[name]/[tag].
+ *
+ * Next 16: `params` é Promise e DEVE ser aguardado. A camada de serviço é
+ * mockada aqui (testes HTTP puros); `next/cache` é neutralizado porque o
+ * cache é uma preocupação de runtime do Next, não da lógica de negócio.
+ */
+
+vi.mock('next/cache', () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }));
+
+vi.mock('@/services/coaching/player-combat', () => {
+  class PlayerNoMatchesError extends Error {
+    constructor(message: string) {
+      super(message);
+      this.name = 'PlayerNoMatchesError';
+    }
+  }
+  return { buildPlayerCombatInsight: vi.fn(), PlayerNoMatchesError };
+});
+
+import { GET } from '@/app/api/players/[region]/[name]/[tag]/route';
+import {
+  buildPlayerCombatInsight,
+  PlayerNoMatchesError,
+} from '@/services/coaching/player-combat';
+
+const insightMock = {
+  player: { region: 'br', name: 'Player', tag: 'BR1', platform: 'pc' },
+  evaluation: { aimClass: 'Excelente', impactClass: 'Equilibrado' },
+  raw_metrics: { kdr: 2, kpr: 1, acs: 200, matches: 10, rounds: 220 },
+  contextual_rating: { kdr: 'Excelente' },
+  coaching_hooks: ['A mira é um ponto forte (HS% 25%)...'],
+};
+
+const request = (url = 'http://localhost/api/players/br/Player/BR1'): Request => new Request(url);
+
+const context = (
+  region = 'br',
+  name = 'Player',
+  tag = 'BR1',
+): { params: Promise<{ region: string; name: string; tag: string }> } => ({
+  params: Promise.resolve({ region, name, tag }),
+});
+
+beforeEach(() => {
+  vi.mocked(buildPlayerCombatInsight).mockReset();
+});
+
+describe('GET /api/players/[region]/[name]/[tag]', () => {
+  it('retorna 200 com o envelope de coaching (região normalizada p/ minúscula)', async () => {
+    vi.mocked(buildPlayerCombatInsight).mockResolvedValueOnce(insightMock as never);
+
+    const response = await GET(request(), context('BR', 'Player One', 'BR1'));
+    const body = (await response.json()) as typeof insightMock;
+
+    expect(response.status).toBe(200);
+    expect(body.player.region).toBe('br');
+    expect(vi.mocked(buildPlayerCombatInsight)).toHaveBeenCalledWith({
+      region: 'br',
+      name: 'Player One',
+      tag: 'BR1',
+      size: 10,
+    });
+  });
+
+  it('respeita ?size= válido (1–10) e repassa ao serviço', async () => {
+    vi.mocked(buildPlayerCombatInsight).mockResolvedValueOnce(insightMock as never);
+
+    await GET(request('http://localhost/api/players/br/Player/BR1?size=5'), context());
+
+    expect(vi.mocked(buildPlayerCombatInsight)).toHaveBeenCalledWith(
+      expect.objectContaining({ size: 5 }),
+    );
+  });
+
+  it('rejeita região fora das afinidades da HenrikDev (400 + lista válida)', async () => {
+    const response = await GET(request(), context('mars', 'Player', 'BR1'));
+    const body = (await response.json()) as { error: { code: string; message: string } };
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe('INVALID_PARAMS');
+    expect(body.error.message).toMatch(/eu, na, ap, kr, latam, br/);
+  });
+
+  it('rejeita tag com caracteres inválidos (400)', async () => {
+    const response = await GET(request(), context('br', 'Player', 'a!b'));
+
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: { code: string } }).error.code).toBe(
+      'INVALID_PARAMS',
+    );
+  });
+
+  it('rejeita nome vazio (400)', async () => {
+    const response = await GET(request(), context('br', '', 'BR1'));
+
+    expect(response.status).toBe(400);
+  });
+
+  it('rejeita size fora da faixa 1–10 (400)', async () => {
+    const tooBig = await GET(
+      request('http://localhost/api/players/br/Player/BR1?size=99'),
+      context(),
+    );
+    const zero = await GET(request('http://localhost/api/players/br/Player/BR1?size=0'), context());
+
+    expect(tooBig.status).toBe(400);
+    expect(zero.status).toBe(400);
+  });
+
+  it('mapeia 404 upstream → 404 PLAYER_NOT_FOUND com hint de Riot ID', async () => {
+    vi.mocked(buildPlayerCombatInsight).mockRejectedValueOnce(
+      new HenrikDevApiError(404, 'Riot ID not found', 10_001),
+    );
+
+    const response = await GET(request(), context());
+    const body = (await response.json()) as { error: { code: string; hint?: string } };
+
+    expect(response.status).toBe(404);
+    expect(body.error.code).toBe('PLAYER_NOT_FOUND');
+    expect(body.error.hint).toMatch(/Riot ID/i);
+  });
+
+  it('mapeia 429 upstream → 503 UPSTREAM_RATE_LIMITED', async () => {
+    vi.mocked(buildPlayerCombatInsight).mockRejectedValueOnce(
+      new HenrikDevApiError(429, 'Rate limit exceeded', 10_003),
+    );
+
+    const response = await GET(request(), context());
+    const body = (await response.json()) as { error: { code: string } };
+
+    expect(response.status).toBe(503);
+    expect(body.error.code).toBe('UPSTREAM_RATE_LIMITED');
+  });
+
+  it('mapeia 401 upstream → 500 CONFIG_ERROR apontando para a variável', async () => {
+    vi.mocked(buildPlayerCombatInsight).mockRejectedValueOnce(
+      new HenrikDevApiError(401, 'Unauthorized', 10_002),
+    );
+
+    const response = await GET(request(), context());
+    const body = (await response.json()) as { error: { code: string; hint?: string } };
+
+    expect(response.status).toBe(500);
+    expect(body.error.code).toBe('CONFIG_ERROR');
+    expect(body.error.hint).toMatch(/HENRIKDEV_API_KEY/);
+  });
+
+  it('mapeia falha de rede upstream → 502 UPSTREAM_UNREACHABLE', async () => {
+    vi.mocked(buildPlayerCombatInsight).mockRejectedValueOnce(
+      new HenrikDevApiError(0, 'Falha de rede', 'NETWORK_ERROR'),
+    );
+
+    const response = await GET(request(), context());
+    const body = (await response.json()) as { error: { code: string } };
+
+    expect(response.status).toBe(502);
+    expect(body.error.code).toBe('UPSTREAM_UNREACHABLE');
+  });
+
+  it('mapeia jogador sem partidas válidas → 404 NO_VALID_MATCHES', async () => {
+    vi.mocked(buildPlayerCombatInsight).mockRejectedValueOnce(
+      new PlayerNoMatchesError('Nenhuma partida competitiva válida encontrada'),
+    );
+
+    const response = await GET(request(), context());
+    const body = (await response.json()) as { error: { code: string } };
+
+    expect(response.status).toBe(404);
+    expect(body.error.code).toBe('NO_VALID_MATCHES');
+  });
+
+  it('erro desconhecido → 500 INTERNAL_ERROR sem vazar stack', async () => {
+    vi.mocked(buildPlayerCombatInsight).mockRejectedValueOnce(new Error('boom interno'));
+
+    const response = await GET(request(), context());
+    const body = (await response.json()) as { error: { code: string; message: string } };
+
+    expect(response.status).toBe(500);
+    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.message).not.toMatch(/boom/);
+  });
+});
