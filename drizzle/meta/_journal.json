@@ -8,6 +8,13 @@
       "when": 1791482552840,
       "tag": "0000_sticky_pretty_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791497983261,
+      "tag": "0001_same_triathlon",
+      "breakpoints": true
     }
   ]
 }

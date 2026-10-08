@@ -152,3 +152,61 @@ describe('createHenrikDevClient', () => {
     ).rejects.toMatchObject({ status: 0, code: 'NETWORK_ERROR' });
   });
 });
+
+describe('fetchMatchById', () => {
+  const detail: HenrikDevMatchV4 = {
+    metadata: { match_id: 'abc-123' },
+    players: [],
+    teams: [],
+    rounds: [],
+    kills: [],
+  };
+
+  it('busca a partida com URL (sem platform) e header Authorization', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ status: 200, data: detail }));
+
+    const result = await makeClient().fetchMatchById({ affinity: 'br', matchId: 'abc-123' });
+
+    expect(result).toEqual(detail);
+    const [url, init] = fetchMock.mock.calls[0] as [URL | Request, RequestInit];
+    expect(String(url)).toBe('https://api.henrikdev.xyz/valorant/v4/match/br/abc-123');
+    expect(new Headers(init.headers).get('authorization')).toBe('HDEV-test-key');
+  });
+
+  it('codifica o match_id e aceita o objeto na raiz (sem envelope data)', async () => {
+    const rooted: HenrikDevMatchV4 = { metadata: { match_id: 'a b' }, players: [], teams: [] };
+    fetchMock.mockResolvedValueOnce(jsonResponse(rooted));
+
+    const result = await makeClient().fetchMatchById({ affinity: 'eu', matchId: 'a b' });
+
+    expect(result).toEqual(rooted);
+    const [url] = fetchMock.mock.calls[0] as [URL | Request];
+    expect(String(url)).toBe('https://api.henrikdev.xyz/valorant/v4/match/eu/a%20b');
+  });
+
+  it('rejeita resposta sem data/metadata como malformada', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ status: 200 }));
+
+    await expect(
+      makeClient().fetchMatchById({ affinity: 'na', matchId: 'x' }),
+    ).rejects.toMatchObject({ status: 502, code: 'MALFORMED_RESPONSE' });
+  });
+
+  it('mapeia 404 de partida como HenrikDevApiError', async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ errors: [{ code: 10_004, message: 'Match not found', status: 404 }] }, 404),
+    );
+
+    await expect(
+      makeClient().fetchMatchById({ affinity: 'na', matchId: 'x' }),
+    ).rejects.toMatchObject({ status: 404, code: 10_004 });
+  });
+
+  it('falha de rede vira NETWORK_ERROR', async () => {
+    fetchMock.mockRejectedValueOnce(new TypeError('fetch failed'));
+
+    await expect(
+      makeClient().fetchMatchById({ affinity: 'na', matchId: 'x' }),
+    ).rejects.toMatchObject({ status: 0, code: 'NETWORK_ERROR' });
+  });
+});

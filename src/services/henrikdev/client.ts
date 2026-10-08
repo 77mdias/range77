@@ -1,4 +1,5 @@
 import type {
+  HenrikDevMatchResponseV4,
   HenrikDevMatchV4,
   HenrikDevMatchesResponseV4,
 } from '@/contracts/henrikdev';
@@ -7,7 +8,7 @@ import type {
  * PASSO 3 — IMPLEMENTAÇÃO: client HTTP da HenrikDev (v4).
  *
  * - Autenticação por header `Authorization` (documentado no OpenAPI 4.6.0);
- * - Timeout padrão de 10s via AbortSignal;
+ * - Timeout padrão de 15s via AbortSignal (payloads v4 são pesados);
  * - Erros HTTP preservam o corpo documentado `{errors:[{code,message}]}`;
  * - Falhas de rede/malformação viram HenrikDevApiError com status 0/502 —
  *   a rota faz o mapping HTTP adequado para o chatbot.
@@ -44,8 +45,15 @@ export interface FetchPlayerMatchesParams {
   readonly start?: number;
 }
 
+export interface FetchMatchByIdParams {
+  readonly affinity: string;
+  readonly matchId: string;
+}
+
 export interface HenrikDevClient {
   fetchPlayerMatches(params: FetchPlayerMatchesParams): Promise<readonly HenrikDevMatchV4[]>;
+  /** Detalhe de UMA partida por match_id (v4 match_v4 — sem platform). */
+  fetchMatchById(params: FetchMatchByIdParams): Promise<HenrikDevMatchV4>;
 }
 
 const DEFAULT_BASE_URL = 'https://api.henrikdev.xyz';
@@ -59,6 +67,52 @@ export function createHenrikDevClient(options: HenrikDevClientOptions): HenrikDe
   const baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const doFetch = options.fetchFn ?? fetch;
+
+  /**
+   * GET + parse sob a MESMA proteção: o payload é grande e o abort pode
+   * disparar DEPOIS dos headers, durante o stream do body — um TimeoutError
+   * no json() precisa virar NETWORK_ERROR, não um 500 interno não identificado.
+   */
+  async function requestJson(url: URL): Promise<unknown> {
+    try {
+      const response = await doFetch(url, {
+        headers: { Authorization: options.apiKey },
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+
+      if (!response.ok) {
+        let message = `HenrikDev respondeu ${response.status}`;
+        let code: number | string | undefined;
+        try {
+          const body = (await response.json()) as {
+            errors?: Array<{ message?: unknown; code?: unknown }>;
+          };
+          const first = body?.errors?.[0];
+          if (first !== undefined && typeof first.message === 'string') {
+            message = first.message;
+          }
+          if (first !== undefined && typeof first.code === 'number') {
+            code = first.code;
+          }
+        } catch {
+          // corpo não-JSON — mantém a mensagem fallback com o status
+        }
+        throw new HenrikDevApiError(response.status, message, code);
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (error instanceof HenrikDevApiError) {
+        throw error;
+      }
+      const reason = error instanceof Error ? error.message : String(error);
+      throw new HenrikDevApiError(
+        0,
+        `Falha de rede ao contatar a HenrikDev: ${reason}`,
+        'NETWORK_ERROR',
+      );
+    }
+  }
 
   return {
     async fetchPlayerMatches(params) {
@@ -76,50 +130,7 @@ export function createHenrikDevClient(options: HenrikDevClientOptions): HenrikDe
         url.searchParams.set('start', String(params.start));
       }
 
-      // fetch E leitura do corpo ficam sob a mesma proteção: o payload é
-      // grande e o abort pode disparar DEPOIS dos headers, durante o stream
-      // do body — um TimeoutError no json() precisava ser NETWORK_ERROR,
-      // não um 500 interno não identificado.
-      let parsed: unknown;
-      try {
-        const response = await doFetch(url, {
-          headers: { Authorization: options.apiKey },
-          signal: AbortSignal.timeout(timeoutMs),
-        });
-
-        if (!response.ok) {
-          let message = `HenrikDev respondeu ${response.status}`;
-          let code: number | string | undefined;
-          try {
-            const body = (await response.json()) as {
-              errors?: Array<{ message?: unknown; code?: unknown }>;
-            };
-            const first = body?.errors?.[0];
-            if (first !== undefined && typeof first.message === 'string') {
-              message = first.message;
-            }
-            if (first !== undefined && typeof first.code === 'number') {
-              code = first.code;
-            }
-          } catch {
-            // corpo não-JSON — mantém a mensagem fallback com o status
-          }
-          throw new HenrikDevApiError(response.status, message, code);
-        }
-
-        parsed = await response.json();
-      } catch (error) {
-        if (error instanceof HenrikDevApiError) {
-          throw error;
-        }
-        const reason = error instanceof Error ? error.message : String(error);
-        throw new HenrikDevApiError(
-          0,
-          `Falha de rede ao contatar a HenrikDev: ${reason}`,
-          'NETWORK_ERROR',
-        );
-      }
-
+      const parsed = await requestJson(url);
       const body = parsed as HenrikDevMatchesResponseV4 | readonly HenrikDevMatchV4[];
       const data = Array.isArray(body) ? body : (body as HenrikDevMatchesResponseV4)?.data;
       if (!Array.isArray(data)) {
@@ -130,6 +141,29 @@ export function createHenrikDevClient(options: HenrikDevClientOptions): HenrikDe
         );
       }
       return data;
+    },
+
+    async fetchMatchById(params) {
+      const url = new URL(
+        `${baseUrl}/valorant/v4/match/${params.affinity}/${encodeURIComponent(params.matchId)}`,
+      );
+
+      const parsed = await requestJson(url);
+      const body = parsed as HenrikDevMatchResponseV4;
+      const candidate = (body?.data ?? parsed) as unknown;
+      const looksLikeMatch =
+        candidate !== null &&
+        typeof candidate === 'object' &&
+        !Array.isArray(candidate) &&
+        'metadata' in candidate;
+      if (!looksLikeMatch) {
+        throw new HenrikDevApiError(
+          502,
+          'Resposta malformada da HenrikDev: detalhe da partida ausente em "data"',
+          'MALFORMED_RESPONSE',
+        );
+      }
+      return candidate as HenrikDevMatchV4;
     },
   };
 }

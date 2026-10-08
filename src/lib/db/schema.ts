@@ -56,4 +56,21 @@ export const playerCombatSnapshots = pgTable(
   ],
 );
 
-export const schema = { playerCombatSnapshots };
+/**
+ * `match_cache`: cache durável do payload bruto de UMA partida (v4
+ * match_id). TTL controlado por `expires_at` (24h na aplicação) — evita
+ * requisições repetidas à HenrikDev ao abrir o detalhe de partida.
+ */
+export const matchCache = pgTable(
+  'match_cache',
+  {
+    matchId: text('match_id').primaryKey(),
+    region: text('region').notNull(),
+    payload: jsonb('payload').notNull(),
+    fetchedAt: timestamp('fetched_at', { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  },
+  (table) => [index('match_cache_expires_at_idx').on(table.expiresAt)],
+);
+
+export const schema = { playerCombatSnapshots, matchCache };

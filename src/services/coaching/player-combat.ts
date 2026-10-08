@@ -102,6 +102,35 @@ export async function buildPlayerCombatInsight(
     size,
   });
 
+  return buildCombatInsightFromMatches(rawMatches, {
+    region,
+    name,
+    tag,
+    size,
+    snapshotStore: store,
+  });
+}
+
+export interface FinalizeCombatInsightParams {
+  readonly region: string;
+  readonly name: string;
+  readonly tag: string;
+  readonly size: number;
+  /** `null` desliga a persistência; implementação injetável nos testes. */
+  readonly snapshotStore: CombatSnapshotStore | null;
+}
+
+/**
+ * Normaliza as partidas JÁ buscadas, calcula as métricas/envelope de coaching
+ * e persiste um snapshot (best-effort). Extraído para a rota `/overview`
+ * reaproveitar a MESMA partida buscada, sem um segundo fetch na HenrikDev.
+ */
+export async function buildCombatInsightFromMatches(
+  rawMatches: readonly HenrikDevMatchV4[],
+  params: FinalizeCombatInsightParams,
+): Promise<PlayerCombatInsight> {
+  const { region, name, tag, size, snapshotStore } = params;
+
   const combatMatches = normalizeMatchesToCombat(rawMatches, { name, tag });
   if (combatMatches.length === 0) {
     throw new PlayerNoMatchesError();
@@ -121,9 +150,8 @@ export async function buildPlayerCombatInsight(
     },
   };
 
-  // Write-through best-effort: criação do store já ocorreu no fail fast
-  // inicial; falhas de ESCRITA não derrubam o envelope.
-  if (store !== null) {
+  // Write-through best-effort: falhas de ESCRITA não derrubam o envelope.
+  if (snapshotStore !== null) {
     const record: CombatSnapshotRecord = {
       region: result.player.region,
       name: result.player.name,
@@ -147,7 +175,7 @@ export async function buildPlayerCombatInsight(
       coachingHooks: [...result.coaching_hooks],
     };
     try {
-      await store.insertSnapshot(record);
+      await snapshotStore.insertSnapshot(record);
     } catch (error) {
       console.warn('[player-combat] snapshot não persistido (best-effort):', error);
     }
