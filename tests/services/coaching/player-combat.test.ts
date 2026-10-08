@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { HenrikDevMatchV4 } from '@/contracts/henrikdev';
 import { EnvironmentValidationError } from '@/config/env';
+import type { CombatSnapshotRecord, CombatSnapshotStore } from '@/lib/db/combat-snapshot-store';
 import { HenrikDevApiError } from '@/services/henrikdev/client';
 import {
   buildPlayerCombatInsight,
@@ -57,6 +58,7 @@ describe('buildPlayerCombatInsight', () => {
       name: 'Player',
       tag: 'BR1',
       client,
+      snapshotStore: null,
     });
 
     expect(client.fetchPlayerMatches).toHaveBeenCalledWith({
@@ -126,10 +128,102 @@ describe('buildPlayerCombatInsight', () => {
       region: 'br',
       name: 'Player',
       tag: 'BR1',
+      snapshotStore: null,
     });
 
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(insight.player.region).toBe('br');
     expect(insight.raw_metrics.kdr).toBe(2);
+  });
+});
+
+describe('buildPlayerCombatInsight — persistência de snapshots', () => {
+  const makeCapturingStore = (): { store: CombatSnapshotStore; inserted: CombatSnapshotRecord[] } => {
+    const inserted: CombatSnapshotRecord[] = [];
+    return {
+      inserted,
+      store: {
+        insertSnapshot: async (record) => {
+          inserted.push(record);
+        },
+        getLatestSnapshot: async () => null,
+      },
+    };
+  };
+
+  it('persiste snapshot write-through com chaves normalizadas para lookup', async () => {
+    const { store, inserted } = makeCapturingStore();
+
+    const insight = await buildPlayerCombatInsight({
+      region: 'BR',
+      name: 'Player',
+      tag: 'BR1',
+      client: makeFakeClient([rawMatch]),
+      snapshotStore: store,
+    });
+
+    expect(insight.player.region).toBe('br');
+    expect(inserted).toHaveLength(1);
+    expect(inserted[0]).toMatchObject({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      nameKey: 'player',
+      tagKey: 'br1',
+      sampleSize: 10,
+      kdr: 2,
+      acs: 182,
+      matches: 1,
+      rounds: 22,
+      aimClass: 'Excelente',
+      impactClass: 'Equilibrado',
+    });
+    expect(Array.isArray(inserted[0]?.coachingHooks)).toBe(true);
+    expect(typeof inserted[0]?.contextualRating).toBe('object');
+  });
+
+  it('falha de persistência é best-effort: o envelope continua íntegro', async () => {
+    const failingStore: CombatSnapshotStore = {
+      insertSnapshot: async () => {
+        throw new Error('neon fora do ar');
+      },
+      getLatestSnapshot: async () => null,
+    };
+
+    const insight = await buildPlayerCombatInsight({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      client: makeFakeClient([rawMatch]),
+      snapshotStore: failingStore,
+    });
+
+    expect(insight.raw_metrics.kdr).toBe(2);
+    expect(insight.coaching_hooks.length).toBeGreaterThan(0);
+  });
+
+  it('snapshotStore: null desliga a persistência explicitamente (sem DB no contexto)', async () => {
+    const insight = await buildPlayerCombatInsight({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      client: makeFakeClient([rawMatch]),
+      snapshotStore: null,
+    });
+
+    expect(insight.raw_metrics.kdr).toBe(2);
+  });
+
+  it('sem store injetado e sem DATABASE_URL → erro de configuração propagado (fail fast)', async () => {
+    vi.stubEnv('DATABASE_URL', '');
+
+    await expect(
+      buildPlayerCombatInsight({
+        region: 'br',
+        name: 'Player',
+        tag: 'BR1',
+        client: makeFakeClient([rawMatch]),
+      }),
+    ).rejects.toBeInstanceOf(EnvironmentValidationError);
   });
 });
