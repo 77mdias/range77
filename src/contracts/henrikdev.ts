@@ -64,6 +64,12 @@ export interface HenrikDevIdName {
   readonly name: string;
 }
 
+/** Temporada (combo id + rótulo curto) — usado para agrupar por ato/época. */
+export interface HenrikDevSeasonV4 {
+  readonly id: string;
+  readonly short: string;
+}
+
 export interface HenrikDevMatchMetadataV4 {
   readonly match_id: string;
   readonly map?: HenrikDevIdName;
@@ -72,8 +78,12 @@ export interface HenrikDevMatchMetadataV4 {
     readonly mode_type?: string | null;
     readonly name?: string | null;
   };
+  readonly season?: HenrikDevSeasonV4;
   readonly started_at?: string;
   readonly is_completed?: boolean;
+  readonly game_length_in_ms?: number;
+  readonly platform?: string;
+  readonly region?: string | null;
 }
 
 export interface HenrikDevPlayerStatsV4 {
@@ -87,12 +97,43 @@ export interface HenrikDevPlayerStatsV4 {
   readonly damage?: { readonly dealt: number; readonly received: number };
 }
 
+/** Agente combinado id+nome (v4). */
+export interface HenrikDevAgentV4 {
+  readonly id: string;
+  readonly name: string;
+}
+
+/** Uso de habilidades por partida (cada slot pode vir nulo). */
+export interface HenrikDevAbilityCastsV4 {
+  readonly ability1?: number | null;
+  readonly ability2?: number | null;
+  readonly grenade?: number | null;
+  readonly ultimate?: number | null;
+}
+
+/** Economia agregada da partida (gasto total + valor de loadout). */
+export interface HenrikDevPlayerEconomyV4 {
+  readonly spent?: { readonly overall: number; readonly average: number };
+  readonly loadout_value?: { readonly overall: number; readonly average: number };
+}
+
+/** Tier/elo do jogador naquela partida (id numérico + nome). */
+export interface HenrikDevTierV4 {
+  readonly id: number;
+  readonly name: string;
+}
+
 export interface HenrikDevPlayerV4 {
   readonly puuid: string;
   readonly name?: string;
   readonly tag?: string;
   readonly team_id?: string;
+  readonly agent?: HenrikDevAgentV4;
   readonly stats: HenrikDevPlayerStatsV4;
+  readonly ability_casts?: HenrikDevAbilityCastsV4;
+  readonly economy?: HenrikDevPlayerEconomyV4;
+  readonly tier?: HenrikDevTierV4;
+  readonly account_level?: number;
 }
 
 export interface HenrikDevTeamV4 {
@@ -103,23 +144,65 @@ export interface HenrikDevTeamV4 {
 
 export interface HenrikDevRoundPlayerRef {
   readonly puuid: string;
+  /** Time do jogador ("Red"/"Blue") — presente nos eventos de round/kill. */
+  readonly team?: string;
   readonly name?: string;
   readonly tag?: string;
+}
+
+/** Arma de um abate (id/nome/tipo podem vir nulos para abates ambientais). */
+export interface HenrikDevWeaponV4 {
+  readonly id?: string | null;
+  readonly name?: string | null;
+  readonly type?: string | null;
 }
 
 export interface HenrikDevKillV4 {
   readonly round: number;
   readonly time_in_match_in_ms: number;
+  /** Tempo dentro do round — usado para ordenar/desempatar timeline. */
+  readonly time_in_round_in_ms?: number;
   readonly killer: HenrikDevRoundPlayerRef;
   readonly victim: HenrikDevRoundPlayerRef;
   readonly assistants?: readonly HenrikDevRoundPlayerRef[];
+  readonly weapon?: HenrikDevWeaponV4;
+}
+
+/** Plant da spike em um round. */
+export interface HenrikDevRoundPlantV4 {
+  readonly round_time_in_ms: number;
+  readonly site: string;
+  readonly player: HenrikDevRoundPlayerRef;
+}
+
+/** Defuse da spike em um round. */
+export interface HenrikDevRoundDefuseV4 {
+  readonly round_time_in_ms: number;
+  readonly player: HenrikDevRoundPlayerRef;
+}
+
+export interface HenrikDevRoundV4 {
+  /** Índice do round (0-based na HenrikDev). */
+  readonly id: number;
+  /** Rótulo bruto (ex.: "Team1"/"Surrendered") — o vencedor confiável é `winning_team`. */
+  readonly result?: string;
+  readonly winning_team: string;
+  readonly plant?: HenrikDevRoundPlantV4 | null;
+  readonly defuse?: HenrikDevRoundDefuseV4 | null;
 }
 
 export interface HenrikDevMatchV4 {
   readonly metadata: HenrikDevMatchMetadataV4;
   readonly players: readonly HenrikDevPlayerV4[];
   readonly teams: readonly HenrikDevTeamV4[];
+  readonly rounds?: readonly HenrikDevRoundV4[];
   readonly kills?: readonly HenrikDevKillV4[];
+}
+
+/** Corpo de sucesso documentado de UMA partida (v4 match_id). */
+export interface HenrikDevMatchResponseV4 {
+  readonly status: number;
+  readonly data: HenrikDevMatchV4;
 }
 
 /** Corpo de sucesso documentado (toleramos também `data` vindo como raiz). */
