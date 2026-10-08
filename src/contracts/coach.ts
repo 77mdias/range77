@@ -33,11 +33,12 @@ export type RawMetrics = Record<string, number>;
 /**
  * Envelope padrão de resposta de coaching.
  *
- * @typeParam TMetrics - chaves de métricas concretas da rota (ex: CombatMetrics
- * convertido para números), garantindo que `contextual_rating` só aceite
- * ratings para métricas que existem de fato no payload.
+ * @typeParam TMetrics - forma concreta das métricas da rota. O constraint é
+ * `object` (em vez de `Record<string, number>`) para permitir métricas
+ * OPCIONAIS: rotas omitem chaves não computáveis (ex: `kast` quando a fonte
+ * não fornece) em vez de emitir `null`/`0` enganosos ao chatbot.
  */
-export interface CoachInsight<TMetrics extends RawMetrics = RawMetrics> {
+export interface CoachInsight<TMetrics extends object = RawMetrics> {
   /** Camada 1: números exatos calculados. */
   readonly raw_metrics: TMetrics;
   /** Camada 2: classificação semântica por métrica. */
