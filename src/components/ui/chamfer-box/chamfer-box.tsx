@@ -1,4 +1,4 @@
-import type { ElementType, ReactNode } from 'react';
+import type { CSSProperties, ElementType, ReactNode } from 'react';
 import { cx } from '@/lib/cx';
 
 /**
@@ -19,12 +19,17 @@ import { cx } from '@/lib/cx';
  *   - padding de conteúdo vai SEMPRE nos filhos (o `padding: 1px` do
  *     externo é estrutural e não deve ser sobrescrito);
  *   - para trocar a superfície do interno (ex.: card elevado), defina
- *     `--chamfer-inner-bg` no externo — ex.:
+ *     `--chamfer-inner-bg` no `style` do externo — ex.:
  *     `<ChamferBox bordered style={{ '--chamfer-inner-bg': 'var(--color-surface-raised)' }}>`.
  */
 
 /** Tamanhos do corte do canto (tokens `--chamfer-*` do @theme). */
 export type ChamferSize = 'sm' | 'md' | 'lg';
+
+/** Style que aceita a variável custom `--chamfer-inner-bg` (herdada pelo interno). */
+export type ChamferStyle = CSSProperties & {
+  '--chamfer-inner-bg'?: string;
+};
 
 export interface ChamferBoxProps {
   /** Tamanho do chanfro. Padrão: `md`. */
@@ -34,6 +39,7 @@ export interface ChamferBoxProps {
   /** Elemento renderizado (polimórfico). Padrão: `div`. */
   readonly as?: ElementType;
   readonly className?: string;
+  readonly style?: ChamferStyle;
   readonly children?: ReactNode;
 }
 
@@ -43,17 +49,22 @@ export function ChamferBox({
   bordered = false,
   as,
   className,
+  style,
   children,
 }: ChamferBoxProps) {
   const Tag = as ?? 'div';
   const clip = `chamfer-${size}`;
 
   if (!bordered) {
-    return <Tag className={cx(clip, className)}>{children}</Tag>;
+    return (
+      <Tag className={cx(clip, className)} style={style}>
+        {children}
+      </Tag>
+    );
   }
 
   return (
-    <Tag className={cx(clip, 'chamfer-box-bordered', className)}>
+    <Tag className={cx(clip, 'chamfer-box-bordered', className)} style={style}>
       <div className={cx(clip, 'chamfer-box-inner')}>{children}</div>
     </Tag>
   );

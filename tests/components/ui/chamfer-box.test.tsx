@@ -52,4 +52,15 @@ describe('ChamferBox', () => {
       '<div class="chamfer-md chamfer-box-bordered extra"><div class="chamfer-md chamfer-box-inner">X</div></div>',
     );
   });
+
+  it('repassa style (ex.: --chamfer-inner-bg) para o elemento externo', () => {
+    const html = renderToStaticMarkup(
+      <ChamferBox bordered style={{ '--chamfer-inner-bg': 'var(--color-surface-raised)' }}>
+        X
+      </ChamferBox>,
+    );
+    expect(html).toBe(
+      '<div class="chamfer-md chamfer-box-bordered" style="--chamfer-inner-bg:var(--color-surface-raised)"><div class="chamfer-md chamfer-box-inner">X</div></div>',
+    );
+  });
 });
