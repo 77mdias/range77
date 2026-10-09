@@ -29,6 +29,16 @@ services:
       - DATABASE_URL
       - HENRIKDEV_API_KEY
       - MINIMAX_API_KEY
+      # Better Auth (fase 3): secret/URL exigidos no boot do primeiro uso;
+      # provedores sociais por credencial (configure só um se quiser).
+      - BETTER_AUTH_SECRET
+      - BETTER_AUTH_URL
+      - GOOGLE_CLIENT_ID
+      - GOOGLE_CLIENT_SECRET
+      - DISCORD_CLIENT_ID
+      - DISCORD_CLIENT_SECRET
+      # Opcional: pooler dedicado p/ transações do auth (fallback DATABASE_URL).
+      - AUTH_DATABASE_URL
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 30s
