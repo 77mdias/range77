@@ -29,6 +29,20 @@ describe('proxy — proteção de /dashboard', () => {
     expect(response.headers.get('x-middleware-next')).toBe('1');
   });
 
+  it('aceita o prefixo __Secure- (cookies seguros em https/prod)', () => {
+    const response = proxy(
+      requestAt('/dashboard', '__Secure-better-auth.session_token=token-abc'),
+    );
+
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+  });
+
+  it('cookie qualquer não conta como sessão', () => {
+    const response = proxy(requestAt('/dashboard', 'outro-cookie=valor'));
+
+    expect(response.status).toBe(307);
+  });
+
   it('trata requisições aninhadas do dashboard', () => {
     const response = proxy(requestAt('/dashboard/settings', 'better-auth.session_token=t'));
 
