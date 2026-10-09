@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { AgentRadar, MapWinrateBars, TrendLine } from '@/components/charts';
 import { Card } from '@/components/ui/card';
 import { MatchRow } from '@/components/ui/match-row';
 import { Sparkline } from '@/components/ui/sparkline';
@@ -50,6 +51,10 @@ export function OverviewTab({ overview }: { readonly overview: PlayerOverview })
         />
         <StatCard label="KAST" value={formatPct(metrics.kast)} />
       </div>
+
+      <Card label="Tendência de ACS">
+        <TrendLine values={overview.trend.perMatch} />
+      </Card>
 
       <Card label="Avaliação">
         <div className="flex flex-wrap gap-2">
@@ -192,12 +197,22 @@ export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewP
     {
       id: 'agents',
       label: 'Agentes',
-      content: <GroupedStatTable rows={overview.agents} keyLabel="Agente" />,
+      content: (
+        <div className="flex flex-col gap-4">
+          <AgentRadar agents={overview.agents} />
+          <GroupedStatTable rows={overview.agents} keyLabel="Agente" />
+        </div>
+      ),
     },
     {
       id: 'maps',
       label: 'Mapas',
-      content: <GroupedStatTable rows={overview.maps} keyLabel="Mapa" />,
+      content: (
+        <div className="flex flex-col gap-4">
+          <MapWinrateBars stats={overview.maps} />
+          <GroupedStatTable rows={overview.maps} keyLabel="Mapa" />
+        </div>
+      ),
     },
   ];
 

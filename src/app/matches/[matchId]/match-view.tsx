@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { RoundHeatmap } from '@/components/charts';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/states';
 import {
@@ -141,6 +142,12 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
           <span className="text-loss">{teamB ?? '—'}</span> (vermelho)
         </p>
       </Card>
+
+      {teamA !== undefined ? (
+        <Card label="Rounds por abates">
+          <RoundHeatmap rounds={detail.rounds} kills={detail.kills} teamId={teamA} />
+        </Card>
+      ) : null}
 
       {teamIds.map((teamId) => (
         <section key={teamId} className="flex flex-col gap-2">
