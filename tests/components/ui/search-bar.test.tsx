@@ -82,4 +82,10 @@ describe('SearchBar', () => {
       'br',
     ]);
   });
+
+  it('permite customizar o rótulo do botão de submit (submitLabel)', () => {
+    render(<SearchBar onSubmit={vi.fn()} submitLabel="Vincular" />);
+
+    expect(screen.getByRole('button', { name: 'Vincular' })).toBeTruthy();
+  });
 });
