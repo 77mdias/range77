@@ -25,6 +25,8 @@ export interface SearchBarProps {
   readonly defaultRegion?: HenrikDevAffinity;
   /** Valor inicial do campo, no formato `Nome#Tag`. */
   readonly defaultValue?: string;
+  /** Rótulo do botão de submit (padrão "Buscar"). */
+  readonly submitLabel?: string;
   readonly disabled?: boolean;
   readonly loading?: boolean;
   readonly className?: string;
@@ -34,6 +36,7 @@ export function SearchBar({
   onSubmit,
   defaultRegion = 'br',
   defaultValue = '',
+  submitLabel = 'Buscar',
   disabled = false,
   loading = false,
   className,
@@ -76,8 +79,8 @@ export function SearchBar({
             disabled={disabled || loading}
             onChange={(event) => setRegion(event.target.value as HenrikDevAffinity)}
             className={cx(
-              'h-12 w-28 border border-line bg-surface-raised px-3',
-              'font-hud text-body uppercase text-text-primary',
+              'h-12 w-28 rounded-l-md border border-line bg-surface px-3',
+              'font-hud text-body text-text-primary',
               'disabled:cursor-not-allowed disabled:opacity-50',
             )}
           >
@@ -103,7 +106,7 @@ export function SearchBar({
             aria-invalid={error !== null ? true : undefined}
             aria-describedby={error !== null ? errorId : undefined}
             className={cx(
-              'h-12 min-w-0 flex-1 border border-l-0 border-line bg-surface-raised px-4',
+              'h-12 min-w-0 flex-1 rounded-r-md border border-l-0 border-line bg-surface px-4',
               'text-body text-text-primary placeholder:text-text-secondary',
               'disabled:cursor-not-allowed disabled:opacity-50',
             )}
@@ -111,7 +114,7 @@ export function SearchBar({
         </div>
 
         <Button type="submit" loading={loading} disabled={disabled}>
-          Buscar
+          {submitLabel}
         </Button>
       </div>
 

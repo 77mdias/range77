@@ -3,14 +3,18 @@ import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getUserRiotStore } from '@/lib/db/user-riot-store';
 import { getSession } from '@/lib/session';
+import { LinkRiotForm } from './link-riot-form';
 import { LogoutButton } from './logout-button';
+import { UnlinkRiotButton } from './unlink-riot-button';
 
 /**
  * PÁGINA: /dashboard/settings (protegida)
  *
- * Perfil do usuário (nome/avatar/email do provedor social) + logout.
- * Conteúdo dinâmico em <Suspense> (Cache Components); sem sessão → /login.
+ * Perfil do usuário (nome/avatar/email do provedor social) + Riot ID
+ * vinculado (self-tracking) + logout. Conteúdo dinâmico em <Suspense>
+ * (Cache Components); sem sessão → /login.
  */
 
 export const instant = false;
@@ -30,6 +34,8 @@ export async function SettingsContent() {
   if (session === null) {
     redirect('/login?next=%2Fdashboard%2Fsettings');
   }
+
+  const linked = await getUserRiotStore().get(session.user.id);
 
   return (
     <div data-settings-page className="mx-auto w-full max-w-2xl px-4 py-10">
@@ -73,6 +79,32 @@ export async function SettingsContent() {
             </div>
           </dl>
         </div>
+      </Card>
+
+      <Card label="Riot ID" className="mt-6">
+        {linked !== null ? (
+          <div data-riot-linked className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-label uppercase text-text-secondary">
+                  {linked.region.toUpperCase()}
+                </p>
+                <p className="font-display text-heading-lg uppercase text-text-primary">
+                  {linked.displayName}
+                  <span className="text-text-secondary">#{linked.tagKey}</span>
+                </p>
+              </div>
+              <UnlinkRiotButton />
+            </div>
+          </div>
+        ) : (
+          <div data-riot-empty className="flex flex-col gap-3">
+            <p className="text-body text-text-secondary">
+              Vincule seu Riot ID para acompanhar sua própria evolução.
+            </p>
+            <LinkRiotForm />
+          </div>
+        )}
       </Card>
 
       <div className="mt-6 flex justify-end">

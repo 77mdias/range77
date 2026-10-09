@@ -8,6 +8,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 const mocks = vi.hoisted(() => ({ getSession: vi.fn() }));
 
 vi.mock('@/lib/session', () => ({ getSession: mocks.getSession }));
+vi.mock('@/lib/db/user-riot-store', () => ({
+  getUserRiotStore: () => ({ get: async () => null }),
+}));
 vi.mock('@/lib/auth-client', () => ({
   authClient: { signOut: vi.fn(async () => ({ success: true })) },
 }));

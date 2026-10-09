@@ -173,6 +173,33 @@ export const trackedPlayers = pgTable(
   ],
 );
 
+/**
+ * `user_riot_account`: Riot ID vinculado ao USUÁRIO LOGADO (self-tracking).
+ * Unique `(user_id)` — UM Riot ID por usuário (revincular = upsert);
+ * lookup por `(region, name_key, tag_key)` (chaves em minúsculas, mesma
+ * convenção das outras tabelas). Remover o usuário remove o vínculo
+ * (cascade).
+ */
+export const userRiotAccounts = pgTable(
+  'user_riot_account',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    region: text('region').notNull(),
+    nameKey: text('name_key').notNull(),
+    tagKey: text('tag_key').notNull(),
+    displayName: text('display_name').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('user_riot_account_unique_idx').on(table.userId),
+    index('user_riot_account_lookup_idx').on(table.region, table.nameKey, table.tagKey),
+  ],
+);
+
 /** Registrado no final: todas as tabelas já estão declaradas. */
 export const schema = {
   playerCombatSnapshots,
@@ -182,4 +209,5 @@ export const schema = {
   account,
   verification,
   trackedPlayers,
+  userRiotAccounts,
 };
