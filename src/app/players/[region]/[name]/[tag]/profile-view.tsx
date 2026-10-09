@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { MatchRow } from '@/components/ui/match-row';
@@ -172,7 +173,13 @@ export function GroupedStatTable({
   );
 }
 
-export function PlayerProfileView({ overview }: { readonly overview: PlayerOverview }) {
+export interface PlayerProfileViewProps {
+  readonly overview: PlayerOverview;
+  /** Slot de ação do header (ex.: botão Seguir — injetado pela página). */
+  readonly headerAction?: ReactNode;
+}
+
+export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewProps) {
   const { player } = overview;
 
   const items: TabItem[] = [
@@ -203,6 +210,7 @@ export function PlayerProfileView({ overview }: { readonly overview: PlayerOverv
             {player.name} <span className="text-text-secondary">#{player.tag}</span>
           </h1>
         </div>
+        {headerAction !== undefined ? headerAction : null}
       </header>
 
       <Tabs items={items} ariaLabel="Seções do perfil" />

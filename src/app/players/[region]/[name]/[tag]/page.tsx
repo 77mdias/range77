@@ -1,11 +1,15 @@
 import { Suspense } from 'react';
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/states';
 import { getCachedPlayerOverview } from '@/lib/cache/tracker';
+import { getTrackedPlayersStore } from '@/lib/db/tracked-players-store';
 import { describeUpstreamError, mappedToApiErrorBody } from '@/lib/http/api-error';
+import { getSession } from '@/lib/session';
 import { parsePlayerRouteParams } from '@/lib/validation/player-params';
 import { PlayerNoMatchesError } from '@/services/coaching/player-combat';
+import { FollowButton } from './follow-button';
 import { PlayerProfileView } from './profile-view';
 
 /**
@@ -46,6 +50,38 @@ function ProfileSkeleton() {
   );
 }
 
+/** Ação do header: "Seguir" (autenticado) ou convite ao login. */
+async function FollowSection({
+  region,
+  name,
+  tag,
+}: {
+  readonly region: string;
+  readonly name: string;
+  readonly tag: string;
+}): Promise<ReactNode> {
+  const session = await getSession();
+  if (session === null) {
+    return (
+      <Link
+        href={`/login?next=${encodeURIComponent(`/players/${region}/${name}/${tag}`)}`}
+        className="text-label uppercase text-text-secondary transition-colors duration-[var(--duration-fast)] ease-out-expo hover:text-text-primary"
+      >
+        Entrar para seguir
+      </Link>
+    );
+  }
+
+  const isTracked = await getTrackedPlayersStore().isTracked({
+    userId: session.user.id,
+    region,
+    nameKey: name.toLowerCase(),
+    tagKey: tag.toLowerCase(),
+  });
+
+  return <FollowButton region={region} name={name} tag={tag} initialFollowing={isTracked} />;
+}
+
 async function PlayerProfileData({
   region,
   name,
@@ -57,7 +93,8 @@ async function PlayerProfileData({
 }) {
   try {
     const overview = await getCachedPlayerOverview(region, name, tag, PROFILE_SAMPLE_SIZE);
-    return <PlayerProfileView overview={overview} />;
+    const headerAction = await FollowSection({ region, name, tag });
+    return <PlayerProfileView overview={overview} headerAction={headerAction} />;
   } catch (error) {
     if (error instanceof PlayerNoMatchesError) {
       return (
