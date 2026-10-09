@@ -1,0 +1,46 @@
+name: CI
+
+# Gate obrigatório do projeto: typecheck + testes com cobertura + build de produção.
+# O build roda com Cache Components habilitado, então falhas de RSC/Suspense
+# aparecem aqui antes do merge.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: typecheck · testes · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: npm
+
+      # NODE_ENV não é definido aqui de propósito: com ele ausente o npm instala
+      # as devDependencies (tsc, vitest, tailwind). Definir NODE_ENV=production
+      # no job faria o npm omitir devDeps e o React resolver para o build de
+      # produção — que não expõe React.act e quebra os testes de componente.
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Typecheck (tsc --noEmit)
+        run: npm run typecheck
+
+      - name: Testes + cobertura
+        run: npx vitest run --coverage
+        env:
+          APP_ENV: test
+
+      - name: Build de produção
+        run: npm run build
