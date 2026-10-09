@@ -11,6 +11,9 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  // Better Auth empacota código de servidor pesado (Kysely/jose) — precisa
+  // ficar fora do bundle do Turbopack (exigência da doc de integração Next).
+  serverExternalPackages: ['better-auth'],
 };
 
 export default nextConfig;

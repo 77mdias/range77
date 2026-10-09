@@ -86,6 +86,13 @@ export interface AppEnv {
   readonly DATABASE_URL?: string | undefined;
   readonly HENRIKDEV_API_KEY?: string | undefined;
   readonly MINIMAX_API_KEY?: string | undefined;
+  readonly AUTH_DATABASE_URL?: string | undefined;
+  readonly BETTER_AUTH_SECRET?: string | undefined;
+  readonly BETTER_AUTH_URL?: string | undefined;
+  readonly GOOGLE_CLIENT_ID?: string | undefined;
+  readonly GOOGLE_CLIENT_SECRET?: string | undefined;
+  readonly DISCORD_CLIENT_ID?: string | undefined;
+  readonly DISCORD_CLIENT_SECRET?: string | undefined;
 }
 
 /** Trim + vazio conta como ausente (evita "credencial fantasma" em branco). */
@@ -108,11 +115,23 @@ export function loadAppEnv(source: EnvSource = process.env): AppEnv {
     DATABASE_URL: pickDefined(source['DATABASE_URL']),
     HENRIKDEV_API_KEY: pickDefined(source['HENRIKDEV_API_KEY']),
     MINIMAX_API_KEY: pickDefined(source['MINIMAX_API_KEY']),
+    AUTH_DATABASE_URL: pickDefined(source['AUTH_DATABASE_URL']),
+    BETTER_AUTH_SECRET: pickDefined(source['BETTER_AUTH_SECRET']),
+    BETTER_AUTH_URL: pickDefined(source['BETTER_AUTH_URL']),
+    GOOGLE_CLIENT_ID: pickDefined(source['GOOGLE_CLIENT_ID']),
+    GOOGLE_CLIENT_SECRET: pickDefined(source['GOOGLE_CLIENT_SECRET']),
+    DISCORD_CLIENT_ID: pickDefined(source['DISCORD_CLIENT_ID']),
+    DISCORD_CLIENT_SECRET: pickDefined(source['DISCORD_CLIENT_SECRET']),
   };
 }
 
 /** Variáveis sensíveis que só podem ser obtidas via `requireEnv`. */
-export type RequiredEnvVar = 'DATABASE_URL' | 'HENRIKDEV_API_KEY' | 'MINIMAX_API_KEY';
+export type RequiredEnvVar =
+  | 'DATABASE_URL'
+  | 'HENRIKDEV_API_KEY'
+  | 'MINIMAX_API_KEY'
+  | 'BETTER_AUTH_SECRET'
+  | 'BETTER_AUTH_URL';
 
 /** Remediação por ambiente — a mensagem diz EXATAMENTE como corrigir. */
 const REMEDIATION_HINT: Readonly<Record<AppEnvironment, string>> = {

@@ -15,6 +15,13 @@
       "when": 1791497983261,
       "tag": "0001_same_triathlon",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791506505458,
+      "tag": "0002_sturdy_blockbuster",
+      "breakpoints": true
     }
   ]
 }
