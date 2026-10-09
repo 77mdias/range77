@@ -27,6 +27,7 @@ interface CapturedOptions {
   secret?: string;
   baseURL?: string;
   socialProviders?: Record<string, unknown>;
+  emailAndPassword?: Record<string, unknown>;
   plugins?: unknown[];
 }
 
@@ -101,6 +102,17 @@ describe('createAuth', () => {
   it('nextCookies é o ÚLTIMO plugin (exigência da doc p/ Server Actions)', () => {
     createAuth(fakeDb, { secret: 's', baseURL: 'u' });
     expect(lastOptions().plugins).toEqual(['NEXT_COOKIES']);
+  });
+
+  it('habilita emailAndPassword com limites alinhados ao módulo de validação', () => {
+    createAuth(fakeDb, { secret: 's', baseURL: 'u' });
+
+    expect(lastOptions().emailAndPassword).toEqual({
+      enabled: true,
+      minPasswordLength: 8,
+      maxPasswordLength: 128,
+      requireNameAndEmail: true,
+    });
   });
 
   it('omite socialProviders quando nenhum provedor está configurado', () => {

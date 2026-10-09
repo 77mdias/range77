@@ -1,12 +1,13 @@
 import Link from 'next/link';
+import { EmailLoginForm } from './email-auth-forms';
 import { SocialLoginButtons } from './social-login-buttons';
 
 /**
  * PÁGINA: /login
  *
- * Login social (Google/Discord). O proxy (Next 16) redireciona rotas
- * protegidas para cá com `?next=<destino>` — o destino é repassado ao
- * `callbackURL` do Better Auth. Next 16: `await searchParams`.
+ * Login social (Google/Discord) E manual (email+senha). O proxy (Next 16)
+ * redireciona rotas protegidas para cá com `?next=<destino>` — o destino é
+ * repassado ao `callbackURL` do Better Auth. Next 16: `await searchParams`.
  */
 
 export const instant = false;
@@ -33,11 +34,23 @@ export default async function LoginPage({ searchParams }: PageProps) {
           Entre no <span className="text-accent">ValCoach</span>
         </h1>
         <p className="text-body text-text-secondary">
-          Use sua conta Google ou Discord para seguir jogadores e acompanhar a evolução no
-          dashboard.
+          Use e-mail e senha ou sua conta Google/Discord para seguir jogadores e
+          acompanhar a evolução no dashboard.
         </p>
 
+        <EmailLoginForm callbackPath={resolveCallbackPath(query.next)} />
+
         <SocialLoginButtons callbackPath={resolveCallbackPath(query.next)} />
+
+        <p className="text-body text-text-secondary">
+          Ainda não tem conta?{' '}
+          <Link
+            href="/signup"
+            className="text-label uppercase text-accent transition-colors duration-[var(--duration-fast)] ease-out-expo hover:text-accent-hover"
+          >
+            Criar conta
+          </Link>
+        </p>
 
         <Link
           href="/"

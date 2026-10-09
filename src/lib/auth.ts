@@ -3,10 +3,14 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
 import { loadAppEnv, requireEnv, type EnvSource } from '@/config/env';
 import { createAuthDatabase, type AuthDatabase } from '@/lib/db/auth-connection';
+import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+} from '@/lib/validation/credentials';
 import { schema } from '@/lib/db/schema';
 
 /**
- * Fábrica do Better Auth (Google + Discord).
+ * Fábrica do Better Auth (Google + Discord + email/senha).
  * ======================================================================
  * - DIP: `createAuth(db, env)` é puro/injetável — os testes passam fakes e
  *   rodam sem rede/DB; a instância de produção nasce de `getAuth()`.
@@ -14,6 +18,9 @@ import { schema } from '@/lib/db/schema';
  *   resolução (remediação citada por ambiente).
  * - Provedores sociais são OPCIONAIS por credencial: dev pode configurar
  *   só Discord (ou só Google) sem quebrar o boot.
+ * - Login manual por email+senha (`emailAndPassword`): os limites de senha
+ *   vêm do módulo de validação compartilhado com os formulários — nunca
+ *   divergem entre cliente e servidor.
  * - `nextCookies()` é o ÚLTIMO plugin (exigência da doc p/ Server Actions).
  */
 
@@ -59,6 +66,12 @@ export function createAuth(db: AuthDatabase, authEnv: ResolvedAuthEnv) {
     socialProviders: {
       ...(authEnv.google !== undefined ? { google: authEnv.google } : {}),
       ...(authEnv.discord !== undefined ? { discord: authEnv.discord } : {}),
+    },
+    emailAndPassword: {
+      enabled: true,
+      minPasswordLength: PASSWORD_MIN_LENGTH,
+      maxPasswordLength: PASSWORD_MAX_LENGTH,
+      requireNameAndEmail: true,
     },
     plugins: [nextCookies()],
   });
