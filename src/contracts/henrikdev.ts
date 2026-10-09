@@ -40,6 +40,8 @@ export interface MatchCombatStats {
   readonly firstBloods?: number | undefined;
   /** First deaths (primeira morte do round sofrida). Opcional. */
   readonly firstDeaths?: number | undefined;
+  /** Dano total causado na partida (v4: players[].stats.damage.dealt). Opcional. */
+  readonly damageDealt?: number | undefined;
 }
 
 /* ============================================================================

@@ -166,6 +166,7 @@ describe('calculateCombatMetrics', () => {
     [{ kast: 101 }, /Partida #0.*kast/i],
     [{ firstBloods: -1 }, /Partida #0.*firstBloods/s],
     [{ firstDeaths: -2 }, /Partida #0.*firstDeaths/s],
+    [{ damageDealt: -50 }, /Partida #0.*damageDealt/s],
   ] as const)('rejeita partida inválida %j com índice e campo citados', (overrides, pattern) => {
     expect(() => calculateCombatMetrics([makeMatch(overrides)])).toThrowError(pattern);
   });

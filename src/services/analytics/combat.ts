@@ -206,6 +206,9 @@ function assertValidMatch(match: MatchCombatStats, index: number): void {
   if (match.firstDeaths !== undefined) {
     assertNonNegative(match.firstDeaths, 'firstDeaths');
   }
+  if (match.damageDealt !== undefined) {
+    assertNonNegative(match.damageDealt, 'damageDealt');
+  }
 }
 
 function classifyAim(hsPercentage: number | null): AimClass {

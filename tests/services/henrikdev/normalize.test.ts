@@ -28,6 +28,7 @@ const makePlayer = (overrides: Partial<HenrikDevPlayerV4> = {}): HenrikDevPlayer
     headshots: 10,
     bodyshots: 20,
     legshots: 10,
+    damage: { dealt: 3400, received: 2800 },
   },
   ...overrides,
 });
@@ -77,7 +78,27 @@ describe('normalizeMatchesToCombat', () => {
       kast: undefined, // fonte não fornece — nunca inventamos
       firstBloods: 0, // timeline presente e sem FB do jogador
       firstDeaths: 0,
+      damageDealt: 3400, // extraído de stats.damage.dealt
     });
+  });
+
+  it('extrai damageDealt quando a fonte fornece stats.damage', () => {
+    const match = makeMatch({
+      players: [
+        makePlayer({ stats: { ...makePlayer().stats, damage: { dealt: 4120, received: 3000 } } }),
+      ],
+    });
+    const [combat] = normalizeMatchesToCombat([match], { name: 'Player', tag: 'BR1' });
+
+    expect(combat?.damageDealt).toBe(4120);
+  });
+
+  it('omite damageDealt quando a fonte não fornece stats.damage', () => {
+    const { damage: _damage, ...statsSemDamage } = makePlayer().stats;
+    const match = makeMatch({ players: [makePlayer({ stats: statsSemDamage })] });
+    const [combat] = normalizeMatchesToCombat([match], { name: 'Player', tag: 'BR1' });
+
+    expect(combat?.damageDealt).toBeUndefined();
   });
 
   it('localiza o jogador com Riot ID case-insensitive', () => {

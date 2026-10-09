@@ -122,6 +122,9 @@ export function normalizeMatchesToCombat(
       ...(entry !== null
         ? { firstBloods: entry.firstBloods, firstDeaths: entry.firstDeaths }
         : {}),
+      ...(found.stats.damage?.dealt !== undefined
+        ? { damageDealt: found.stats.damage.dealt }
+        : {}),
     });
   }
 
