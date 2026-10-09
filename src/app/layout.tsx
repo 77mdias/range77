@@ -43,6 +43,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR">
       <body
+        suppressHydrationWarning
         className={`${displayFont.variable} ${hudFont.variable} ${bodyFont.variable} font-body`}
       >
         <AppShell>{children}</AppShell>
