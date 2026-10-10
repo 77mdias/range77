@@ -12,7 +12,7 @@ import { DesignSystemShowcase } from './showcase';
 
 export const metadata = {
   title: 'VALCOACH — Design System',
-  description: 'Styleguide viva: tokens, tipografia, chamfers e componentes.',
+  description: 'Styleguide viva: tokens, tipografia, formas e componentes.',
 };
 
 export default function DesignSystemPage() {

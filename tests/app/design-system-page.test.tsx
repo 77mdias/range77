@@ -16,7 +16,7 @@ describe('DesignSystemPage', () => {
     for (const section of [
       'Paleta',
       'Tipografia',
-      'Chamfer',
+      'Formas',
       'Button',
       'Badge',
       'Table',
