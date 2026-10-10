@@ -40,7 +40,7 @@ export async function SettingsContent() {
   return (
     <div data-settings-page className="mx-auto w-full max-w-2xl px-4 py-10">
       <header className="mb-8 flex items-center justify-between gap-3 border-b border-line pb-4">
-        <h1 className="font-display text-display-md uppercase text-text-primary">Configurações</h1>
+        <h1 className="font-display text-display-md text-text-primary">Configurações</h1>
         <Link
           href="/dashboard"
           className="text-label uppercase text-text-secondary transition-colors duration-[var(--duration-fast)] ease-out-expo hover:text-text-primary"
@@ -58,12 +58,12 @@ export async function SettingsContent() {
               alt={`Avatar de ${session.user.name}`}
               width={64}
               height={64}
-              className="h-16 w-16 border border-line object-cover"
+              className="h-16 w-16 rounded-md border border-line object-cover"
             />
           ) : (
             <div
               aria-hidden="true"
-              className="flex h-16 w-16 items-center justify-center border border-line bg-surface-hover font-display text-heading-lg text-text-secondary"
+              className="flex h-16 w-16 items-center justify-center rounded-md border border-line bg-surface-hover font-display text-heading-lg text-text-secondary"
             >
               {session.user.name.charAt(0).toUpperCase()}
             </div>
@@ -89,7 +89,7 @@ export async function SettingsContent() {
                 <p className="text-label uppercase text-text-secondary">
                   {linked.region.toUpperCase()}
                 </p>
-                <p className="font-display text-heading-lg uppercase text-text-primary">
+                <p className="font-display text-heading-lg text-text-primary">
                   {linked.displayName}
                   <span className="text-text-secondary">#{linked.tagKey}</span>
                 </p>

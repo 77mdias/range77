@@ -70,7 +70,7 @@ export function EmailLoginForm({ callbackPath, className }: EmailLoginFormProps)
   }
 
   const inputClass = cx(
-    'h-12 w-full border border-line bg-surface-raised px-4',
+    'h-12 w-full rounded-md border border-line bg-surface px-4',
     'text-body text-text-primary placeholder:text-text-secondary',
     'disabled:cursor-not-allowed disabled:opacity-50',
   );
@@ -205,7 +205,7 @@ export function SignupForm({ callbackPath, className }: SignupFormProps) {
   }
 
   const inputClass = cx(
-    'h-12 w-full border border-line bg-surface-raised px-4',
+    'h-12 w-full rounded-md border border-line bg-surface px-4',
     'text-body text-text-primary placeholder:text-text-secondary',
     'disabled:cursor-not-allowed disabled:opacity-50',
   );

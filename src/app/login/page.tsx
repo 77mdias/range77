@@ -29,9 +29,9 @@ export default async function LoginPage({ searchParams }: PageProps) {
   return (
     <main className="mx-auto w-full max-w-md px-4 py-20">
       <section data-login-page className="flex flex-col gap-6 text-center">
-        <p className="text-label uppercase text-accent">Tracker · coach estatístico</p>
-        <h1 className="font-display text-display-lg uppercase text-text-primary">
-          Entre no <span className="text-accent">ValCoach</span>
+        <p className="text-label uppercase text-text-secondary">Tracker · coach estatístico</p>
+        <h1 className="font-display text-display-lg text-text-primary">
+          Entre no <span className="bg-accent px-1.5 text-on-accent">ValCoach</span>
         </h1>
         <p className="text-body text-text-secondary">
           Use e-mail e senha ou sua conta Google/Discord para seguir jogadores e
@@ -46,7 +46,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
           Ainda não tem conta?{' '}
           <Link
             href="/signup"
-            className="text-label uppercase text-accent transition-colors duration-[var(--duration-fast)] ease-out-expo hover:text-accent-hover"
+            className="font-medium text-text-primary underline-offset-4 transition-colors duration-[var(--duration-fast)] ease-out-expo hover:underline"
           >
             Criar conta
           </Link>

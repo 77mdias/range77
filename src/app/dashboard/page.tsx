@@ -45,8 +45,8 @@ export async function DashboardContent() {
     <div data-dashboard-page className="mx-auto w-full max-w-6xl px-4 py-10">
       <header className="mb-8 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
         <div>
-          <p className="text-label uppercase text-accent">Dashboard</p>
-          <h1 className="font-display text-display-md uppercase text-text-primary">
+          <p className="text-label uppercase text-text-secondary">Dashboard</p>
+          <h1 className="font-display text-display-md text-text-primary">
             Olá, {session.user.name}
           </h1>
         </div>
@@ -65,7 +65,7 @@ export async function DashboardContent() {
           action={
             <Link
               href="/"
-              className="inline-flex h-10 items-center bg-accent px-6 font-hud text-label uppercase tracking-wide text-on-accent shadow-hard transition-all duration-[var(--duration-fast)] ease-out-expo hover:bg-accent-hover"
+              className="inline-flex h-10 items-center rounded-md bg-accent px-6 font-medium text-body text-on-accent transition-colors duration-[var(--duration-fast)] ease-out-expo hover:bg-accent-hover"
             >
               Buscar jogador
             </Link>
@@ -81,7 +81,7 @@ export async function DashboardContent() {
               <div className="flex flex-col gap-4">
                 <Link
                   href={`/players/${player.region}/${encodeURIComponent(player.nameKey)}/${player.tagKey}`}
-                  className="font-display text-heading-lg uppercase text-text-primary no-underline transition-colors duration-[var(--duration-fast)] ease-out-expo hover:text-accent"
+                  className="font-display text-heading-lg text-text-primary no-underline transition-colors duration-[var(--duration-fast)] ease-out-expo hover:underline"
                 >
                   {player.displayName}
                   <span className="text-text-secondary">#{player.tagKey}</span>
