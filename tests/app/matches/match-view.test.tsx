@@ -4,8 +4,9 @@ import { MatchView } from '@/app/matches/[matchId]/match-view';
 import type { MatchDetail } from '@/contracts/tracker';
 
 /**
- * SUITE TDD — apresentação do detalhe de partida (RSC síncrono): header,
- * placar, faixa round-a-round e scoreboard duplo.
+ * SUITE TDD — apresentação do detalhe de partida (RSC síncrono) no design
+ * Stitch: MatchMetaBar, ScoreBanner, RoundTimeline, heatmap e scoreboard
+ * duplo via o componente `ScoreboardTable` do design system.
  */
 
 const detail: MatchDetail = {
@@ -67,17 +68,27 @@ const detail: MatchDetail = {
 };
 
 describe('MatchView', () => {
-  it('renderiza mapa, placar, rounds e os dois scoreboards', () => {
+  it('renderiza meta bar, banner de placar, timeline e os dois scoreboards', () => {
     const html = renderToStaticMarkup(<MatchView detail={detail} />);
+    expect(html).toContain('data-component="match-meta-bar"');
+    expect(html).toContain('COMPETITIVE');
     expect(html).toContain('Ascent');
-    expect(html).toContain('competitive');
+    expect(html).toContain('Duração: 40:00');
+    expect(html).toContain('data-component="score-banner"');
+    expect(html).toContain('13');
+    expect(html).toContain('data-component="round-timeline"');
     expect(html).toContain('Time Red');
     expect(html).toContain('Time Blue');
     expect(html).toContain('TenZ');
     expect(html).toContain('Enemy');
     expect(html).toContain('24/14/6');
-    expect(html).toContain('data-round-strip');
-    expect(html).toContain('data-match-score');
+    expect(html).toContain('+10');
+    expect(html).toContain('Immortal 3');
+  });
+
+  it('HS% indisponível vira travessão no scoreboard', () => {
+    const html = renderToStaticMarkup(<MatchView detail={detail} />);
+    expect(html).toContain('—');
   });
 
   it('estado vazio quando a partida não trouxe times/jogadores', () => {
