@@ -75,7 +75,7 @@ export function TrendLine({
           data={points}
           x={(point) => xScale(point.index)}
           y={(point) => yScale(point.value)}
-          stroke="var(--color-accent)"
+          stroke="var(--color-text-primary)"
           strokeWidth={2}
           shapeRendering="geometricPrecision"
         />
@@ -86,7 +86,7 @@ export function TrendLine({
             cx={xScale(point.index)}
             cy={yScale(point.value)}
             r={2.5}
-            fill="var(--color-accent)"
+            fill="var(--color-text-primary)"
           />
         ))}
 

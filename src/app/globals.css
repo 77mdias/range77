@@ -1,66 +1,67 @@
 @import 'tailwindcss';
 
 /* =============================================================================
- * VALCOACH — DESIGN TOKENS (fase 1a)
+ * VALCOACH — DESIGN TOKENS (v2 · direção minimalista clara)
  *
- * Convenções do sistema (regras do plano):
+ * Baseado no DESIGN.md da marca: canvas branco (#ffffff), tinta preta
+ * (#000000) e um único acento saturado amarelo (#f5f841). Fonte = system
+ * stack. Superfícies com raio discreto (sem chanfro, sem sombra dura).
+ *
+ * Convenções do sistema:
  *   - Componentes usam SOMENTE os tokens SEMÂNTICOS (ex.: `bg-surface`,
  *     `text-text-primary`) — nunca os primitivos direto. Os primitivos
- *     existem para compor semânticos e para a styleguide (fase 1b).
- *   - `border-radius` é SEMPRE 0: cantos são chanfrados (`chamfer-*`).
+ *     existem para compor semânticos e para a styleguide.
+ *   - Cantos arredondados via escala `--radius-*` (utilitários `rounded-*`).
  *   - Papéis de fonte: display/heading → `font-display`; números/stats →
- *     `font-hud` (tabular-nums embutido); corpo → `font-body`.
- *   - Sombra é DURA (sem blur): `shadow-hard`.
- *
- * As fontes (`--font-display`, `--font-hud`, `--font-body`) são variáveis
- * CSS do next/font aplicadas no <body> (layout.tsx) — por isso os utilitários
- * `font-*` abaixo as referenciam via var(), sem redefini-las aqui.
+ *     `font-hud` (tabular-nums embutido); corpo → `font-body`. Todos apontam
+ *     para o system stack (DESIGN.md não usa fontes custom).
+ *   - O amarelo (`--color-accent`) é um acento de SUPERFÍCIE (fundo de CTA,
+ *     chips) — texto sobre ele usa `text-on-accent` (tinta). Não usar
+ *     `text-accent` para texto corrido (contraste insuficiente no branco).
  * ========================================================================== */
 
 @theme {
   /* — Cores primitivas (não usar direto em componentes) — */
-  --color-void: #0f1923; /* fundo base — quase-preto azulado Riot */
-  --color-void-raised: #16212f; /* superfície elevada */
-  --color-void-hover: #1e2a3a; /* hover de superfície */
-  --color-steel-line: #2a3648; /* bordas/divisórias */
-  --color-steel-dim: #3f4b5e; /* bordas discretas/estados desabilitados */
-  --color-bone: #ece8e1; /* texto primário — off-white Riot */
-  --color-bone-dim: #9aa3af; /* texto secundário */
-  --color-blood: #ff4655; /* accent Riot */
-  --color-blood-hover: #ff6672;
-  --color-blood-dark: #8f2f35;
+  --color-canvas: #ffffff; /* fundo base — branco */
+  --color-canvas-soft: #f9fafb; /* superfície elevada — cinza bem claro */
+  --color-hover: #f4f4f5; /* hover de superfície */
+  --color-hairline: #e4e4e7; /* bordas/divisórias */
+  --color-ink: #000000; /* texto primário — preto */
+  --color-ink-soft: #18181b; /* títulos/ênfase */
+  --color-ink-mute: #71717a; /* texto secundário */
+  --color-primary: #f5f841; /* acento da marca — amarelo saturado */
+  --color-primary-hover: #e9ec35; /* hover do acento */
 
-  /* win/loss são, ao mesmo tempo, primitivo e semântico (nomes idênticos
-     no plano — uma única definição serve aos dois papéis). */
-  --color-win: #3fbf8f;
-  --color-loss: #ff4655;
+  /* win/loss são, ao mesmo tempo, primitivo e semântico — os componentes
+     de status (sparkline, charts, badges) leem estes nomes diretamente. */
+  --color-win: #16a34a;
+  --color-loss: #dc2626;
 
   /* — Tipografia: escala (tamanho + line-height por papel) — */
-  --text-display-xl: 72px;
-  --text-display-xl--line-height: 0.9;
-  --text-display-lg: 56px;
-  --text-display-lg--line-height: 0.95;
-  --text-display-md: 40px;
-  --text-display-md--line-height: 1;
-  --text-heading-lg: 28px;
-  --text-heading-lg--line-height: 1.1;
-  --text-heading-sm: 20px;
-  --text-heading-sm--line-height: 1.2;
+  --text-display-xl: 48px;
+  --text-display-xl--line-height: 1.05;
+  --text-display-lg: 34px;
+  --text-display-lg--line-height: 1.1;
+  --text-display-md: 26px;
+  --text-display-md--line-height: 1.2;
+  --text-heading-lg: 20px;
+  --text-heading-lg--line-height: 1.3;
+  --text-heading-sm: 16px;
+  --text-heading-sm--line-height: 1.4;
   --text-body-lg: 16px;
   --text-body-lg--line-height: 1.6;
   --text-body: 14px;
   --text-body--line-height: 1.6;
-  --text-label: 12px; /* rótulo: uppercase + tracking wide por contrato */
-  --text-label--line-height: 1.2;
-  --text-label--letter-spacing: 0.08em;
+  --text-label: 12px; /* rótulo: uppercase + tracking por contrato */
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.06em;
 
-  /* — Chamfer: cantos cortados (assinatura visual) — */
-  --chamfer-sm: 8px;
-  --chamfer-md: 12px;
-  --chamfer-lg: 18px;
-
-  /* — Sombra dura, sem blur — */
-  --shadow-hard: 4px 4px 0 rgb(0 0 0 / 0.45);
+  /* — Raio: cantos arredondados discretos (assinatura minimalista) — */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 20px;
 
   /* — Motion — */
   --duration-fast: 120ms;
@@ -71,22 +72,33 @@
 
 /* Semânticos em `@theme inline`: cada utilitário resolve o var() do
    primitivo no ponto de uso (ex.: `bg-surface` → background-color:
-   var(--color-void)). Trocar um primitivo re-mapeia todo o sistema. */
+   var(--color-canvas)). Trocar um primitivo re-mapeia todo o sistema. */
 @theme inline {
-  --color-surface: var(--color-void);
-  --color-surface-raised: var(--color-void-raised);
-  --color-surface-hover: var(--color-void-hover);
-  --color-line: var(--color-steel-line);
-  --color-text-primary: var(--color-bone);
-  --color-text-secondary: var(--color-bone-dim);
-  --color-accent: var(--color-blood);
-  --color-accent-hover: var(--color-blood-hover);
-  --color-on-accent: var(--color-void); /* conteúdo sobre fundo accent */
+  --color-surface: var(--color-canvas);
+  --color-surface-raised: var(--color-canvas-soft);
+  --color-surface-hover: var(--color-hover);
+  --color-line: var(--color-hairline);
+  --color-text-primary: var(--color-ink);
+  --color-text-secondary: var(--color-ink-mute);
+  --color-accent: var(--color-primary);
+  --color-accent-hover: var(--color-primary-hover);
+  --color-on-accent: var(--color-ink); /* conteúdo sobre fundo accent */
 }
 
-/* — Papéis de fonte (variáveis vêm do next/font no <body>) — */
+/* — Papéis de fonte (system stack — DESIGN.md não usa fontes custom) — */
+:root {
+  --font-display: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-hud: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+}
+
 @utility font-display {
   font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 @utility font-hud {
@@ -98,100 +110,25 @@
   font-family: var(--font-body);
 }
 
-/* =============================================================================
- * CHAMFER — cantos cortados via clip-path
- *
- * Corte diagonal de 45° no canto superior direito, no tamanho do token
- * `--chamfer-*`. Quem precisa de BORDA usa a técnica aninhada do
- * <ChamferBox> (ver src/components/ui/chamfer-box.tsx) — clip-path corta
- * bordas nativas, então `border` + `chamfer-*` juntos não funcionam.
- * ========================================================================== */
-@utility chamfer-sm {
-  clip-path: polygon(
-    0 0,
-    calc(100% - var(--chamfer-sm)) 0,
-    100% var(--chamfer-sm),
-    100% 100%,
-    0 100%
-  );
-}
-
-@utility chamfer-md {
-  clip-path: polygon(
-    0 0,
-    calc(100% - var(--chamfer-md)) 0,
-    100% var(--chamfer-md),
-    100% 100%,
-    0 100%
-  );
-}
-
-@utility chamfer-lg {
-  clip-path: polygon(
-    0 0,
-    calc(100% - var(--chamfer-lg)) 0,
-    100% var(--chamfer-lg),
-    100% 100%,
-    0 100%
-  );
-}
-
-/* Borda simulada — elemento EXTERNO do par aninhado: o `padding: 1px`
-   deixa aparecer 1px do background (cor da linha) ao redor do interno.
-   NUNCA sobrescrever o padding aqui (padding de conteúdo vai nos filhos). */
-@utility chamfer-box-bordered {
-  background: var(--color-line);
-  padding: 1px;
-}
-
-/* Borda simulada — elemento INTERNO do par aninhado: em fluxo normal
-   (não absoluto) para o externo manter altura intrínseca. A superfície
-   pode ser trocada via `--chamfer-inner-bg` (ex.: cards elevados). */
-@utility chamfer-box-inner {
-  background: var(--chamfer-inner-bg, var(--color-surface));
-}
-
 @layer base {
-  /* Regra do sistema: border-radius é SEMPRE 0 (chamfer no lugar). */
-  *,
-  ::before,
-  ::after {
-    border-radius: 0;
-  }
-
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   body {
-    background-color: var(--color-void);
-    color: var(--color-bone);
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
     font-family: var(--font-body);
   }
 
-  /* Textura de grid sutil (3% de opacidade), fixa atrás do conteúdo:
-     linhas verticais + horizontais em linear-gradient. */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background-image:
-      linear-gradient(var(--color-bone) 1px, transparent 1px),
-      linear-gradient(90deg, var(--color-bone) 1px, transparent 1px);
-    background-size: 44px 44px;
-    opacity: 0.03;
-  }
-
   ::selection {
-    background: var(--color-blood);
-    color: var(--color-void);
+    background: var(--color-primary);
+    color: var(--color-ink);
   }
 
   /* Foco sempre visível (contrato de acessibilidade dos componentes). */
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-text-primary);
     outline-offset: 2px;
   }
 

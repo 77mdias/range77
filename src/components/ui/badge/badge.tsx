@@ -15,9 +15,9 @@ export interface BadgeProps {
 }
 
 const VARIANT_CLASSES: Record<BadgeVariant, string> = {
-  win: 'border-win/40 bg-win/15 text-win',
-  loss: 'border-loss/40 bg-loss/15 text-loss',
-  accent: 'border-accent/40 bg-accent/15 text-accent',
+  win: 'border-win/30 bg-win/10 text-win',
+  loss: 'border-loss/30 bg-loss/10 text-loss',
+  accent: 'border-transparent bg-accent text-on-accent',
   neutral: 'border-line bg-surface-hover text-text-secondary',
 };
 
@@ -26,7 +26,7 @@ export function Badge({ variant = 'neutral', className, children }: BadgeProps) 
     <span
       data-variant={variant}
       className={cx(
-        'inline-flex items-center justify-center border px-2 py-0.5',
+        'inline-flex items-center justify-center rounded-full border px-2 py-0.5',
         'font-hud text-label uppercase tracking-wide',
         VARIANT_CLASSES[variant],
         className,

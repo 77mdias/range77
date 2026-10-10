@@ -4,10 +4,10 @@ import { cx } from '@/lib/cx';
 /**
  * Button — ação primária do design system.
  *
- * Variantes (`primary` blood com sombra dura, `secondary` outline, `ghost`)
- * e tamanhos sm/md/lg. O estado `loading` bloqueia a interação (evita
- * duplo submit), expõe `aria-busy` e troca o conteúdo por um spinner CSS.
- * Efeito de press: o botão desloca 2px e a sombra dura "encosta".
+ * Variantes: `primary` (acento amarelo, tinta escura), `secondary` (outline
+ * tinta) e `ghost` (texto). Tamanhos sm/md/lg. O estado `loading` bloqueia a
+ * interação (evita duplo submit), expõe `aria-busy` e troca o conteúdo por um
+ * spinner CSS. Efeito de press: leve compressão (`active:scale`).
  */
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
@@ -21,7 +21,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'bg-accent text-on-accent shadow-hard hover:bg-accent-hover',
+  primary: 'bg-accent text-on-accent hover:bg-accent-hover',
   secondary:
     'border border-text-primary bg-transparent text-text-primary hover:bg-surface-hover',
   ghost: 'bg-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary',
@@ -52,11 +52,11 @@ export function Button({
       data-loading={loading ? '' : undefined}
       className={cx(
         'inline-flex select-none items-center justify-center gap-2 whitespace-nowrap',
-        'font-hud font-semibold uppercase tracking-wide',
-        'transition-[transform,box-shadow,background-color,color] duration-[var(--duration-fast)] ease-out-expo',
-        'active:translate-x-0.5 active:translate-y-0.5 active:shadow-none',
+        'rounded-md font-medium',
+        'transition-[background-color,color,transform] duration-[var(--duration-fast)] ease-out-expo',
+        'active:scale-[0.98]',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        'disabled:active:translate-x-0 disabled:active:translate-y-0',
+        'disabled:active:scale-100',
         VARIANT_CLASSES[variant],
         SIZE_CLASSES[size],
         className,
@@ -66,7 +66,7 @@ export function Button({
         <span
           data-testid="button-spinner"
           aria-hidden="true"
-          className="inline-block size-4 animate-spin border-2 border-current border-t-transparent"
+          className="inline-block size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
         />
       ) : null}
       {children}

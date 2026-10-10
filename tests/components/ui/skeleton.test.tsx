@@ -3,15 +3,15 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { Skeleton } from '@/components/ui/skeleton';
 
 /**
- * SUITE TDD — Skeleton: bloco chanfrado pulsante com dimensões.
+ * SUITE TDD — Skeleton: bloco arredondado pulsante com dimensões.
  */
 
 describe('Skeleton', () => {
-  it('renderiza bloco pulsante chanfrado e decorativo', () => {
+  it('renderiza bloco pulsante arredondado e decorativo', () => {
     const html = renderToStaticMarkup(<Skeleton width="60%" height={16} />);
     expect(html).toContain('data-skeleton');
     expect(html).toContain('animate-pulse');
-    expect(html).toContain('chamfer-sm');
+    expect(html).toContain('rounded-md');
     expect(html).toContain('aria-hidden="true"');
   });
 

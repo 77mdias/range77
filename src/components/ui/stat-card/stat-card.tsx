@@ -33,7 +33,9 @@ export function StatCard({
   return (
     <Card label={label} className={className}>
       <div className="flex items-end justify-between gap-3">
-        <span className="font-hud text-display-md leading-none text-text-primary">{value}</span>
+        <span className="font-hud text-display-md font-semibold leading-none text-text-primary">
+          {value}
+        </span>
         {delta !== undefined ? (
           <span
             data-trend={up ? 'up' : 'down'}

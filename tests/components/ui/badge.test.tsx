@@ -16,7 +16,7 @@ describe('Badge', () => {
   it('renderiza as variantes win/loss/accent com as cores corretas', () => {
     expect(renderToStaticMarkup(<Badge variant="win">W</Badge>)).toContain('text-win');
     expect(renderToStaticMarkup(<Badge variant="loss">L</Badge>)).toContain('text-loss');
-    expect(renderToStaticMarkup(<Badge variant="accent">A</Badge>)).toContain('text-accent');
+    expect(renderToStaticMarkup(<Badge variant="accent">A</Badge>)).toContain('bg-accent');
   });
 
   it('mescla className extra', () => {

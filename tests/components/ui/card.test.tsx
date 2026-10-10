@@ -3,16 +3,16 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { Card } from '@/components/ui/card';
 
 /**
- * SUITE TDD — Card: superfície elevada chanfrada com header/corpo.
+ * SUITE TDD — Card: superfície elevada (fundo canvas-soft, borda hairline,
+ * raio discreto) com header/corpo.
  */
 
 describe('Card', () => {
-  it('usa a técnica aninhada do ChamferBox e a sombra dura', () => {
+  it('usa a superfície elevada com borda e raio', () => {
     const html = renderToStaticMarkup(<Card>corpo</Card>);
-    expect(html).toContain('chamfer-box-bordered');
-    expect(html).toContain('chamfer-box-inner');
-    expect(html).toContain('shadow-hard');
-    expect(html).toContain('--chamfer-inner-bg:var(--color-surface-raised)');
+    expect(html).toContain('rounded-lg');
+    expect(html).toContain('border-line');
+    expect(html).toContain('bg-surface-raised');
   });
 
   it('renderiza o header com label uppercase e slot de ação', () => {

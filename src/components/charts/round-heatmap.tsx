@@ -98,7 +98,7 @@ export function RoundHeatmap({
                       cx={cellCenterX}
                       cy={cell.y + cell.height - 5}
                       r={2}
-                      fill="var(--color-accent)"
+                      fill="var(--color-canvas)"
                     />
                   ) : null}
 
@@ -121,7 +121,8 @@ export function RoundHeatmap({
         </HeatmapRect>
       </svg>
       <p className="mt-1 text-label uppercase text-text-secondary">
-        Verde = round do time {teamId} · intensidade = abates · ponto osso = plant · accent = defuse
+        Verde = round do time {teamId} · intensidade = abates · ponto preto = plant · ponto branco =
+        defuse
       </p>
     </div>
   );

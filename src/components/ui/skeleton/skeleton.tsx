@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import { cx } from '@/lib/cx';
 
 /**
- * Skeleton — bloco chanfrado pulsante para estados de carregamento.
+ * Skeleton — bloco arredondado pulsante para estados de carregamento.
  * Dimensões via props/className; `aria-hidden` (puramente decorativo).
  */
 
@@ -18,7 +18,7 @@ export function Skeleton({ width, height, className }: SkeletonProps) {
       aria-hidden="true"
       data-skeleton
       style={{ width, height }}
-      className={cx('block animate-pulse bg-surface-hover chamfer-sm', className)}
+      className={cx('block animate-pulse rounded-md bg-surface-hover', className)}
     />
   );
 }

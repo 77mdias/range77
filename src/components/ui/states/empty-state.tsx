@@ -22,7 +22,7 @@ export function EmptyState({ title, description, action, className }: EmptyState
         className,
       )}
     >
-      <p className="font-display text-heading-lg uppercase text-text-primary">{title}</p>
+      <p className="font-display text-heading-lg text-text-primary">{title}</p>
       {description !== undefined ? (
         <p className="max-w-md text-body text-text-secondary">{description}</p>
       ) : null}

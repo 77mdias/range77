@@ -6,4 +6,5 @@
 export { AgentRadar, type AgentRadarProps } from './agent-radar';
 export { MapWinrateBars, type MapWinrateBarsProps } from './map-winrate-bars';
 export { RoundHeatmap, type RoundHeatmapProps } from './round-heatmap';
+export { RrTrendChart, type RrTrendChartProps } from './rr-trend-chart';
 export { TrendLine, type TrendLineProps } from './trend-line';

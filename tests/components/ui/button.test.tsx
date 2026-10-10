@@ -28,11 +28,11 @@ describe('Button', () => {
     expect(screen.getByRole('button').className).toContain('bg-transparent');
   });
 
-  it('aplica o efeito de press e a sombra dura', () => {
+  it('aplica o efeito de press (compressão no clique)', () => {
     render(<Button>Press</Button>);
     const className = screen.getByRole('button').className;
-    expect(className).toContain('shadow-hard');
-    expect(className).toContain('active:translate-x-0.5');
+    expect(className).toContain('rounded-md');
+    expect(className).toContain('active:scale-[0.98]');
   });
 
   it('dispara onClick', () => {

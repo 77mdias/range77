@@ -45,7 +45,7 @@ export function MatchRow({
   const content = (
     <>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-display text-heading-sm uppercase text-text-primary">{map}</p>
+        <p className="truncate font-display text-heading-sm text-text-primary">{map}</p>
         <time className="text-body text-text-secondary">{relative}</time>
       </div>
 

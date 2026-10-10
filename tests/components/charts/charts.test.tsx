@@ -90,7 +90,7 @@ describe('AgentRadar', () => {
       expect(html).toContain(axis);
     }
     expect(html).toContain('<polygon');
-    expect(html).toContain('Jett (accent) vs. média do jogador');
+    expect(html).toContain('Jett (tinta) vs. média do jogador');
   });
 
   it('agente ausente nas agregações → estado vazio', () => {

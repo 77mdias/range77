@@ -104,14 +104,20 @@ export function AgentRadar({ agents, agentKey, size = 260, className }: AgentRad
 
         <polygon
           points={toPointsAttribute(agentPolygon)}
-          fill="var(--color-accent)"
-          fillOpacity={0.15}
-          stroke="var(--color-accent)"
+          fill="var(--color-text-primary)"
+          fillOpacity={0.08}
+          stroke="var(--color-text-primary)"
           strokeWidth={2}
         />
 
         {agentPolygon.map((point, index) => (
-          <circle key={axes[index]!.axis} cx={point.x} cy={point.y} r={3} fill="var(--color-accent)" />
+          <circle
+            key={axes[index]!.axis}
+            cx={point.x}
+            cy={point.y}
+            r={3}
+            fill="var(--color-text-primary)"
+          />
         ))}
 
         {axes.map((axis, index) => {
@@ -134,7 +140,7 @@ export function AgentRadar({ agents, agentKey, size = 260, className }: AgentRad
         })}
       </svg>
       <figcaption className="mt-1 text-label uppercase text-text-secondary">
-        {selectedKey} (accent) vs. média do jogador (pontilhado)
+        {selectedKey} (tinta) vs. média do jogador (pontilhado)
       </figcaption>
     </figure>
   );
