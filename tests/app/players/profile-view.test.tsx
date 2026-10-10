@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
+  AgentsTab,
   GroupedStatTable,
+  MapsTab,
   MatchesTab,
   PlayerProfileView,
 } from '@/app/players/[region]/[name]/[tag]/profile-view';
 import type { PlayerOverview } from '@/services/tracker/player-overview';
+import type { GroupedStat } from '@/contracts/tracker';
 
 /**
  * SUITE TDD — apresentação do perfil (RSC síncrono). O `Tabs` só renderiza o
@@ -88,17 +91,30 @@ const overview: PlayerOverview = {
 };
 
 describe('PlayerProfileView', () => {
-  it('renderiza header, métricas, avaliação e hooks (aba ativa)', () => {
+  it('renderiza header do jogador, KPI strip, avaliação e hooks (aba ativa)', () => {
     const html = renderToStaticMarkup(<PlayerProfileView overview={overview} />);
+    expect(html).toContain('data-component="player-header"');
     expect(html).toContain('Player One');
     expect(html).toContain('#BR1');
-    expect(html).toContain('KDR');
+    expect(html).toContain('data-component="kpi-tile"');
+    expect(html).toContain('K/D');
     expect(html).toContain('HS%');
-    expect(html).toContain('ACS');
+    expect(html).toContain('KAST');
+    expect(html).toContain('▲ +50 ACS');
     expect(html).toContain('Mira: Excelente');
     expect(html).toContain('Impacto: Equilibrado');
     expect(html).toContain('1 vitórias seguidas');
     expect(html).toContain('A mira é um ponto forte');
+  });
+
+  it('tendência de queda usa tom negativo no KPI', () => {
+    const down: PlayerOverview = {
+      ...overview,
+      trend: { ...overview.trend, direction: 'down', delta: -30 },
+    };
+    const html = renderToStaticMarkup(<PlayerProfileView overview={down} />);
+    expect(html).toContain('▼ -30 ACS');
+    expect(html).toContain('text-loss');
   });
 
   it('expõe as 4 abas', () => {
@@ -145,5 +161,81 @@ describe('GroupedStatTable', () => {
     expect(
       renderToStaticMarkup(<GroupedStatTable rows={[]} keyLabel="Mapa" />),
     ).toContain('Sem dados');
+  });
+});
+
+function groupStat(key: string, overrides: Partial<GroupedStat> = {}): GroupedStat {
+  return {
+    matches: 10,
+    wins: 6,
+    losses: 4,
+    winrate: 60,
+    avgKills: 15,
+    avgDeaths: 12,
+    avgAssists: 5,
+    kda: 1.67,
+    avgAcs: 230,
+    avgHsPercentage: 25,
+    ...overrides,
+    key: overrides.key ?? key,
+  };
+}
+
+describe('AgentsTab', () => {
+  it('classifica tier, nota tática e mantém radar + tabela', () => {
+    const agents = [
+      groupStat('Jett', { winrate: 65, avgAcs: 265, avgKills: 18, avgDeaths: 11 }),
+      groupStat('Cypher', { key: 'Cypher', winrate: 40, avgKills: 10, avgDeaths: 15 }),
+      groupStat('Omen', { key: 'Omen', winrate: 52, avgKills: 13, avgDeaths: 12 }),
+    ];
+    const html = renderToStaticMarkup(<AgentsTab agents={agents} />);
+    expect(html).toContain('data-agent-cards');
+    expect(html).toContain('Tier S main');
+    expect(html).toContain('Status tático // recomendado:');
+    expect(html).toContain('Bottleneck');
+    expect(html).toContain('Alerta // gargalo crítico:');
+    expect(html).toContain('Solid sec');
+    expect(html).toContain('// Viável:');
+  });
+
+  it('role ausente no payload não quebra o card', () => {
+    const html = renderToStaticMarkup(<AgentsTab agents={[groupStat('Phoenix', { winrate: 47 })]} />);
+    expect(html).toContain('Phoenix');
+    expect(html).toContain('10 partidas');
+  });
+
+  it('K/D derivado exibe 2 casas e HS% nulo vira travessão', () => {
+    const html = renderToStaticMarkup(
+      <AgentsTab agents={[groupStat('Jett', { avgKills: 18, avgDeaths: 11, avgHsPercentage: null })]} />,
+    );
+    expect(html).toContain('1.64');
+    expect(html).toContain('—');
+  });
+
+  it('estado vazio sem agregações de agente', () => {
+    expect(renderToStaticMarkup(<AgentsTab agents={[]} />)).toContain('Sem agentes');
+  });
+});
+
+describe('MapsTab', () => {
+  it('classifica o map pool e usa barra única de WR', () => {
+    const maps = [
+      groupStat('Ascent', { winrate: 72, matches: 18, wins: 13, losses: 5 }),
+      groupStat('Breeze', { winrate: 31, matches: 8, wins: 2, losses: 6 }),
+      groupStat('Haven', { winrate: 55 }),
+      groupStat('Split', { winrate: 48 }),
+    ];
+    const html = renderToStaticMarkup(<MapsTab maps={maps} />);
+    expect(html).toContain('data-map-cards');
+    expect(html).toContain('Melhor mapa');
+    expect(html).toContain('Pior mapa');
+    expect(html).toContain('Estável');
+    expect(html).toContain('Neutro');
+    expect(html).toContain('WR 72%');
+    expect(html).toContain('13V');
+  });
+
+  it('estado vazio sem agregações de mapa', () => {
+    expect(renderToStaticMarkup(<MapsTab maps={[]} />)).toContain('Sem mapas');
   });
 });

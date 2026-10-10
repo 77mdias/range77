@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react';
+import { AgentCard, MapCard, type AgentCardProps } from '@/components/agents';
+import { AgentRadar, TrendLine } from '@/components/charts';
 import { Badge } from '@/components/ui/badge';
-import { AgentRadar, MapWinrateBars, TrendLine } from '@/components/charts';
 import { Card } from '@/components/ui/card';
-import { MatchRow } from '@/components/ui/match-row';
-import { Sparkline } from '@/components/ui/sparkline';
-import { StatCard } from '@/components/ui/stat-card';
+import { KpiTile } from '@/components/ui/kpi-tile';
 import { EmptyState } from '@/components/ui/states';
 import {
   Table,
@@ -15,18 +14,32 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, type TabItem } from '@/components/ui/tabs';
-import type { GroupedStat, MatchSummary } from '@/contracts/tracker';
+import { MatchHistoryTable, PlayerHeader } from '@/components/player';
+import {
+  MAIN_WINRATE_THRESHOLD,
+  buildAgentCardProfiles,
+  buildMapCardProfiles,
+  type AgentCardProfile,
+  type AgentTier,
+  type MapPoolStatus,
+} from '@/services/analytics/agent-map-profiles';
+import type { AgentStat, GroupedStat, MapStat, MatchSummary } from '@/contracts/tracker';
 import type { PlayerOverview } from '@/services/tracker/player-overview';
 
 /**
- * PlayerProfileView — apresentação PURA (síncrona) do perfil: header do
- * jogador, StatCards do envelope de combate, streaks/avaliação e as abas
+ * PlayerProfileView — apresentação PURA (síncrona) do perfil no design
+ * Stitch: PlayerHeader, strip de KPIs, tendência, avaliação e abas
  * Visão Geral | Partidas | Agentes | Mapas. Separada da página assíncrona
  * para ser testável com `renderToStaticMarkup`.
  */
 
 function formatPct(value: number | null | undefined): string {
   return value === null || value === undefined ? '—' : `${value}%`;
+}
+
+/** K/D de exibição (presentacional; divisão por zero → kills). */
+function displayKd(kills: number, deaths: number): number {
+  return deaths === 0 ? kills : kills / deaths;
 }
 
 export function OverviewTab({ overview }: { readonly overview: PlayerOverview }) {
@@ -39,17 +52,26 @@ export function OverviewTab({ overview }: { readonly overview: PlayerOverview })
       ? 'Sem sequência'
       : `${current.length} ${current.result === 'win' ? 'vitórias' : 'derrotas'} seguidas`;
 
+  const trendUp = overview.trend.direction === 'up';
+  const trendDown = overview.trend.direction === 'down';
+  const trendAccent = trendUp
+    ? `▲ +${overview.trend.delta} ACS`
+    : trendDown
+      ? `▼ ${overview.trend.delta} ACS`
+      : undefined;
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="KDR" value={metrics.kdr} />
-        <StatCard label="HS%" value={formatPct(metrics.hsPercentage)} />
-        <StatCard
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4" data-kpi-strip>
+        <KpiTile label="K/D" value={metrics.kdr} trailing={`${metrics.matches} partidas`} />
+        <KpiTile label="HS%" value={formatPct(metrics.hsPercentage)} />
+        <KpiTile
           label="ACS"
           value={metrics.acs}
-          sparkline={<Sparkline points={overview.trend.perMatch} ariaLabel="Tendência de ACS" />}
+          accent={trendAccent}
+          accentTone={trendUp ? 'positive' : trendDown ? 'negative' : 'neutral'}
         />
-        <StatCard label="KAST" value={formatPct(metrics.kast)} />
+        <KpiTile label="KAST" value={formatPct(metrics.kast)} trailing={`${metrics.rounds} rounds`} />
       </div>
 
       <Card label="Tendência de ACS">
@@ -112,25 +134,23 @@ export function MatchesTab({
   }
 
   return (
-    <Card label={`Últimas ${matches.length} partidas`}>
-      <ul className="-mx-5 -my-5 divide-y divide-line">
-        {matches.map((match) => (
-          <li key={match.matchId}>
-            <MatchRow
-              map={match.map}
-              result={match.result}
-              kills={match.kills}
-              deaths={match.deaths}
-              assists={match.assists}
-              acs={match.acs}
-              hsPercentage={match.hsPercentage ?? undefined}
-              playedAt={match.startedAt}
-              href={`/matches/${match.matchId}?region=${region}`}
-            />
-          </li>
-        ))}
-      </ul>
-    </Card>
+    <MatchHistoryTable
+      matches={matches.map((match) => ({
+        id: match.matchId,
+        agent: match.agent,
+        map: match.map,
+        result: match.result,
+        scoreTeam: match.score.us,
+        scoreEnemy: match.score.them,
+        kills: match.kills,
+        deaths: match.deaths,
+        assists: match.assists,
+        kd: displayKd(match.kills, match.deaths),
+        acs: match.acs,
+        hsPercentage: match.hsPercentage,
+        href: `/matches/${match.matchId}?region=${region}`,
+      }))}
+    />
   );
 }
 
@@ -178,6 +198,129 @@ export function GroupedStatTable({
   );
 }
 
+/** Rótulos/tom por tier — mapeamento de apresentação (texto puro). */
+const TIER_LABELS: Record<AgentTier, string> = {
+  main: 'Tier S main',
+  solid: 'Solid sec',
+  bottleneck: 'Bottleneck',
+};
+
+function toAgentCardProps(profile: AgentCardProfile): AgentCardProps {
+  const tacticalNote: AgentCardProps['tacticalNote'] =
+    profile.tier === 'bottleneck'
+      ? {
+          tone: 'warning',
+          title: 'Alerta // gargalo crítico:',
+          description: `Win rate de ${profile.winRatePercent}% derruba o elo — revise o kit e as rotinas com ${profile.name}.`,
+        }
+      : profile.tier === 'main'
+        ? {
+            tone: 'positive',
+            title: 'Status tático // recomendado:',
+            description: `Mantenha ${profile.name} como main — impacto consistente (${profile.winRatePercent}% WR).`,
+          }
+        : {
+            tone: 'neutral',
+            title: '// Viável:',
+            description: `${profile.name} segura como opção no pool (${profile.winRatePercent}% WR).`,
+          };
+
+  return {
+    name: profile.name,
+    matches: profile.matches,
+    winRate: `${profile.winRatePercent}%`,
+    tier: profile.tier,
+    tierLabel: TIER_LABELS[profile.tier],
+    stats: [
+      { label: 'ACS', value: String(profile.avgAcs) },
+      { label: 'K/D', value: profile.kdRatio.toFixed(2) },
+      { label: 'HS%', value: profile.hsPercent === null ? '—' : `${profile.hsPercent}%` },
+    ],
+    progresses: [
+      {
+        label: 'Win rate',
+        percent: profile.winRatePercent,
+        displayValue: `${profile.winRatePercent}%`,
+      },
+      {
+        label: 'Headshot',
+        percent: profile.hsPercent ?? 0,
+        displayValue: profile.hsPercent === null ? '—' : `${profile.hsPercent}%`,
+      },
+    ],
+    tacticalNote,
+  };
+}
+
+export function AgentsTab({ agents }: { readonly agents: readonly AgentStat[] }) {
+  const profiles = buildAgentCardProfiles(agents);
+
+  if (profiles.length === 0) {
+    return (
+      <EmptyState
+        title="Sem agentes"
+        description="Nenhuma partida válida para computar o desempenho por agente."
+      />
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3" data-agent-cards>
+        {profiles.map((profile) => (
+          <AgentCard key={profile.name} {...toAgentCardProps(profile)} />
+        ))}
+      </div>
+      <AgentRadar agents={agents} />
+      <GroupedStatTable rows={agents} keyLabel="Agente" />
+    </div>
+  );
+}
+
+const STATUS_LABELS: Record<MapPoolStatus, string> = {
+  best: 'Melhor mapa',
+  stable: 'Estável',
+  neutral: 'Neutro',
+  worst: 'Pior mapa',
+};
+
+export function MapsTab({ maps }: { readonly maps: readonly MapStat[] }) {
+  const profiles = buildMapCardProfiles(maps);
+
+  if (profiles.length === 0) {
+    return (
+      <EmptyState
+        title="Sem mapas"
+        description="Nenhuma partida válida para computar o desempenho por mapa."
+      />
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-map-cards>
+        {profiles.map((profile) => (
+          <MapCard
+            key={profile.name}
+            map={profile.name}
+            status={profile.status}
+            statusLabel={STATUS_LABELS[profile.status]}
+            winRate={`${profile.winRatePercent}%`}
+            matches={profile.matches}
+            record={{ wins: profile.wins, losses: profile.losses }}
+            winPercent={profile.winRatePercent}
+          />
+        ))}
+      </div>
+      <p className="font-hud text-label uppercase text-text-secondary">
+        Referência de benchmark: {MAIN_WINRATE_THRESHOLD}% WR — split ATK/DEF chega com o
+        endpoint de detalhe por mapa.
+      </p>
+      <GroupedStatTable rows={maps} keyLabel="Mapa" />
+    </div>
+  );
+}
+
 export interface PlayerProfileViewProps {
   readonly overview: PlayerOverview;
   /** Slot de ação do header (ex.: botão Seguir — injetado pela página). */
@@ -197,36 +340,26 @@ export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewP
     {
       id: 'agents',
       label: 'Agentes',
-      content: (
-        <div className="flex flex-col gap-4">
-          <AgentRadar agents={overview.agents} />
-          <GroupedStatTable rows={overview.agents} keyLabel="Agente" />
-        </div>
-      ),
+      content: <AgentsTab agents={overview.agents} />,
     },
     {
       id: 'maps',
       label: 'Mapas',
-      content: (
-        <div className="flex flex-col gap-4">
-          <MapWinrateBars stats={overview.maps} />
-          <GroupedStatTable rows={overview.maps} keyLabel="Mapa" />
-        </div>
-      ),
+      content: <MapsTab maps={overview.maps} />,
     },
   ];
 
   return (
     <div data-player-profile className="flex flex-col gap-6">
-      <header className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
-        <div>
-          <p className="text-label uppercase text-accent">{player.region.toUpperCase()} · PC</p>
-          <h1 className="font-display text-display-md uppercase text-text-primary" data-player-name>
-            {player.name} <span className="text-text-secondary">#{player.tag}</span>
-          </h1>
-        </div>
-        {headerAction !== undefined ? headerAction : null}
-      </header>
+      <PlayerHeader
+        name={player.name}
+        tag={player.tag}
+        meta={[
+          { label: 'Região', value: player.region.toUpperCase() },
+          { label: 'Plataforma', value: player.platform.toUpperCase() },
+        ]}
+        actions={headerAction}
+      />
 
       <Tabs items={items} ariaLabel="Seções do perfil" />
     </div>
