@@ -117,7 +117,7 @@ const FEATURE_MODULES = [
     description:
       'Converse com o modelo sobre decisões específicas: "Por que perdi o clutch 1v2 no round 18?"',
     statLabel: 'Motor de conversa',
-    statValue: 'MiniMax 2.5',
+    statValue: 'MiniMax-Val-03',
   },
 ] as const;
 
@@ -268,6 +268,19 @@ export function HomeLanding() {
                 />
               </div>
             ))}
+          </div>
+
+          {/* Bloco de eficiência do Stitch: conteúdo estático da arquitetura. */}
+          <div
+            data-token-efficiency
+            className="mt-3 border border-line bg-surface px-4 py-3 text-center shadow-hard-2"
+          >
+            <p className="font-hud text-label uppercase text-text-secondary">
+              Eficiência de token computacional
+            </p>
+            <p className="mt-1 font-display text-display-lg font-bold uppercase tracking-tight text-text-primary">
+              98.5% redução <span className="text-text-secondary">//</span> zero data loss
+            </p>
           </div>
         </div>
       </section>

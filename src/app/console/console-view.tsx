@@ -80,6 +80,12 @@ export function ConsoleView() {
           data-console-inspector
           className="flex flex-col gap-3 rounded-md border border-line bg-surface p-3"
         >
+          <p
+            data-payload-simulated
+            className="border border-line bg-surface-raised px-2 py-1 font-hud text-label uppercase text-text-secondary"
+          >
+            Payload simulado • NEXUS#BR1 é um exemplo ilustrativo (demo)
+          </p>
           <LayerTabs
             ariaLabel="Camada do payload"
             options={CONSOLE_LAYERS.map((layer) => ({ id: layer.id, label: layer.label }))}

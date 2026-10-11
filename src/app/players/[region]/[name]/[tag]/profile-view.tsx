@@ -228,7 +228,7 @@ export interface PlayerProfileViewProps {
 /** Seções da página única do perfil (âncoras no topo, sem abas). */
 const PROFILE_SECTIONS = [
   { id: 'visao-geral', label: 'Visão Geral' },
-  { id: 'partidas', label: 'Partidas' },
+  { id: 'partidas', label: 'Partidas & Breakdown' },
   { id: 'agentes-mapas', label: 'Agentes & Mapas' },
 ] as const;
 
@@ -299,7 +299,7 @@ export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewP
         <OverviewTab overview={overview} />
       </ProfileSection>
 
-      <ProfileSection id="partidas" title="Partidas">
+      <ProfileSection id="partidas" title="Partidas & Breakdown">
         <MatchesTab matches={overview.matches} region={player.region} rrDeltas={rrDeltas} />
       </ProfileSection>
 

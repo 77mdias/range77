@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import type { ReactNode } from 'react';
 import { Geist, JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 import { AppShell } from '@/components/layout/app-shell';
+import { NavUser } from '@/components/layout/nav-user';
+import { Skeleton } from '@/components/ui/skeleton';
 import './globals.css';
 
 /**
@@ -45,7 +48,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${spaceGrotesk.variable} ${jetBrainsMono.variable} ${geist.variable}`}
     >
       <body className="font-body">
-        <AppShell>{children}</AppShell>
+        <AppShell
+          user={
+            <Suspense fallback={<Skeleton width={128} height={30} />}>
+              <NavUser />
+            </Suspense>
+          }
+        >
+          {children}
+        </AppShell>
       </body>
     </html>
   );

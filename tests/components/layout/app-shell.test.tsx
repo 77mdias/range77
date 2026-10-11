@@ -28,9 +28,9 @@ describe('AppShell', () => {
     expect(html).toContain('href="/"');
     expect(html).toContain('Busca');
     expect(html).toContain('href="/dashboard"');
-    expect(html).toContain('Dashboard');
+    expect(html).toContain('Visão Geral');
     expect(html).toContain('href="/console"');
-    expect(html).toContain('Console');
+    expect(html).toContain('Console API &amp; IA');
     expect(html).toContain('aria-current="page"');
   });
 

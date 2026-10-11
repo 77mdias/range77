@@ -67,6 +67,17 @@ describe('HomePage', () => {
     expect(output).toContain('actionable_coach_diagnosis.md');
   });
 
+  it('renderiza o bloco de eficiência de token computacional (Stitch)', () => {
+    const output = html();
+    expect(output).toContain('data-token-efficiency');
+    expect(output).toContain('Eficiência de token computacional');
+    expect(output).toContain('98.5% redução');
+    expect(output).toContain('zero data loss');
+    // Padronização do nome do motor (D.3)
+    expect(output).toContain('MiniMax-Val-03');
+    expect(output).not.toContain('MiniMax 2.5');
+  });
+
   it('renderiza os 4 módulos do ecossistema', () => {
     const output = html();
     for (const title of [

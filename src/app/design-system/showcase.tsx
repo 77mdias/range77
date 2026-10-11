@@ -1248,7 +1248,7 @@ export function DesignSystemShowcase() {
                 title="Sandbox de IA interativo"
                 description="Converse com o modelo sobre decisões específicas: “Por que perdi o clutch 1v2 no round 18?”"
                 statLabel="Motor de conversa"
-                statValue="MiniMax 2.5"
+                statValue="MiniMax-Val-03"
               />
             </div>
           </div>

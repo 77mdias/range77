@@ -50,6 +50,9 @@ describe('ConsoleView', () => {
     expect(output).toContain('SCHEMA: PROTOCOL_V4.JSON');
     expect(output).toContain('raw_henrikdev.payload.json');
     expect(output).toContain('raw_kill_events');
+    // Payload ilustrativo é rotulado como simulado (regra: nada passa por real)
+    expect(output).toContain('data-payload-simulated');
+    expect(output).toContain('exemplo ilustrativo');
     for (const layer of CONSOLE_LAYERS) {
       expect(output).toContain(layer.label);
     }
