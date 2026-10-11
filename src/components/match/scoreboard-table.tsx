@@ -19,6 +19,8 @@ export interface ScoreboardPlayer {
   readonly tag?: string;
   readonly rank?: string;
   readonly agent: string;
+  /** Ícone do agente (asset local); ausente → iniciais. */
+  readonly agentIconSrc?: string | null;
   readonly acs: number;
   readonly kills: number;
   readonly deaths: number;
@@ -116,7 +118,19 @@ export function ScoreboardTable({ teams, ariaLabel, className }: ScoreboardTable
                       </span>
                     ) : null}
                   </TableCell>
-                  <TableCell className="font-hud text-label uppercase">{player.agent}</TableCell>
+                  <TableCell>
+                    <span className="flex items-center gap-1.5">
+                      {player.agentIconSrc ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- ícone local do agente
+                        <img
+                          src={player.agentIconSrc}
+                          alt=""
+                          className="size-5 rounded-full border border-line object-cover"
+                        />
+                      ) : null}
+                      <span className="font-hud text-label uppercase">{player.agent}</span>
+                    </span>
+                  </TableCell>
                   <TableCell numeric>{player.acs}</TableCell>
                   <TableCell numeric className="font-hud text-label">
                     {player.kills}/{player.deaths}/{player.assists}
@@ -146,8 +160,8 @@ export function ScoreboardTable({ teams, ariaLabel, className }: ScoreboardTable
       ))}
 
       <footer className="mt-2 flex items-center gap-2 border-t border-line pt-2 font-hud text-label uppercase text-text-secondary">
-        <Badge variant="neutral">Formato Riot V3</Badge>
-        Clique na linha para replay telemétrico
+        <Badge variant="neutral">Fonte: HenrikDev v4</Badge>
+        Scoreboard normalizado — KAST/ECON chegam com o contrato estendido
       </footer>
     </div>
   );

@@ -21,6 +21,8 @@ export interface MatchHistoryEntry {
   readonly id: string;
   /** Indisponível em alguns payloads → renderiza `—`. */
   readonly agent?: string | null;
+  /** Ícone do agente (asset local); ausente → marcador neutro. */
+  readonly agentIconSrc?: string | null;
   readonly map: string;
   readonly result: MatchResult;
   readonly scoreTeam: number;
@@ -105,7 +107,16 @@ export function MatchHistoryTable({
                 </TableCell>
                 <TableCell>
                   <span className="flex items-center gap-1.5 font-semibold">
-                    <span aria-hidden="true" className="size-2 rounded-full bg-text-primary" />
+                    {match.agentIconSrc !== undefined && match.agentIconSrc !== null ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- ícone local do agente
+                      <img
+                        src={match.agentIconSrc}
+                        alt=""
+                        className="size-4 rounded-full border border-line object-cover"
+                      />
+                    ) : (
+                      <span aria-hidden="true" className="size-2 rounded-full bg-text-primary" />
+                    )}
                     {match.agent ?? '—'}
                   </span>
                 </TableCell>

@@ -40,6 +40,7 @@
   --color-primary: #f5f841; /* acento de superfície — amarelo neon */
   --color-primary-hover: #e9ec35; /* hover do acento */
   --color-primary-ink: #616200; /* acento de TEXTO sobre claro (olive) */
+  --color-tertiary: #2c676b; /* acento técnico (teal) — labels de contexto */
 
   /* win/loss são, ao mesmo tempo, primitivo e semântico — os componentes
      de status (sparkline, charts, badges) leem estes nomes diretamente. */

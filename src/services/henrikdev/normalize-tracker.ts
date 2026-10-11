@@ -15,6 +15,10 @@ import type {
   MatchSummary,
   RoundOutcome,
 } from '@/contracts/tracker';
+import type {
+  HenrikDevAccountV1,
+  HenrikDevMmrV2,
+} from '@/contracts/henrikdev';
 import { roundTo } from '@/services/analytics/combat';
 
 /**
@@ -283,6 +287,39 @@ export function resolveAccountLevel(
     }
   }
   return latest?.level ?? null;
+}
+
+/**
+ * Ícone do cartão de jogador (v1 account `card`): prefere `large`, cai para
+ * `small`/`wide`. `null` quando nada chegou — a view usa o fallback.
+ */
+export function resolveAccountCard(account: HenrikDevAccountV1 | null | undefined): string | null {
+  const card = account?.card;
+  if (card === undefined) {
+    return null;
+  }
+  return card.large ?? card.small ?? card.wide ?? null;
+}
+
+/** Resumo do ranque atual (v2 mmr) para o header do perfil. */
+export interface PlayerRankSummary {
+  /** Tier formatado (ex.: "Ascendant 3"); `null` se ausente. */
+  readonly tier: string | null;
+  /** Imagem oficial do elo (v2 mmr `images`); `null` se ausente. */
+  readonly imageSrc: string | null;
+  /** RR dentro do tier atual (0–100, `ranking_in_tier`); `null` se ausente. */
+  readonly rrInTier: number | null;
+}
+
+/** Normaliza o payload v2/mmr com tolerância a campos ausentes. */
+export function resolveRankSummary(mmr: HenrikDevMmrV2 | null | undefined): PlayerRankSummary {
+  if (mmr === null || mmr === undefined) {
+    return { tier: null, imageSrc: null, rrInTier: null };
+  }
+  const tier = typeof mmr.currenttierpatched === 'string' ? mmr.currenttierpatched : null;
+  const imageSrc = mmr.images?.small ?? mmr.images?.large ?? mmr.images?.triangle_down ?? null;
+  const rrInTier = typeof mmr.ranking_in_tier === 'number' ? mmr.ranking_in_tier : null;
+  return { tier, imageSrc, rrInTier };
 }
 
 /** Scoreboard completo (todos os jogadores da partida). */

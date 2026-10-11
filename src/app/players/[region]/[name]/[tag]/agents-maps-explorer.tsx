@@ -27,7 +27,13 @@ import { AgentsTab, MapsTab } from './agents-maps-sections';
  * este componente só orquestra estado + render.
  */
 
-export function AgentsMapsExplorer({ matches }: { readonly matches: readonly MatchSummary[] }) {
+export interface AgentsMapsExplorerProps {
+  readonly matches: readonly MatchSummary[];
+  /** Elo de referência exibido à direita da FilterBar (tier atual real). */
+  readonly eloBase?: string;
+}
+
+export function AgentsMapsExplorer({ matches, eloBase }: AgentsMapsExplorerProps) {
   const [season, setSeason] = useState(FILTER_ALL);
   const [queue, setQueue] = useState(FILTER_ALL);
   const [minMatches, setMinMatches] = useState(false);
@@ -62,11 +68,21 @@ export function AgentsMapsExplorer({ matches }: { readonly matches: readonly Mat
             onChange={setMinMatches}
           />
         </div>
-        <span
-          data-sample-total
-          className="font-hud text-label uppercase text-text-secondary"
-        >
-          Amostra total: {filtered.length} partidas
+        <span className="flex items-center gap-3">
+          <span
+            data-sample-total
+            className="border border-line bg-surface px-1.5 py-0.5 font-hud text-label uppercase text-text-secondary"
+          >
+            Amostra total: {filtered.length} partidas
+          </span>
+          {eloBase !== undefined ? (
+            <span
+              data-elo-base
+              className="border border-line bg-accent px-1.5 py-0.5 font-hud text-label font-bold uppercase text-text-primary"
+            >
+              Elo base: {eloBase}
+            </span>
+          ) : null}
         </span>
       </FilterBar>
 

@@ -17,6 +17,7 @@ import {
   computeTeamTotals,
   selectMatchMvp,
 } from '@/services/analytics/match-breakdown';
+import { agentArtSrc, agentIconSrc, mapMinimapSrc } from '@/lib/valorant-assets';
 import { formatRelativeTime } from '@/lib/format/relative-time';
 
 /**
@@ -87,6 +88,7 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
             tag: row.tag === '' ? undefined : row.tag,
             rank: row.tier ?? undefined,
             agent: row.agent,
+            agentIconSrc: agentIconSrc(row.agent),
             acs: row.acs,
             kills: row.kills,
             deaths: row.deaths,
@@ -109,14 +111,19 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
           `Duração: ${formatDuration(detail.gameLengthMs)}`,
           `Jogada: ${formatRelativeTime(detail.startedAt)}`,
           `Região: ${detail.region.toUpperCase()}`,
-          `Season: ${detail.season ?? 'Ato atual'}`,
+          `Match ID: ${detail.matchId}`,
         ]}
       />
 
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-6">
         <div className="grid gap-3 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <ScoreBanner scoreTeam={scoreA} scoreEnemy={scoreB} map={detail.map} />
+            <ScoreBanner
+              scoreTeam={scoreA}
+              scoreEnemy={scoreB}
+              map={detail.map}
+              mapImageSrc={mapMinimapSrc(detail.map) ?? undefined}
+            />
           </div>
           <div className="lg:col-span-8" data-round-strip>
             <Card label={`Timeline de ${detail.rounds.length} rounds`}>
@@ -142,6 +149,7 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
             playerName={mvp.tag === '' ? mvp.name : `${mvp.name}#${mvp.tag}`}
             agent={mvp.agent}
             rank={mvp.tier ?? undefined}
+            portraitSrc={agentIconSrc(mvp.agent) ?? agentArtSrc(mvp.agent) ?? undefined}
             stats={[
               { label: 'K/D/A', value: `${mvp.kills}/${mvp.deaths}/${mvp.assists}` },
               { label: 'ACS', value: String(mvp.acs) },

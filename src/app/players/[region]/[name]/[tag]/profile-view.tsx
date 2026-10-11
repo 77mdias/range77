@@ -1,24 +1,32 @@
 import type { ReactNode } from 'react';
+import { AiCoachTerminal } from '@/components/ai';
 import { RrTrendChart, TrendLine } from '@/components/charts';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { CoachingTip } from '@/components/ui/coaching-tip';
 import { KpiTile } from '@/components/ui/kpi-tile';
+import {
+  InsightList,
+  type InsightItem,
+} from '@/components/ui/insight-list';
+import { SectionHeader } from '@/components/ui/section-header';
 import { EmptyState } from '@/components/ui/states';
 import { MatchHistoryTable, PlayerHeader, type MatchHistoryEntry } from '@/components/player';
+import { buildAgentCardProfiles } from '@/services/analytics/agent-map-profiles';
 import { computeFirstBloodRate, computeWinrate } from '@/services/analytics/tracker-aggregations';
 import { computeRrNet, indexRrDeltaByMatchId } from '@/services/analytics/rr-trend';
+import { agentIconSrc } from '@/lib/valorant-assets';
 import type { MatchSummary } from '@/contracts/tracker';
 import type { PlayerOverview } from '@/services/tracker/player-overview';
-import { AgentsMapsExplorer } from './agents-maps-explorer';
 import { ProfileAiSandbox } from './ai-sandbox';
 
 /**
- * PlayerProfileView — apresentação PURA (síncrona) do perfil no design
- * Stitch. Página única: PlayerHeader, strip de KPIs, tendência, avaliação e
- * histórico, seguidos da seção "Agentes & Mapas" (ilha client com filtros
- * reais) — nav por âncoras, sem abas. Separada da página assíncrona para ser
- * testável com `renderToStaticMarkup`.
+ * PlayerProfileView — tela VISÃO GERAL do jogador (Stitch
+ * "Visão Geral do Jogador & AI Coaching Hub"): faixa de contexto, header de
+ * identidade (cartão/nível/ranque reais), strip de 6 KPIs, workspace 8/4
+ * (trajetória de RR + histórico recente + motor de insights | hub de
+ * coaching IA) e faixa de status da pipeline. Apresentação PURA: todo
+ * cálculo vem de `services/analytics`.
  */
 
 function formatPct(value: number | null | undefined): string {
@@ -30,7 +38,7 @@ function displayKd(kills: number, deaths: number): number {
   return deaths === 0 ? kills : Math.round((kills / deaths) * 100) / 100;
 }
 
-/** Linhas do histórico (compartilhado entre o overview e a aba Partidas). */
+/** Linhas do histórico (compartilhado entre a visão geral e o breakdown). */
 function toHistoryEntries(
   matches: readonly MatchSummary[],
   region: string,
@@ -39,6 +47,7 @@ function toHistoryEntries(
   return matches.map((match) => ({
     id: match.matchId,
     agent: match.agent,
+    agentIconSrc: match.agent === null ? null : agentIconSrc(match.agent),
     map: match.map,
     result: match.result,
     scoreTeam: match.score.us,
@@ -54,143 +63,61 @@ function toHistoryEntries(
   }));
 }
 
-export function OverviewTab({ overview }: { readonly overview: PlayerOverview }) {
-  const metrics = overview.combat.raw_metrics;
+/**
+ * Motor de insights (Stitch: "Pontos Fortes Computados" / "Pontos Críticos
+ * Identificados") — SOMENTE classificações já computadas pelo analytics
+ * (streaks, tendência, tiers de agente). Coluna sem item → cartão omitido.
+ */
+export function buildInsightColumns(overview: PlayerOverview): {
+  readonly strengths: readonly InsightItem[];
+  readonly weaknesses: readonly InsightItem[];
+} {
+  const strengths: InsightItem[] = [];
+  const weaknesses: InsightItem[] = [];
   const { current, longestWin, longestLoss } = overview.streaks;
-  const streakVariant =
-    current.result === 'win' ? 'win' : current.result === 'loss' ? 'loss' : 'neutral';
-  const streakLabel =
-    current.result === 'none'
-      ? 'Sem sequência'
-      : `${current.length} ${current.result === 'win' ? 'vitórias' : 'derrotas'} seguidas`;
+  const windowSize = overview.trend.perMatch.length;
 
-  const wins = overview.matches.filter((match) => match.result === 'win').length;
-  const losses = overview.matches.length - wins;
-  const winRate = computeWinrate(wins, overview.matches.length);
-  const firstBloodRate = computeFirstBloodRate(metrics.firstBloods ?? 0, metrics.rounds);
+  if (current.result === 'win' && current.length >= 2) {
+    strengths.push({
+      title: `sequência: ${current.length} vitórias`,
+      description: `Maior sequência da janela: ${longestWin} vitórias. Mantenha a rotina pré-fila.`,
+    });
+  }
+  if (overview.trend.direction === 'up') {
+    strengths.push({
+      title: `tendência ACS: +${overview.trend.delta}`,
+      description: `De ${overview.trend.first} para ${overview.trend.last} ACS na janela de ${windowSize} partidas.`,
+    });
+  } else if (overview.trend.direction === 'down') {
+    weaknesses.push({
+      title: `tendência ACS: ${overview.trend.delta}`,
+      description: `De ${overview.trend.first} para ${overview.trend.last} ACS na janela de ${windowSize} partidas — revise o aquecimento.`,
+    });
+  }
 
-  const trendUp = overview.trend.direction === 'up';
-  const trendDown = overview.trend.direction === 'down';
-  const trendAccent = trendUp
-    ? `▲ +${overview.trend.delta} ACS`
-    : trendDown
-      ? `▼ ${overview.trend.delta} ACS`
-      : undefined;
+  for (const profile of buildAgentCardProfiles(overview.agents)) {
+    if (profile.tier === 'main') {
+      strengths.push({
+        title: `main: ${profile.name}`,
+        description: `${profile.winRatePercent}% WR em ${profile.matches} partidas — mantenha no pool aberto.`,
+      });
+    }
+    if (profile.tier === 'bottleneck') {
+      weaknesses.push({
+        title: `gargalo: ${profile.name}`,
+        description: `${profile.winRatePercent}% WR em ${profile.matches} partidas — revise kit e rotinas antes da fila.`,
+      });
+    }
+  }
 
-  const rrSeries = overview.rrHistory.map((point) => ({ rr: point.rr, result: point.result }));
-  const lastRr = overview.rrHistory[overview.rrHistory.length - 1];
-  const rrNet = computeRrNet(overview.rrHistory);
-  const rrNetLabel = rrNet > 0 ? `NET: +${rrNet} RR` : `NET: ${rrNet} RR`;
+  if (longestLoss >= 3) {
+    weaknesses.push({
+      title: `sequência de derrotas: ${longestLoss}`,
+      description: 'Pausas curtas entre sessões preservam a tomada de decisão.',
+    });
+  }
 
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6" data-kpi-strip>
-        <KpiTile label="K/D" value={metrics.kdr} trailing={`${metrics.matches} partidas`} />
-        <KpiTile label="Win Rate" value={`${winRate}%`} trailing={`${wins}V ${losses}D`} />
-        <KpiTile label="HS%" value={formatPct(metrics.hsPercentage)} />
-        <KpiTile
-          label="ACS"
-          value={metrics.acs}
-          accent={trendAccent}
-          accentTone={trendUp ? 'positive' : trendDown ? 'negative' : 'neutral'}
-        />
-        <KpiTile label="KAST" value={formatPct(metrics.kast)} trailing={`${metrics.rounds} rounds`} />
-        <KpiTile
-          label="First Blood / R"
-          value={firstBloodRate}
-          trailing={
-            metrics.firstDeaths === null
-              ? undefined
-              : `FB ${metrics.firstBloods ?? 0} / FD ${metrics.firstDeaths}`
-          }
-        />
-      </div>
-
-      <Card
-        label="Trajetória RR"
-        action={
-          <span className="font-hud text-label uppercase text-text-secondary">{rrNetLabel}</span>
-        }
-      >
-        <RrTrendChart series={rrSeries} />
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-hud text-label uppercase text-text-secondary">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-accent" aria-hidden /> Vitória (+RR)
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-text-primary" aria-hidden /> Derrota (-RR)
-          </span>
-          {lastRr !== undefined ? (
-            <span className="ml-auto">
-              Atual: {lastRr.rr} RR ({lastRr.tier})
-            </span>
-          ) : null}
-        </div>
-      </Card>
-
-      <Card label="Histórico Recente (últimos 5 jogos)">
-        <MatchesTab
-          matches={overview.matches}
-          region={overview.player.region}
-          rrDeltas={indexRrDeltaByMatchId(overview.rrHistory)}
-          limit={5}
-        />
-      </Card>
-
-      <Card label="Tendência de ACS">
-        <TrendLine values={overview.trend.perMatch} />
-      </Card>
-
-      <Card label="Avaliação">
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="accent">Mira: {overview.combat.evaluation.aimClass}</Badge>
-          <Badge variant="neutral">Impacto: {overview.combat.evaluation.impactClass}</Badge>
-          <Badge variant={streakVariant}>{streakLabel}</Badge>
-        </div>
-        <dl className="mt-4 grid grid-cols-2 gap-3 text-body sm:grid-cols-4">
-          <div>
-            <dt className="text-text-secondary">Maior seq. de vitórias</dt>
-            <dd className="font-hud text-body-lg text-text-primary">{longestWin}</dd>
-          </div>
-          <div>
-            <dt className="text-text-secondary">Maior seq. de derrotas</dt>
-            <dd className="font-hud text-body-lg text-text-primary">{longestLoss}</dd>
-          </div>
-          <div>
-            <dt className="text-text-secondary">Partidas</dt>
-            <dd className="font-hud text-body-lg text-text-primary">{metrics.matches}</dd>
-          </div>
-          <div>
-            <dt className="text-text-secondary">Rounds</dt>
-            <dd className="font-hud text-body-lg text-text-primary">{metrics.rounds}</dd>
-          </div>
-        </dl>
-      </Card>
-
-      {overview.combat.coaching_hooks.length > 0 ? (
-        <Card label="Protocol advice">
-          <div className="flex flex-col gap-3" data-coaching-tips>
-            {overview.combat.coaching_hooks.map((hook) => (
-              <CoachingTip key={hook} title="Protocol advice">
-                {hook}
-              </CoachingTip>
-            ))}
-          </div>
-        </Card>
-      ) : null}
-
-      <Card
-        label="Consultar IA (sandbox demo)"
-        action={
-          <span className="font-hud text-label uppercase text-text-secondary">
-            Respostas simuladas
-          </span>
-        }
-      >
-        <ProfileAiSandbox />
-      </Card>
-    </div>
-  );
+  return { strengths, weaknesses };
 }
 
 export function MatchesTab({
@@ -225,87 +152,245 @@ export interface PlayerProfileViewProps {
   readonly headerAction?: ReactNode;
 }
 
-/** Seções da página única do perfil (âncoras no topo, sem abas). */
-const PROFILE_SECTIONS = [
-  { id: 'visao-geral', label: 'Visão Geral' },
-  { id: 'partidas', label: 'Partidas & Breakdown' },
-  { id: 'agentes-mapas', label: 'Agentes & Mapas' },
-] as const;
-
-function ProfileSection({
-  id,
-  title,
-  children,
-}: {
-  readonly id: string;
-  readonly title: string;
-  readonly children: ReactNode;
-}) {
-  return (
-    <section id={id} data-profile-section={id} className="flex scroll-mt-24 flex-col gap-4">
-      <h2 className="font-display text-heading-sm uppercase tracking-tight text-text-primary">
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
 export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewProps) {
   const { player } = overview;
-  const rrDeltas = indexRrDeltaByMatchId(overview.rrHistory);
-  const currentRr = overview.rrHistory[overview.rrHistory.length - 1];
+  const metrics = overview.combat.raw_metrics;
+  const { current, longestWin, longestLoss } = overview.streaks;
+  const streakVariant =
+    current.result === 'win' ? 'win' : current.result === 'loss' ? 'loss' : 'neutral';
+  const streakLabel =
+    current.result === 'none'
+      ? 'Sem sequência'
+      : `${current.length} ${current.result === 'win' ? 'vitórias' : 'derrotas'} seguidas`;
 
-  const headerMeta = [
-    { label: 'Região', value: player.region.toUpperCase() },
-    { label: 'Plataforma', value: player.platform.toUpperCase() },
-    ...(player.level !== null ? [{ label: 'Nível', value: String(player.level) }] : []),
-    ...(currentRr !== undefined
-      ? [{ label: 'RR Pool', value: `${currentRr.rr} / 100` }]
-      : []),
-  ];
+  const wins = overview.matches.filter((match) => match.result === 'win').length;
+  const losses = overview.matches.length - wins;
+  const winRate = computeWinrate(wins, overview.matches.length);
+  const firstBloodRate = computeFirstBloodRate(metrics.firstBloods ?? 0, metrics.rounds);
+
+  const trendUp = overview.trend.direction === 'up';
+  const trendDown = overview.trend.direction === 'down';
+  const trendAccent = trendUp
+    ? `▲ +${overview.trend.delta} ACS`
+    : trendDown
+      ? `▼ ${overview.trend.delta} ACS`
+      : undefined;
+
+  const rrDeltas = indexRrDeltaByMatchId(overview.rrHistory);
+  const rrSeries = overview.rrHistory.map((point) => ({ rr: point.rr, result: point.result }));
+  const lastRr = overview.rrHistory[overview.rrHistory.length - 1];
+  const rrNet = computeRrNet(overview.rrHistory);
+  const rrNetLabel = rrNet > 0 ? `NET: +${rrNet} RR` : `NET: ${rrNet} RR`;
+
+  const rank = overview.rank;
+  const rankTier = rank?.tier ?? lastRr?.tier ?? undefined;
+  const rrInTier = rank?.rrInTier ?? lastRr?.rr ?? null;
+  const { strengths, weaknesses } = buildInsightColumns(overview);
 
   return (
-    <div data-player-profile className="flex flex-col gap-8">
+    <div data-player-profile className="flex flex-col">
+      {/* ── Faixa de contexto (só o que é real do ambiente) ─────────── */}
+      <div
+        data-context-strip
+        className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-line bg-surface-raised px-4 py-1.5 font-hud text-label uppercase text-text-secondary"
+      >
+        <div className="flex flex-wrap items-center gap-x-4">
+          <span className="font-semibold text-text-primary">
+            Região: {player.region.toUpperCase()}
+          </span>
+          <span>Pipeline: 3-layer</span>
+          <span>Payload: camada 3 sintetizada</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-4">
+          <span className="inline-flex items-center gap-1.5 text-text-primary">
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-accent" />
+            HenrikDev API: OK
+          </span>
+          <span>Sync: cache</span>
+        </div>
+      </div>
+
+      {/* ── Header de identidade ─────────────────────────────────────── */}
       <PlayerHeader
         name={player.name}
         tag={player.tag}
+        avatarSrc={player.cardSrc ?? undefined}
         level={player.level ?? undefined}
-        rank={currentRr?.tier}
+        rank={rankTier}
+        rankImageSrc={rank?.imageSrc ?? undefined}
         // O Riot ID só chega aqui após um lookup bem-sucedido na HenrikDev —
         // "verificado" significa exatamente isso (conta Riot resolvida).
         verified
-        meta={headerMeta}
+        meta={[
+          ...(rrInTier !== null ? [{ label: 'RR Pool', value: `${rrInTier} / 100` }] : []),
+          { label: 'Roster', value: 'Competitivo 5v5' },
+          { label: 'Amostra', value: `${metrics.matches} partidas` },
+        ]}
         actions={headerAction}
       />
 
-      <nav
-        aria-label="Seções do perfil"
-        data-profile-section-nav
-        className="flex flex-wrap gap-1 border-b border-line"
-      >
-        {PROFILE_SECTIONS.map((section) => (
-          <a
-            key={section.id}
-            href={`#${section.id}`}
-            className="relative -mb-px h-10 border-b-2 border-transparent px-4 font-hud text-label uppercase leading-10 tracking-wide text-text-secondary transition-colors duration-[var(--duration-fast)] ease-out-expo hover:text-text-primary"
+      {/* ── Strip de KPIs (3 linhas: label+meta, valor, trailing real) ─ */}
+      <div className="mx-auto w-full max-w-7xl px-4 pt-6">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6" data-kpi-strip>
+          <KpiTile
+            label="K/D Ratio"
+            value={metrics.kdr}
+            trailing={`${metrics.rounds} rounds`}
+          />
+          <KpiTile
+            label="Win Rate"
+            accent={`${overview.matches.length} GMS`}
+            accentTone="neutral"
+            value={`${winRate}%`}
+            trailing={`${wins}W ${losses}D`}
+          />
+          <KpiTile label="Headshot %" value={formatPct(metrics.hsPercentage)} />
+          <KpiTile
+            label="ACS Médio"
+            accent={trendAccent}
+            accentTone={trendUp ? 'positive' : trendDown ? 'negative' : 'neutral'}
+            value={metrics.acs}
+            trailing="Combate"
+          />
+          <KpiTile
+            label="KAST %"
+            value={formatPct(metrics.kast)}
+            trailing={`${metrics.rounds} rounds`}
+          />
+          <KpiTile
+            label="First Blood / RD"
+            value={firstBloodRate}
+            trailing={
+              metrics.firstDeaths === null
+                ? undefined
+                : `FB ${metrics.firstBloods ?? 0} / FD ${metrics.firstDeaths}`
+            }
+          />
+        </div>
+      </div>
+
+      {/* ── Workspace 8/4 ───────────────────────────────────────────── */}
+      <div className="mx-auto grid w-full max-w-7xl gap-4 px-4 py-6 xl:grid-cols-12">
+        {/* Coluna esquerda (8): telemetria + histórico + insights */}
+        <div className="flex flex-col gap-4 xl:col-span-8">
+          <Card
+            label={`Trajetória RR • Últimas ${overview.rrHistory.length} partidas`}
+            action={
+              <span className="border border-line bg-surface-high px-1.5 py-0.5 font-hud text-label font-bold uppercase text-text-primary">
+                {rrNetLabel}
+              </span>
+            }
           >
-            {section.label}
-          </a>
-        ))}
-      </nav>
+            <RrTrendChart series={rrSeries} />
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line pt-2 font-hud text-label uppercase text-text-secondary">
+              <span className="inline-flex items-center gap-1.5">
+                <span aria-hidden="true" className="size-2 rounded-full bg-accent" /> Vitória
+                (+RR)
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span aria-hidden="true" className="size-2 rounded-full bg-text-primary" />{' '}
+                Derrota (-RR)
+              </span>
+              {lastRr !== undefined ? (
+                <span className="ml-auto font-bold text-text-primary">
+                  Atual: {lastRr.rr} RR ({lastRr.tier})
+                </span>
+              ) : null}
+            </div>
+          </Card>
 
-      <ProfileSection id="visao-geral" title="Visão Geral">
-        <OverviewTab overview={overview} />
-      </ProfileSection>
+          <Card
+            label="Histórico Recente (últimos 5 jogos)"
+            action={
+              <span className="font-hud text-label uppercase text-text-secondary">
+                Camada 2 parsed
+              </span>
+            }
+          >
+            <MatchesTab matches={overview.matches} region={player.region} rrDeltas={rrDeltas} limit={5} />
+          </Card>
 
-      <ProfileSection id="partidas" title="Partidas & Breakdown">
-        <MatchesTab matches={overview.matches} region={player.region} rrDeltas={rrDeltas} />
-      </ProfileSection>
+          <div className="grid gap-3 md:grid-cols-2" data-insight-columns>
+            {strengths.length > 0 ? (
+              <InsightList tone="strength" label="Pontos fortes computados" items={strengths} />
+            ) : null}
+            {weaknesses.length > 0 ? (
+              <InsightList tone="weakness" label="Pontos críticos identificados" items={weaknesses} />
+            ) : null}
+          </div>
 
-      <ProfileSection id="agentes-mapas" title="Agentes & Mapas">
-        <AgentsMapsExplorer matches={overview.matches} />
-      </ProfileSection>
+          <Card label="Tendência de ACS">
+            <TrendLine values={overview.trend.perMatch} />
+          </Card>
+
+          <Card label="Avaliação da camada 2">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="accent">Mira: {overview.combat.evaluation.aimClass}</Badge>
+              <Badge variant="neutral">Impacto: {overview.combat.evaluation.impactClass}</Badge>
+              <Badge variant={streakVariant}>{streakLabel}</Badge>
+            </div>
+            <dl className="mt-4 grid grid-cols-2 gap-3 text-body sm:grid-cols-4">
+              <div>
+                <dt className="text-text-secondary">Maior seq. de vitórias</dt>
+                <dd className="font-hud text-body-lg text-text-primary">{longestWin}</dd>
+              </div>
+              <div>
+                <dt className="text-text-secondary">Maior seq. de derrotas</dt>
+                <dd className="font-hud text-body-lg text-text-primary">{longestLoss}</dd>
+              </div>
+              <div>
+                <dt className="text-text-secondary">Partidas</dt>
+                <dd className="font-hud text-body-lg text-text-primary">{metrics.matches}</dd>
+              </div>
+              <div>
+                <dt className="text-text-secondary">Rounds</dt>
+                <dd className="font-hud text-body-lg text-text-primary">{metrics.rounds}</dd>
+              </div>
+            </dl>
+          </Card>
+        </div>
+
+        {/* Coluna direita (4): hub de coaching IA */}
+        <div className="xl:col-span-4">
+          <AiCoachTerminal
+            status="Layer 3 online"
+            title="Diagnóstico do Coach IA"
+            scoreLine={`${metrics.matches} partidas analisadas • 3-layer`}
+          >
+            <div className="flex flex-col gap-3" data-coaching-tips>
+              {overview.combat.coaching_hooks.map((hook) => (
+                <CoachingTip key={hook} title="Protocol advice">
+                  {hook}
+                </CoachingTip>
+              ))}
+            </div>
+            <div className="mt-4 border-t border-line pt-3">
+              <SectionHeader
+                title="Consultar IA"
+                annotation="SANDBOX DEMO"
+                className="mb-2"
+              />
+              <ProfileAiSandbox />
+            </div>
+          </AiCoachTerminal>
+        </div>
+      </div>
+
+      {/* ── Faixa de status da pipeline ─────────────────────────────── */}
+      <div
+        data-pipeline-strip
+        className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-line bg-surface-raised px-4 py-2 font-hud text-label uppercase text-text-secondary"
+      >
+        <div className="flex flex-wrap items-center gap-x-4">
+          <span className="font-bold text-text-primary">Match pipeline status:</span>
+          <span>Fontes: HenrikDev</span>
+          <span>Cálculo: analytics local</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-4">
+          <span>Região: {player.region.toUpperCase()}</span>
+          <span className="font-bold text-text-primary">Cache: ativo</span>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,9 +1,13 @@
 import type {
+  HenrikDevAccountResponseV1,
+  HenrikDevAccountV1,
   HenrikDevMatchResponseV4,
   HenrikDevMatchV4,
   HenrikDevMatchesResponseV4,
   HenrikDevMmrHistoryEntryV2,
   HenrikDevMmrHistoryResponseV2,
+  HenrikDevMmrResponseV2,
+  HenrikDevMmrV2,
 } from '@/contracts/henrikdev';
 
 /**
@@ -87,6 +91,18 @@ export interface FetchMmrHistoryParams {
   readonly tag: string;
 }
 
+export interface FetchAccountParams {
+  readonly name: string;
+  readonly tag: string;
+}
+
+export interface FetchMmrParams {
+  readonly affinity: string;
+  readonly platform: string;
+  readonly name: string;
+  readonly tag: string;
+}
+
 export interface HenrikDevClient {
   fetchPlayerMatches(params: FetchPlayerMatchesParams): Promise<readonly HenrikDevMatchV4[]>;
   /** Detalhe de UMA partida por match_id (v4 match_v4 — sem platform). */
@@ -97,6 +113,13 @@ export interface HenrikDevClient {
    * `services/analytics/rr-trend.ts`.
    */
   fetchMmrHistory(params: FetchMmrHistoryParams): Promise<readonly HenrikDevMmrHistoryEntryV2[]>;
+  /**
+   * Identidade estendida da conta (v1 account): nível + cartão com os
+   * ícones oficiais do jogador.
+   */
+  fetchAccount(params: FetchAccountParams): Promise<HenrikDevAccountV1>;
+  /** Ranque atual (v2 mmr): tier, RR dentro do tier e imagens do elo. */
+  fetchMmr(params: FetchMmrParams): Promise<HenrikDevMmrV2>;
 }
 
 const DEFAULT_BASE_URL = 'https://api.henrikdev.xyz';
@@ -226,6 +249,43 @@ export function createHenrikDevClient(options: HenrikDevClientOptions): HenrikDe
         );
       }
       return history;
+    },
+
+    async fetchAccount(params) {
+      const url = new URL(
+        `${baseUrl}/valorant/v1/account/${encodeURIComponent(params.name)}/${encodeURIComponent(params.tag)}`,
+      );
+
+      const parsed = await requestJson(url);
+      const body = parsed as HenrikDevAccountResponseV1;
+      const account = body?.data;
+      if (account === null || typeof account !== 'object' || Array.isArray(account)) {
+        throw new HenrikDevApiError(
+          502,
+          'Resposta malformada da HenrikDev: conta ausente em "data"',
+          'MALFORMED_RESPONSE',
+        );
+      }
+      return account;
+    },
+
+    async fetchMmr(params) {
+      const url = new URL(
+        `${baseUrl}/valorant/v2/mmr/${params.affinity}/${params.platform}` +
+          `/${encodeURIComponent(params.name)}/${encodeURIComponent(params.tag)}`,
+      );
+
+      const parsed = await requestJson(url);
+      const body = parsed as HenrikDevMmrResponseV2;
+      const mmr = body?.data;
+      if (mmr === null || typeof mmr !== 'object' || Array.isArray(mmr)) {
+        throw new HenrikDevApiError(
+          502,
+          'Resposta malformada da HenrikDev: MMR ausente em "data"',
+          'MALFORMED_RESPONSE',
+        );
+      }
+      return mmr;
     },
   };
 }

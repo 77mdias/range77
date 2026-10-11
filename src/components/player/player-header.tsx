@@ -14,6 +14,8 @@ export interface PlayerHeaderProps {
   readonly avatarSrc?: string;
   readonly level?: number;
   readonly rank?: string;
+  /** Imagem oficial do elo (HenrikDev v2/mmr `images`). */
+  readonly rankImageSrc?: string;
   readonly verified?: boolean;
   /** Pares label → valor da linha de meta (ex.: RR pool, servidor). */
   readonly meta?: readonly { readonly label: string; readonly value: string }[];
@@ -28,6 +30,7 @@ export function PlayerHeader({
   avatarSrc,
   level,
   rank,
+  rankImageSrc,
   verified = false,
   meta,
   actions,
@@ -76,8 +79,19 @@ export function PlayerHeader({
               {name}
               <span className="text-text-secondary">#{tag}</span>
             </h1>
-            {verified ? <Badge variant="accent">Verificado</Badge> : null}
-            {rank !== undefined ? <Badge variant="neutral">{rank}</Badge> : null}
+            {verified ? <Badge variant="neutral">Verificado</Badge> : null}
+            {rank !== undefined ? (
+              <span
+                data-player-rank
+                className="inline-flex items-center gap-1.5 border border-line bg-accent px-1.5 py-0.5 font-hud text-label font-bold uppercase text-text-primary"
+              >
+                {rankImageSrc !== undefined ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- ícone oficial do elo
+                  <img src={rankImageSrc} alt="" className="size-4 object-contain" />
+                ) : null}
+                {rank}
+              </span>
+            ) : null}
           </div>
           {meta !== undefined && meta.length > 0 ? (
             <dl className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-hud text-label uppercase text-text-secondary">

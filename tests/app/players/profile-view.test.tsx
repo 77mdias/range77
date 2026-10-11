@@ -17,7 +17,15 @@ import type { GroupedStat } from '@/contracts/tracker';
  */
 
 const overview: PlayerOverview = {
-  player: { region: 'br', name: 'Player One', tag: 'BR1', platform: 'pc', level: 242 },
+  player: {
+    region: 'br',
+    name: 'Player One',
+    tag: 'BR1',
+    platform: 'pc',
+    level: 242,
+    cardSrc: 'https://media.valorant-api.com/playercards/large.png',
+  },
+  rank: { tier: 'Diamond 1', imageSrc: 'https://media/rank-small.png', rrInTier: 55 },
   combat: {
     player: { region: 'br', name: 'Player One', tag: 'BR1', platform: 'pc' },
     evaluation: { aimClass: 'Excelente', impactClass: 'Equilibrado' },
@@ -111,19 +119,32 @@ const overview: PlayerOverview = {
 };
 
 describe('PlayerProfileView', () => {
-  it('renderiza header do jogador, KPI strip, avaliação e hooks (aba ativa)', () => {
+  it('renderiza header do jogador, KPI strip, avaliação e coaching tips', () => {
     const html = renderToStaticMarkup(<PlayerProfileView overview={overview} />);
     expect(html).toContain('data-component="player-header"');
     expect(html).toContain('Player One');
     expect(html).toContain('#BR1');
-    expect(html).toContain('data-component="kpi-tile"');
-    expect(html).toContain('K/D');
+    // Cartão + ícone de rank reais (HenrikDev) com preload
+    expect(html).toContain('playercards/large.png');
+    expect(html).toContain('data-player-rank');
+    expect(html).toContain('rank-small.png');
+    expect(html).toContain('data-player-level');
+    expect(html).toContain('LVL 242');
+    expect(html).toContain('Verificado');
+    expect(html).toContain('RR Pool');
+    expect(html).toContain('55 / 100');
+    // Faixas de contexto e pipeline (Stitch)
+    expect(html).toContain('data-context-strip');
+    expect(html).toContain('data-pipeline-strip');
+    // KPI strip com dados reais
+    expect(html).toContain('data-kpi-strip');
+    expect(html).toContain('K/D Ratio');
     expect(html).toContain('Win Rate');
-    expect(html).toContain('1V 0D');
-    expect(html).toContain('HS%');
-    expect(html).toContain('KAST');
-    expect(html).toContain('First Blood / R');
-    expect(html).toContain('0.08');
+    expect(html).toContain('1W 0D');
+    expect(html).toContain('Headshot %');
+    expect(html).toContain('KAST %');
+    expect(html).toContain('First Blood / RD');
+    expect(html).toContain('FB 3 / FD 2');
     expect(html).toContain('▲ +50 ACS');
     expect(html).toContain('Mira: Excelente');
     expect(html).toContain('Impacto: Equilibrado');
@@ -138,17 +159,10 @@ describe('PlayerProfileView', () => {
     expect(html).toContain('NET: +10 RR');
     expect(html).toContain('Atual: 55 RR (Diamond 1)');
     expect(html).toContain('data-chart="rr-trend"');
-    // Header enriquecido: nível, selo de verificação, rank atual e RR pool
-    expect(html).toContain('data-player-level');
-    expect(html).toContain('LVL 242');
-    expect(html).toContain('Verificado');
-    expect(html).toContain('RR Pool');
-    expect(html).toContain('Diamond 1');
     // Histórico recente embutido no overview (Stitch)
     expect(html).toContain('Histórico Recente (últimos 5 jogos)');
     expect(html).toContain('data-component="match-history-table"');
     // Sandbox de IA rotulado como demo (reuso do console)
-    expect(html).toContain('Consultar IA (sandbox demo)');
     expect(html).toContain('data-profile-ai-sandbox');
     expect(html).toContain('SANDBOX DEMO');
   });
@@ -159,7 +173,7 @@ describe('PlayerProfileView', () => {
     expect(html).toContain('data-chart="rr-trend-empty"');
   });
 
-  it('tendência de queda usa tom negativo no KPI', () => {
+  it('tendência de queda usa tom negativo no KPI e alimenta os pontos críticos', () => {
     const down: PlayerOverview = {
       ...overview,
       trend: { ...overview.trend, direction: 'down', delta: -30 },
@@ -167,20 +181,56 @@ describe('PlayerProfileView', () => {
     const html = renderToStaticMarkup(<PlayerProfileView overview={down} />);
     expect(html).toContain('▼ -30 ACS');
     expect(html).toContain('text-loss');
+    expect(html).toContain('Pontos críticos identificados');
+    expect(html).toContain('tendência ACS: -30');
   });
 
-  it('renderiza a página única com seções ancoradas (sem abas)', () => {
+  it('tela única VISÃO GERAL: sem seções ancoradas nem abas (navegação é o shell)', () => {
     const html = renderToStaticMarkup(<PlayerProfileView overview={overview} />);
-    for (const label of ['Visão Geral', 'Partidas', 'Agentes &amp; Mapas']) {
-      expect(html).toContain(label);
-    }
-    for (const id of ['visao-geral', 'partidas', 'agentes-mapas']) {
-      expect(html).toContain(`id="${id}"`);
-    }
-    expect(html).toContain('data-profile-section-nav');
-    // Layout em página única: nenhum tablist
-    expect(html).not.toContain('data-tabs');
+    expect(html).toContain('data-player-profile');
+    expect(html).toContain('data-insight-columns');
+    expect(html).toContain('Pontos fortes computados');
+    // Sem seção de agentes/mapas nem nav de âncoras (mudou para /breakdown)
+    expect(html).not.toContain('data-agents-maps-explorer');
+    expect(html).not.toContain('data-profile-section-nav');
     expect(html).not.toContain('role="tablist"');
+  });
+
+  it('motor de insights classifica tiers de agente em fortes/críticos', () => {
+    const comAgentes: PlayerOverview = {
+      ...overview,
+      agents: [
+        {
+          key: 'Jett',
+          matches: 10,
+          wins: 7,
+          losses: 3,
+          winrate: 70,
+          avgKills: 18,
+          avgDeaths: 11,
+          avgAssists: 5,
+          kda: 2.09,
+          avgAcs: 265,
+          avgHsPercentage: 31,
+        },
+        {
+          key: 'Cypher',
+          matches: 8,
+          wins: 3,
+          losses: 5,
+          winrate: 37.5,
+          avgKills: 10,
+          avgDeaths: 15,
+          avgAssists: 4,
+          kda: 0.93,
+          avgAcs: 180,
+          avgHsPercentage: 22,
+        },
+      ],
+    };
+    const html = renderToStaticMarkup(<PlayerProfileView overview={comAgentes} />);
+    expect(html).toContain('main: Jett');
+    expect(html).toContain('gargalo: Cypher');
   });
 
   it('mostra "Sem sequência" quando não há streak atual', () => {

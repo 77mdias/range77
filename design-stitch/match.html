@@ -1,0 +1,2612 @@
+<!doctype html>
+
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="web_standard" name="shell-type" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Geist:wght@400;500;600&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      @layer base {
+        html,
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        body {
+          overscroll-behavior: none;
+        }
+        main > :first-child {
+          margin-top: 0 !important;
+        }
+        main > :last-child {
+          margin-bottom: 0 !important;
+        }
+      }
+      ::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              secondary: "#5e5e5e",
+              tertiary: "#2c676b",
+              "on-primary-container": "#6f7100",
+              "secondary-fixed": "#e2e2e2",
+              "surface-container-high": "#e8e8e8",
+              "secondary-fixed-dim": "#c6c6c6",
+              error: "#ba1a1a",
+              "surface-bright": "#f9f9f9",
+              "on-primary-fixed": "#1c1d00",
+              "inverse-primary": "#cbce04",
+              "on-background": "#1a1c1c",
+              "border-hairline": "#000000",
+              "on-primary-fixed-variant": "#484a00",
+              outline: "#797861",
+              "on-secondary": "#ffffff",
+              "on-tertiary": "#ffffff",
+              "surface-container-low": "#f3f3f4",
+              "on-tertiary-fixed": "#002022",
+              "primary-fixed": "#e7ea33",
+              "inverse-surface": "#2f3131",
+              "on-error": "#ffffff",
+              background: "#f9f9f9",
+              "canvas-soft": "#f9fafb",
+              "on-surface-variant": "#484833",
+              "on-secondary-container": "#646464",
+              "on-primary": "#ffffff",
+              "on-error-container": "#93000a",
+              primary: "#616200",
+              "tertiary-container": "#c0faff",
+              "primary-fixed-dim": "#cbce04",
+              "tertiary-fixed": "#b2edf2",
+              "secondary-container": "#e2e2e2",
+              "primary-container": "#f5f841",
+              "surface-container-lowest": "#ffffff",
+              surface: "#f9f9f9",
+              "on-tertiary-fixed-variant": "#0a4f53",
+              "on-surface": "#1a1c1c",
+              "surface-container": "#eeeeee",
+              "on-tertiary-container": "#3b757a",
+              "tertiary-fixed-dim": "#97d0d5",
+              "error-container": "#ffdad6",
+              "surface-variant": "#e2e2e2",
+              "inverse-on-surface": "#f0f1f1",
+              "on-secondary-fixed": "#1b1b1b",
+              "surface-dim": "#dadada",
+              "outline-variant": "#cac8ad",
+              "surface-container-highest": "#e2e2e2",
+              "on-secondary-fixed-variant": "#474747",
+              "surface-tint": "#616200",
+            },
+            borderRadius: {
+              DEFAULT: "0.125rem",
+              lg: "0.25rem",
+              xl: "0.5rem",
+              full: "0.75rem",
+            },
+            spacing: {
+              gutter: "0.75rem",
+              "margin-mobile": "0.75rem",
+              margin: "1rem",
+              "space-md": "0.375rem",
+              "space-xs": "0.1875rem",
+              "space-xl": "0.625rem",
+              "space-lg": "0.5rem",
+              "gutter-mobile": "0.5rem",
+              "space-sm": "0.25rem",
+            },
+            fontFamily: {
+              "display-xl": ["Space Grotesk"],
+              "label-xs": ["JetBrains Mono"],
+              "body-md": ["Geist"],
+              "headline-md": ["Space Grotesk"],
+              "display-xl-mobile": ["Space Grotesk"],
+              "body-lg": ["Geist"],
+              "label-sm": ["JetBrains Mono"],
+              "body-sm": ["Geist"],
+              "headline-lg": ["Space Grotesk"],
+              "label-md": ["JetBrains Mono"],
+            },
+            fontSize: {
+              "display-xl": [
+                "32px",
+                {
+                  lineHeight: "36px",
+                  letterSpacing: "-0.03em",
+                  fontWeight: "700",
+                },
+              ],
+              "label-xs": [
+                "9px",
+                {
+                  lineHeight: "11px",
+                  letterSpacing: "0.08em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-md": ["13px", { lineHeight: "17px", fontWeight: "400" }],
+              "headline-md": [
+                "16px",
+                {
+                  lineHeight: "20px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+              "display-xl-mobile": [
+                "24px",
+                {
+                  lineHeight: "28px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-lg": ["14px", { lineHeight: "18px", fontWeight: "500" }],
+              "label-sm": [
+                "10px",
+                {
+                  lineHeight: "12px",
+                  letterSpacing: "0.06em",
+                  fontWeight: "500",
+                },
+              ],
+              "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }],
+              "headline-lg": [
+                "20px",
+                {
+                  lineHeight: "24px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "600",
+                },
+              ],
+              "label-md": [
+                "11px",
+                {
+                  lineHeight: "14px",
+                  letterSpacing: "0.04em",
+                  fontWeight: "600",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body
+    class="bg-surface-container-lowest font-body-md text-on-surface antialiased"
+  >
+    <header
+      class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest border-b border-border-hairline"
+    >
+      <div
+        class="h-14 w-full px-margin flex items-center justify-between gap-space-lg"
+      >
+        <div class="flex items-center gap-space-lg shrink-0">
+          <img
+            alt="Valorant Coach Logo"
+            class="h-8 w-auto object-contain"
+            src="https://lh3.googleusercontent.com/aida/AEtjO1U360_ctaTjqMO7KcyC_wix6I24yGiIuIq9yAOfSl7VD4OMSKnPqljERT0wkI-fFanjbevJ6X4ZaiYDdVQGC9jN2JcjfDGs5ixDvnXqYjRi7k2FiWyCkwKlXQgEoebaJDJJkG_l6hObiXe1Sb2KpWbd6ZquR_sYCyAp-TQxf2cKp3K3BPGKoNoBqu6nH1LqeCxtnAjn9LdDFXDmoKmIiysLnPqcylrEWKTvpFLn708J_QZpEYD3P2aZDOQ"
+          /><span
+            class="font-headline-md text-headline-md tracking-tight uppercase text-on-surface hidden sm:inline-block"
+            >VALORANT.COACH</span
+          >
+          <div
+            class="flex items-center gap-space-xs px-space-md py-space-xs bg-canvas-soft border border-border-hairline rounded"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full bg-primary-container border border-border-hairline animate-pulse"
+            ></span
+            ><span class="font-label-xs text-label-xs uppercase text-on-surface"
+              >API Pipeline: Active (3-Layer Mode)</span
+            >
+          </div>
+        </div>
+        <nav
+          class="hidden xl:flex items-center h-full"
+          data-active-classes="bg-primary-container text-on-surface font-label-md border-b-2 border-border-hairline"
+        >
+          <a
+            class="h-full px-space-lg inline-flex items-center font-label-md text-label-md uppercase text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors border-r border-border-hairline"
+            data-path="visao-geral"
+            href="#"
+            >Visão Geral</a
+          ><a
+            class="h-full px-space-lg inline-flex items-center font-label-md text-label-md uppercase text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors border-r border-border-hairline"
+            data-path="partidas-breakdown"
+            href="#"
+            >Partidas &amp; Breakdown</a
+          ><a
+            class="h-full px-space-lg inline-flex items-center font-label-md text-label-md uppercase text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors border-r border-border-hairline"
+            data-path="agentes-mapas"
+            href="#"
+            >Agentes &amp; Mapas</a
+          ><a
+            class="h-full px-space-lg inline-flex items-center font-label-md text-label-md uppercase text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors border-r border-border-hairline"
+            data-path="console-api-ia"
+            href="#"
+            >Console API &amp; IA</a
+          >
+        </nav>
+        <div class="flex items-center gap-space-md shrink-0">
+          <div
+            class="hidden md:flex items-center bg-canvas-soft border border-border-hairline rounded px-space-md py-space-xs"
+          >
+            <span
+              class="material-symbols-outlined text-secondary text-sm mr-space-xs"
+              >search</span
+            ><input
+              class="bg-transparent font-body-sm text-body-sm text-on-surface focus:outline-none w-44"
+              placeholder="Player#Tag (ex: Tenz#0001)"
+              type="text"
+            /><span
+              class="font-label-xs text-label-xs px-space-xs bg-surface-container-highest border border-border-hairline text-on-surface uppercase rounded"
+              >BR/LATAM</span
+            >
+          </div>
+          <button
+            aria-label="Notificações"
+            class="w-8 h-8 flex items-center justify-center bg-canvas-soft border border-border-hairline rounded hover:bg-surface-container transition-colors"
+            type="button"
+          >
+            <span class="material-symbols-outlined text-on-surface text-base"
+              >notifications</span
+            >
+          </button>
+          <div
+            class="flex items-center gap-space-sm pl-space-sm border-l border-border-hairline"
+          >
+            <div class="text-right hidden sm:block">
+              <div
+                class="font-label-md text-label-md uppercase text-on-surface leading-none"
+              >
+                NEXUS#BR1
+              </div>
+              <div
+                class="font-label-xs text-label-xs text-secondary leading-tight mt-space-xs flex items-center justify-end gap-space-xs"
+              >
+                <span
+                  class="w-1.5 h-1.5 bg-primary-container rounded-full border border-border-hairline"
+                ></span
+                >Ascendant 3
+              </div>
+            </div>
+            <img
+              alt="Profile"
+              class="w-8 h-8 rounded-full object-cover border border-border-hairline"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFPq6p-GS0Wj5qkWQjFKsQLZufHLDQAvkrm5OpdcwbEDgeeDDGxvjFSTYQDaOdNqn3XvmiPcSJL2-XxlYqdrVaCO8pMHxx90nzNONqpD-CK28tbl9LXmB3Z05UUsSbgrU-vX_372DDUQ8-BOcStolWNIuqlX8o2v2rW8c9bOusBOjUiJO0biC8ljvhxf_3QAt33l9COh9vWodDydVZMnI7YftE4G4G68Y-0_fzIcL6Y5v2HdYZ300vQw"
+            />
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="w-full pt-14 bg-surface-container-lowest min-h-screen">
+      <div class="flex flex-col w-full">
+        <!-- Top Match Meta Status Bar -->
+        <div
+          class="w-full bg-surface-container-low px-margin py-space-sm flex flex-wrap items-center justify-between gap-space-md shadow-sm"
+        >
+          <div class="flex items-center gap-space-md flex-wrap">
+            <span
+              class="bg-primary-container text-on-surface px-space-md py-space-xs font-label-xs text-label-xs uppercase shadow-sm"
+            >
+              COMPETITIVO // RANKED BR1
+            </span>
+            <span class="font-label-sm text-label-sm text-on-surface uppercase">
+              MAPA: <strong class="text-on-surface">ASCENT</strong>
+            </span>
+            <span class="font-label-xs text-label-xs text-secondary">
+              DURAÇÃO: 38M 14S • SERVIDOR: SA-SAOPAULO-1
+            </span>
+            <span class="font-label-xs text-label-xs text-secondary">
+              MATCH ID: <span class="text-on-surface">#BR-ASC-8942-TX9</span>
+            </span>
+          </div>
+          <div class="flex items-center gap-space-sm">
+            <span class="font-label-xs text-label-xs uppercase text-secondary"
+              >DELTA RR:</span
+            >
+            <span
+              class="bg-primary-container text-on-surface px-space-sm py-space-xs font-label-md text-label-md"
+            >
+              +22 RR (ASC 3 • 84/100)
+            </span>
+          </div>
+        </div>
+        <!-- Hero Telemetry Summary Strip -->
+        <div class="w-full bg-surface-container-lowest px-margin py-space-xl">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-center">
+            <!-- Scoreboard Big Banner -->
+            <div
+              class="lg:col-span-4 bg-canvas-soft p-space-lg shadow-md flex items-center justify-between"
+            >
+              <div class="flex flex-col">
+                <span
+                  class="font-label-xs text-label-xs uppercase text-secondary tracking-widest"
+                  >// RESULTADO FINAL</span
+                >
+                <div class="flex items-baseline gap-space-md mt-space-xs">
+                  <span class="font-display-xl text-display-xl text-on-surface"
+                    >13</span
+                  >
+                  <span class="font-headline-lg text-headline-lg text-secondary"
+                    >:</span
+                  >
+                  <span class="font-display-xl text-display-xl text-secondary"
+                    >09</span
+                  >
+                  <span
+                    class="ml-space-sm bg-primary-container text-on-surface font-label-xs text-label-xs px-space-sm py-space-xs uppercase shadow-sm"
+                  >
+                    VITÓRIA
+                  </span>
+                </div>
+                <div
+                  class="flex items-center gap-space-md mt-space-xs font-label-xs text-label-xs text-secondary"
+                >
+                  <span>DEF: 7-5</span>
+                  <span>•</span>
+                  <span>ATK: 6-4</span>
+                </div>
+              </div>
+              <div
+                class="relative w-24 h-24 overflow-hidden rounded bg-surface-container-high shadow-inner shrink-0"
+              >
+                <img
+                  class="w-full h-full object-cover"
+                  data-alt="Tactical overhead aerial minimalist map render of Ascent Valorant courtyard with high contrast white architectural geometry and neon target ping nodes."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5fCdLFNbQbzdRi9MGZl_V9FLwAMve7FWw94K6b7ziGG1ZGhXjo_Itofm9nlmYRui8B3SrLLtnQkrY-CezALzyYdS95YRXIqWngMcGmMYSc6JSX2KZCo815z1zPre2CS-VDPcaL8EQ_gkY3106ALzMbpozgjVquOHn-XeKHow-rD31GCwnsHqlSlKP_WXag__n9t_hSpBrOawysEw-Fayh20Ab2VwGlCvQu4_tJAQDQi_PW3cQUa02Jg"
+                />
+                <div
+                  class="absolute bottom-0 inset-x-0 bg-on-background/80 text-surface-container-lowest font-label-xs text-label-xs text-center py-space-xs"
+                >
+                  ASCENT
+                </div>
+              </div>
+            </div>
+            <!-- Match MVP Callout -->
+            <div class="lg:col-span-8 bg-canvas-soft p-space-lg shadow-md">
+              <div
+                class="flex flex-col md:flex-row md:items-center justify-between gap-space-md"
+              >
+                <div class="flex items-center gap-space-md">
+                  <div
+                    class="relative w-14 h-14 bg-surface-container-highest shrink-0 overflow-hidden shadow-sm"
+                  >
+                    <img
+                      class="w-full h-full object-cover"
+                      data-alt="Esports portrait thumbnail of agent Jett Valorant high speed wind duelist styled in brutalist monochrome high contrast lighting profile."
+                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyk_ueM7mRq8UqxG2xyac2X629I_ue8YTCudL9shWQH-C3PzKRbWFkzNt2RQNnJ6jqMv16O2ERQ60TM_v7cP6KBuVeCfHmGjxRc0z5Ru4J0hBU00NjMXfkKvnRhIpSLIVaG55_mBMl4ThGsNQGuNB1BB55sqPQkjxbVzhPC9TvPaZnM8uecxrTi3ipM31Dwre-_T5Fs7BNAEo_w0meWHX6jyd1Ex7FDgEcGkgBiVTFanJZrMTW8G9ufQ"
+                    />
+                    <span
+                      class="absolute top-0 left-0 bg-primary-container text-on-surface font-label-xs text-label-xs px-space-xs"
+                    >
+                      MVP
+                    </span>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-space-sm">
+                      <span
+                        class="font-headline-md text-headline-md text-on-surface"
+                        >NEXUS#BR1</span
+                      >
+                      <span
+                        class="bg-surface-container-high text-on-surface font-label-xs text-label-xs px-space-xs py-space-xs uppercase"
+                      >
+                        JETT
+                      </span>
+                      <span class="font-label-xs text-label-xs text-secondary"
+                        >ASCENDANT 3</span
+                      >
+                    </div>
+                    <div
+                      class="font-body-sm text-body-sm text-secondary mt-space-xs"
+                    >
+                      Rating Global:
+                      <strong class="text-on-surface font-label-md"
+                        >1.48</strong
+                      >
+                      • KDA:
+                      <strong class="text-on-surface font-label-md"
+                        >26/13/4</strong
+                      >
+                      (+13 DIFF) • 4 First Kills
+                    </div>
+                  </div>
+                </div>
+                <!-- Quick Micro Metrics -->
+                <div
+                  class="grid grid-cols-3 gap-space-md bg-surface-container-lowest p-space-md shadow-sm"
+                >
+                  <div class="text-center px-space-sm">
+                    <div class="font-label-xs text-label-xs text-secondary">
+                      ACS
+                    </div>
+                    <div
+                      class="font-headline-md text-headline-md text-on-surface mt-space-xs"
+                    >
+                      312
+                    </div>
+                  </div>
+                  <div class="text-center px-space-sm">
+                    <div class="font-label-xs text-label-xs text-secondary">
+                      HS RATE
+                    </div>
+                    <div
+                      class="font-headline-md text-headline-md text-on-surface mt-space-xs"
+                    >
+                      34.8%
+                    </div>
+                  </div>
+                  <div class="text-center px-space-sm">
+                    <div class="font-label-xs text-label-xs text-secondary">
+                      KAST
+                    </div>
+                    <div
+                      class="font-headline-md text-headline-md text-on-surface mt-space-xs"
+                    >
+                      81.8%
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Interactive Secondary Tabs Navigation -->
+        <div class="w-full bg-surface-container-lowest px-margin mt-space-xs">
+          <div
+            class="flex items-center gap-space-xs overflow-x-auto pb-space-xs"
+          >
+            <button
+              class="bg-on-background text-surface-container-lowest font-label-md text-label-md uppercase px-space-lg py-space-md shadow-sm"
+            >
+              Scoreboard Geral
+            </button>
+            <button
+              class="bg-canvas-soft hover:bg-surface-container-high text-on-surface font-label-md text-label-md uppercase px-space-lg py-space-md transition-colors"
+            >
+              Economia &amp; Rounds
+            </button>
+            <button
+              class="bg-canvas-soft hover:bg-surface-container-high text-on-surface font-label-md text-label-md uppercase px-space-lg py-space-md transition-colors"
+            >
+              Mapa de Abates &amp; Heatmap
+            </button>
+            <button
+              class="bg-canvas-soft hover:bg-surface-container-high text-on-surface font-label-md text-label-md uppercase px-space-lg py-space-md transition-colors flex items-center gap-space-xs"
+            >
+              <span class="w-2 h-2 rounded-full bg-primary-container"></span>
+              Diagnóstico IA por Round
+            </button>
+          </div>
+        </div>
+        <!-- Main Multi-Panel Workspace -->
+        <div class="w-full px-margin py-space-lg flex flex-col gap-gutter">
+          <!-- Section 1: Detailed Match Scoreboard -->
+          <div class="bg-canvas-soft p-space-md shadow-md">
+            <div
+              class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-sm mb-space-sm border-b border-border-hairline gap-space-sm"
+            >
+              <div class="flex items-center gap-space-md flex-wrap">
+                <span
+                  class="font-label-md text-label-md uppercase text-on-surface font-bold"
+                  >// TABELA TELEMÉTRICA DA PARTIDA</span
+                ><span
+                  class="bg-primary-container text-on-surface font-label-xs text-label-xs px-space-xs py-space-xs font-semibold"
+                  >ALL ROLES COMPUTED</span
+                ><span
+                  class="font-label-xs text-label-xs bg-surface-container-high px-space-xs py-space-xs text-secondary uppercase"
+                  >FORMATO RIOT V3</span
+                >
+              </div>
+              <div class="font-label-xs text-label-xs text-secondary uppercase">
+                RANKED MMR RANGE: ASC 1 — IMM 2 • CLIQUE NA LINHA PARA REPLAY
+                TELEMÉTRICO
+              </div>
+            </div>
+            <div class="mb-space-lg overflow-x-auto">
+              <div
+                class="bg-surface-container-low px-space-md py-space-xs flex items-center justify-between font-label-xs text-label-xs text-on-surface uppercase mb-space-xs border border-border-hairline"
+              >
+                <div class="flex items-center gap-space-sm">
+                  <span class="w-2.5 h-2.5 bg-on-background"></span
+                  ><strong class="tracking-wide"
+                    >TIME ALIADO (DEFESA INICIAL // VENCEDOR: 13 ROUNDS)</strong
+                  >
+                </div>
+                <span class="text-secondary font-label-xs text-label-xs"
+                  >RATING MÉDIO: <strong class="text-on-surface">1.18</strong> •
+                  ECON RATING: <strong class="text-on-surface">74.2</strong> •
+                  DANO TOTAL:
+                  <strong class="text-on-surface">15.820</strong></span
+                >
+              </div>
+              <table
+                class="w-full text-left font-body-sm text-body-sm border border-border-hairline border-collapse"
+              >
+                <thead>
+                  <tr
+                    class="bg-surface-container-lowest text-secondary font-label-xs text-label-xs uppercase border-b border-border-hairline"
+                  >
+                    <th class="py-space-xs px-space-sm">
+                      Jogador &amp; Ranque
+                    </th>
+                    <th class="py-space-xs px-space-sm">Agente</th>
+                    <th class="py-space-xs px-space-sm text-right">ACS</th>
+                    <th class="py-space-xs px-space-sm text-center">
+                      K / D / A
+                    </th>
+                    <th class="py-space-xs px-space-sm text-right">+/-</th>
+                    <th class="py-space-xs px-space-sm text-right">ADR</th>
+                    <th class="py-space-xs px-space-sm text-right">HS %</th>
+                    <th class="py-space-xs px-space-sm text-right">KAST %</th>
+                    <th class="py-space-xs px-space-sm text-right">FK / FD</th>
+                    <th class="py-space-xs px-space-sm text-right">ECON</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y-0">
+                  <tr
+                    class="bg-primary-container/20 text-on-surface font-medium hover:bg-primary-container/30 transition-colors border-b border-border-hairline"
+                  >
+                    <td
+                      class="py-space-xs px-space-sm flex items-center gap-space-sm"
+                    >
+                      <span
+                        class="bg-primary-container text-on-surface font-label-xs text-label-xs px-space-xs font-bold"
+                        >VOCÊ</span
+                      >
+                      <div>
+                        <div class="flex items-center gap-space-xs">
+                          <span
+                            class="font-headline-md text-headline-md font-bold"
+                            >NEXUS#BR1</span
+                          ><span
+                            class="bg-on-background text-primary-container font-label-xs text-[9px] px-1 py-0.5 rounded font-bold uppercase tracking-wider"
+                            >ASC 3</span
+                          >
+                        </div>
+                        <div class="font-label-xs text-label-xs text-secondary">
+                          Ascendant 3 • 84 RR
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <img
+                          alt="Jett"
+                          class="w-6 h-6 rounded-full object-cover border border-border-hairline shrink-0"
+                          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyk_ueM7mRq8UqxG2xyac2X629I_ue8YTCudL9shWQH-C3PzKRbWFkzNt2RQNnJ6jqMv16O2ERQ60TM_v7cP6KBuVeCfHmGjxRc0z5Ru4J0hBU00NjMXfkKvnRhIpSLIVaG55_mBMl4ThGsNQGuNB1BB55sqPQkjxbVzhPC9TvPaZnM8uecxrTi3ipM31Dwre-_T5Fs7BNAEo_w0meWHX6jyd1Ex7FDgEcGkgBiVTFanJZrMTW8G9ufQ"
+                        /><span
+                          class="font-label-xs text-label-xs font-bold uppercase"
+                          >Jett</span
+                        >
+                      </div>
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md font-bold text-on-surface"
+                    >
+                      312
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-center font-label-md text-label-md font-bold"
+                    >
+                      26 / 13 / 4
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md font-bold"
+                    >
+                      +13
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md font-bold"
+                    >
+                      184.2
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs font-semibold"
+                    >
+                      34.8%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      81.8%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs font-bold"
+                    >
+                      4 / 1
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs font-bold"
+                    >
+                      92
+                    </td>
+                  </tr>
+                  <tr
+                    class="bg-surface-container-lowest text-on-surface hover:bg-surface-container-low transition-colors border-b border-border-hairline"
+                  >
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <span class="font-body-md text-body-md font-semibold"
+                          >VORTEX#007</span
+                        ><span
+                          class="bg-surface-container-highest text-on-surface font-label-xs text-[9px] px-1 py-0.5 rounded uppercase font-medium"
+                          >ASC 2</span
+                        >
+                      </div>
+                      <div class="font-label-xs text-label-xs text-secondary">
+                        Ascendant 2 • 31 RR
+                      </div>
+                    </td>
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <div
+                          class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center font-label-xs font-bold text-secondary border border-border-hairline"
+                        >
+                          SO
+                        </div>
+                        <span class="font-label-xs text-label-xs uppercase"
+                          >Sova</span
+                        >
+                      </div>
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      218
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-center font-label-md text-label-md"
+                    >
+                      17 / 12 / 11
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      +5
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      142.0
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      28.0%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      77.2%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      2 / 2
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      71
+                    </td>
+                  </tr>
+                  <tr
+                    class="bg-canvas-soft text-on-surface hover:bg-surface-container-low transition-colors border-b border-border-hairline"
+                  >
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <span class="font-body-md text-body-md font-semibold"
+                          >CYPHER_GOD#BR</span
+                        ><span
+                          class="bg-on-background text-surface-container-lowest font-label-xs text-[9px] px-1 py-0.5 rounded uppercase font-medium"
+                          >IMM 1</span
+                        >
+                      </div>
+                      <div class="font-label-xs text-label-xs text-secondary">
+                        Immortal 1 • 45 RR
+                      </div>
+                    </td>
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <div
+                          class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center font-label-xs font-bold text-secondary border border-border-hairline"
+                        >
+                          CY
+                        </div>
+                        <span class="font-label-xs text-label-xs uppercase"
+                          >Cypher</span
+                        >
+                      </div>
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      195
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-center font-label-md text-label-md"
+                    >
+                      15 / 14 / 6
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      +1
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      128.5
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      31.2%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      72.7%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      1 / 1
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      68
+                    </td>
+                  </tr>
+                  <tr
+                    class="bg-surface-container-lowest text-on-surface hover:bg-surface-container-low transition-colors border-b border-border-hairline"
+                  >
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <span class="font-body-md text-body-md font-semibold"
+                          >ASTRA_LUA#88</span
+                        ><span
+                          class="bg-surface-container-highest text-on-surface font-label-xs text-[9px] px-1 py-0.5 rounded uppercase font-medium"
+                          >ASC 3</span
+                        >
+                      </div>
+                      <div class="font-label-xs text-label-xs text-secondary">
+                        Ascendant 3 • 12 RR
+                      </div>
+                    </td>
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <div
+                          class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center font-label-xs font-bold text-secondary border border-border-hairline"
+                        >
+                          OM
+                        </div>
+                        <span class="font-label-xs text-label-xs uppercase"
+                          >Omen</span
+                        >
+                      </div>
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      178
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-center font-label-md text-label-md"
+                    >
+                      13 / 15 / 9
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md text-secondary"
+                    >
+                      -2
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      115.3
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      22.5%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      68.1%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      1 / 3
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      64
+                    </td>
+                  </tr>
+                  <tr
+                    class="bg-canvas-soft text-on-surface hover:bg-surface-container-low transition-colors"
+                  >
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <span class="font-body-md text-body-md font-semibold"
+                          >FLASHBANG#KAYO</span
+                        ><span
+                          class="bg-surface-container-highest text-on-surface font-label-xs text-[9px] px-1 py-0.5 rounded uppercase font-medium"
+                          >ASC 1</span
+                        >
+                      </div>
+                      <div class="font-label-xs text-label-xs text-secondary">
+                        Ascendant 1 • 92 RR
+                      </div>
+                    </td>
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <div
+                          class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center font-label-xs font-bold text-secondary border border-border-hairline"
+                        >
+                          KO
+                        </div>
+                        <span class="font-label-xs text-label-xs uppercase"
+                          >KAY/O</span
+                        >
+                      </div>
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      152
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-center font-label-md text-label-md"
+                    >
+                      11 / 16 / 14
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md text-secondary"
+                    >
+                      -5
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      103.8
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      19.2%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      63.6%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      2 / 3
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      59
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="overflow-x-auto">
+              <div
+                class="bg-surface-container-low px-space-md py-space-xs flex items-center justify-between font-label-xs text-label-xs text-on-surface uppercase mb-space-xs border border-border-hairline"
+              >
+                <div class="flex items-center gap-space-sm">
+                  <span class="w-2.5 h-2.5 bg-secondary"></span
+                  ><strong class="tracking-wide"
+                    >TIME ADVERSÁRIO (ATAQUE INICIAL // DERROTA: 9
+                    ROUNDS)</strong
+                  >
+                </div>
+                <span class="text-secondary font-label-xs text-label-xs"
+                  >RATING MÉDIO: <strong class="text-on-surface">0.94</strong> •
+                  ECON RATING: <strong class="text-on-surface">58.0</strong> •
+                  DANO TOTAL:
+                  <strong class="text-on-surface">12.940</strong></span
+                >
+              </div>
+              <table
+                class="w-full text-left font-body-sm text-body-sm border border-border-hairline border-collapse"
+              >
+                <thead>
+                  <tr
+                    class="bg-surface-container-lowest text-secondary font-label-xs text-label-xs uppercase border-b border-border-hairline"
+                  >
+                    <th class="py-space-xs px-space-sm">
+                      Jogador &amp; Ranque
+                    </th>
+                    <th class="py-space-xs px-space-sm">Agente</th>
+                    <th class="py-space-xs px-space-sm text-right">ACS</th>
+                    <th class="py-space-xs px-space-sm text-center">
+                      K / D / A
+                    </th>
+                    <th class="py-space-xs px-space-sm text-right">+/-</th>
+                    <th class="py-space-xs px-space-sm text-right">ADR</th>
+                    <th class="py-space-xs px-space-sm text-right">HS %</th>
+                    <th class="py-space-xs px-space-sm text-right">KAST %</th>
+                    <th class="py-space-xs px-space-sm text-right">FK / FD</th>
+                    <th class="py-space-xs px-space-sm text-right">ECON</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y-0">
+                  <tr
+                    class="bg-surface-container-lowest text-on-surface hover:bg-surface-container-low transition-colors border-b border-border-hairline"
+                  >
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <span class="font-body-md text-body-md font-semibold"
+                          >REYDANZ#LAT</span
+                        ><span
+                          class="bg-on-background text-surface-container-lowest font-label-xs text-[9px] px-1 py-0.5 rounded uppercase font-medium"
+                          >IMM 2</span
+                        >
+                      </div>
+                      <div class="font-label-xs text-label-xs text-secondary">
+                        Immortal 2 • 110 RR
+                      </div>
+                    </td>
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <div
+                          class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center font-label-xs font-bold text-secondary border border-border-hairline"
+                        >
+                          RE
+                        </div>
+                        <span class="font-label-xs text-label-xs uppercase"
+                          >Reyna</span
+                        >
+                      </div>
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md font-bold"
+                    >
+                      254
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-center font-label-md text-label-md"
+                    >
+                      20 / 16 / 2
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      +4
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      165.4
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      32.0%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      68.1%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs font-bold"
+                    >
+                      5 / 3
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      74
+                    </td>
+                  </tr>
+                  <tr
+                    class="bg-canvas-soft text-on-surface hover:bg-surface-container-low transition-colors border-b border-border-hairline"
+                  >
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <span class="font-body-md text-body-md font-semibold"
+                          >SHADOW#777</span
+                        ><span
+                          class="bg-surface-container-highest text-on-surface font-label-xs text-[9px] px-1 py-0.5 rounded uppercase font-medium"
+                          >ASC 3</span
+                        >
+                      </div>
+                      <div class="font-label-xs text-label-xs text-secondary">
+                        Ascendant 3 • 60 RR
+                      </div>
+                    </td>
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <div
+                          class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center font-label-xs font-bold text-secondary border border-border-hairline"
+                        >
+                          FA
+                        </div>
+                        <span class="font-label-xs text-label-xs uppercase"
+                          >Fade</span
+                        >
+                      </div>
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      198
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-center font-label-md text-label-md"
+                    >
+                      16 / 15 / 8
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      +1
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      132.8
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      24.5%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      72.7%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      2 / 2
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      62
+                    </td>
+                  </tr>
+                  <tr
+                    class="bg-surface-container-lowest text-on-surface hover:bg-surface-container-low transition-colors border-b border-border-hairline"
+                  >
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <span class="font-body-md text-body-md font-semibold"
+                          >SMOKER#CH</span
+                        ><span
+                          class="bg-surface-container-highest text-on-surface font-label-xs text-[9px] px-1 py-0.5 rounded uppercase font-medium"
+                          >ASC 2</span
+                        >
+                      </div>
+                      <div class="font-label-xs text-label-xs text-secondary">
+                        Ascendant 2 • 40 RR
+                      </div>
+                    </td>
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <div
+                          class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center font-label-xs font-bold text-secondary border border-border-hairline"
+                        >
+                          AS
+                        </div>
+                        <span class="font-label-xs text-label-xs uppercase"
+                          >Astra</span
+                        >
+                      </div>
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      165
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-center font-label-md text-label-md"
+                    >
+                      13 / 16 / 7
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md text-secondary"
+                    >
+                      -3
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      112.4
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      21.0%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      63.6%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      1 / 2
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      55
+                    </td>
+                  </tr>
+                  <tr
+                    class="bg-canvas-soft text-on-surface hover:bg-surface-container-low transition-colors border-b border-border-hairline"
+                  >
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <span class="font-body-md text-body-md font-semibold"
+                          >LOCKDOWN#KJ</span
+                        ><span
+                          class="bg-surface-container-highest text-on-surface font-label-xs text-[9px] px-1 py-0.5 rounded uppercase font-medium"
+                          >ASC 2</span
+                        >
+                      </div>
+                      <div class="font-label-xs text-label-xs text-secondary">
+                        Ascendant 2 • 15 RR
+                      </div>
+                    </td>
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <div
+                          class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center font-label-xs font-bold text-secondary border border-border-hairline"
+                        >
+                          KJ
+                        </div>
+                        <span class="font-label-xs text-label-xs uppercase"
+                          >Killjoy</span
+                        >
+                      </div>
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      150
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-center font-label-md text-label-md"
+                    >
+                      11 / 18 / 5
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md text-secondary"
+                    >
+                      -7
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      105.1
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      18.5%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      59.0%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      1 / 2
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      51
+                    </td>
+                  </tr>
+                  <tr
+                    class="bg-surface-container-lowest text-on-surface hover:bg-surface-container-low transition-colors"
+                  >
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <span class="font-body-md text-body-md font-semibold"
+                          >INITIATOR#09</span
+                        ><span
+                          class="bg-surface-container-highest text-on-surface font-label-xs text-[9px] px-1 py-0.5 rounded uppercase font-medium"
+                          >ASC 1</span
+                        >
+                      </div>
+                      <div class="font-label-xs text-label-xs text-secondary">
+                        Ascendant 1 • 78 RR
+                      </div>
+                    </td>
+                    <td class="py-space-xs px-space-sm">
+                      <div class="flex items-center gap-space-xs">
+                        <div
+                          class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center font-label-xs font-bold text-secondary border border-border-hairline"
+                        >
+                          BR
+                        </div>
+                        <span class="font-label-xs text-label-xs uppercase"
+                          >Breach</span
+                        >
+                      </div>
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      135
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-center font-label-md text-label-md"
+                    >
+                      10 / 17 / 10
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md text-secondary"
+                    >
+                      -7
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-md text-label-md"
+                    >
+                      98.6
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      16.0%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      54.5%
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      1 / 2
+                    </td>
+                    <td
+                      class="py-space-xs px-space-sm text-right font-label-xs text-label-xs"
+                    >
+                      48
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- Section 2: Round-by-Round Timeline & Economic Flow Matrix -->
+          <div class="bg-canvas-soft p-space-md shadow-md">
+            <div
+              class="flex flex-col md:flex-row md:items-center justify-between pb-space-sm mb-space-sm border-b border-border-hairline gap-space-sm"
+            >
+              <div>
+                <div class="flex items-center gap-space-xs">
+                  <span
+                    class="font-label-md text-label-md uppercase text-on-surface font-bold"
+                    >// TIMELINE DE 22 ROUNDS • ESTADO ECONÔMICO &amp;
+                    COMBATE</span
+                  ><span
+                    class="bg-surface-container-high text-on-surface font-label-xs text-label-xs px-space-xs py-space-xs uppercase"
+                    >COMPACT RIBBON</span
+                  >
+                </div>
+                <div
+                  class="font-label-xs text-label-xs text-secondary mt-space-xs"
+                >
+                  Histórico sequencial: tipo de vitória, compra econômica e
+                  clutch points. Clique nos rounds com (*) para abrir telemetria
+                  de IA.
+                </div>
+              </div>
+              <div
+                class="flex items-center gap-space-md flex-wrap font-label-xs text-label-xs uppercase bg-surface-container-lowest px-space-md py-space-xs border border-border-hairline"
+              >
+                <div class="flex items-center gap-space-xs">
+                  <span class="w-2.5 h-2.5 bg-on-background"></span
+                  ><span>Vitória Def</span>
+                </div>
+                <div class="flex items-center gap-space-xs">
+                  <span
+                    class="w-2.5 h-2.5 bg-primary-container border border-border-hairline"
+                  ></span
+                  ><span>Vitória Atk</span>
+                </div>
+                <div class="flex items-center gap-space-xs">
+                  <span
+                    class="w-2.5 h-2.5 bg-surface-container-highest border border-border-hairline"
+                  ></span
+                  ><span>Derrota</span>
+                </div>
+                <div
+                  class="flex items-center gap-space-xs pl-space-sm border-l border-border-hairline"
+                >
+                  <span class="font-bold text-error">*</span
+                  ><span>Diagnóstico IA</span>
+                </div>
+              </div>
+            </div>
+            <div class="overflow-x-auto pb-space-xs">
+              <div class="min-w-[890px] flex flex-col gap-space-xs">
+                <div class="grid grid-cols-22 gap-1 items-stretch">
+                  <!-- R1 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R1
+                    </div>
+                    <div
+                      class="my-0.5 bg-on-background text-surface-container-lowest text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      W
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-on-surface uppercase"
+                    >
+                      ELIM
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-high text-secondary px-0.5 py-0.5 uppercase"
+                    >
+                      PIST
+                    </div>
+                  </div>
+                  <!-- R2 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R2
+                    </div>
+                    <div
+                      class="my-0.5 bg-on-background text-surface-container-lowest text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      W
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-on-surface uppercase"
+                    >
+                      ELIM
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-high text-on-surface font-semibold px-0.5 py-0.5 uppercase"
+                    >
+                      SEMI
+                    </div>
+                  </div>
+                  <!-- R3 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R3
+                    </div>
+                    <div
+                      class="my-0.5 bg-surface-container-highest text-secondary text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      L
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-secondary uppercase"
+                    >
+                      PLNT
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-primary-container/30 text-on-surface px-0.5 py-0.5 uppercase"
+                    >
+                      BONU
+                    </div>
+                  </div>
+                  <!-- R4 (Highlighted Interactive IA) -->
+                  <div
+                    class="flex flex-col border-2 border-border-hairline bg-primary-container/30 p-1 text-center relative shadow-sm ring-2 ring-primary-container"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-error font-bold flex items-center justify-center gap-0.5"
+                    >
+                      R4*
+                    </div>
+                    <div
+                      class="my-0.5 bg-surface-container-highest text-error text-[10px] font-bold py-0.5 leading-none border border-error"
+                    >
+                      L
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-error font-bold uppercase"
+                    >
+                      CLUT
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-highest text-on-surface font-bold px-0.5 py-0.5 uppercase"
+                    >
+                      FULL
+                    </div>
+                  </div>
+                  <!-- R5 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R5
+                    </div>
+                    <div
+                      class="my-0.5 bg-on-background text-surface-container-lowest text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      W
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-on-surface uppercase"
+                    >
+                      DEF
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-highest text-on-surface px-0.5 py-0.5 uppercase"
+                    >
+                      FULL
+                    </div>
+                  </div>
+                  <!-- R6 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R6
+                    </div>
+                    <div
+                      class="my-0.5 bg-on-background text-surface-container-lowest text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      W
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-on-surface uppercase"
+                    >
+                      ELIM
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-highest text-on-surface px-0.5 py-0.5 uppercase"
+                    >
+                      FULL
+                    </div>
+                  </div>
+                  <!-- R7 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R7
+                    </div>
+                    <div
+                      class="my-0.5 bg-surface-container-highest text-secondary text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      L
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-secondary uppercase"
+                    >
+                      PLNT
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-high text-secondary px-0.5 py-0.5 uppercase"
+                    >
+                      SEMI
+                    </div>
+                  </div>
+                  <!-- R8 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R8
+                    </div>
+                    <div
+                      class="my-0.5 bg-on-background text-surface-container-lowest text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      W
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-on-surface uppercase"
+                    >
+                      ELIM
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-highest text-on-surface px-0.5 py-0.5 uppercase"
+                    >
+                      FULL
+                    </div>
+                  </div>
+                  <!-- R9 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R9
+                    </div>
+                    <div
+                      class="my-0.5 bg-surface-container-highest text-secondary text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      L
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-secondary uppercase"
+                    >
+                      PLNT
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-high text-secondary px-0.5 py-0.5 uppercase"
+                    >
+                      ECO
+                    </div>
+                  </div>
+                  <!-- R10 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R10
+                    </div>
+                    <div
+                      class="my-0.5 bg-surface-container-highest text-secondary text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      L
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-secondary uppercase"
+                    >
+                      ELIM
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-highest text-on-surface px-0.5 py-0.5 uppercase"
+                    >
+                      FULL
+                    </div>
+                  </div>
+                  <!-- R11 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R11
+                    </div>
+                    <div
+                      class="my-0.5 bg-on-background text-surface-container-lowest text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      W
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-on-surface uppercase"
+                    >
+                      DEF
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-highest text-on-surface px-0.5 py-0.5 uppercase"
+                    >
+                      FULL
+                    </div>
+                  </div>
+                  <!-- R12 (Halftime Climax) -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center mr-1 border-r-2 border-r-on-background"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-on-surface font-bold"
+                    >
+                      R12*
+                    </div>
+                    <div
+                      class="my-0.5 bg-on-background text-surface-container-lowest text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      W
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-on-surface uppercase"
+                    >
+                      RETK
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-highest text-on-surface font-bold px-0.5 py-0.5 uppercase"
+                    >
+                      FULL
+                    </div>
+                  </div>
+                  <!-- R13 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center ml-1 border-l-2 border-l-primary-container"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R13
+                    </div>
+                    <div
+                      class="my-0.5 bg-primary-container text-on-surface text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      W
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-on-surface uppercase"
+                    >
+                      PLNT
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-high text-secondary px-0.5 py-0.5 uppercase"
+                    >
+                      PIST
+                    </div>
+                  </div>
+                  <!-- R14 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R14
+                    </div>
+                    <div
+                      class="my-0.5 bg-primary-container text-on-surface text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      W
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-on-surface uppercase"
+                    >
+                      ELIM
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-high text-on-surface font-semibold px-0.5 py-0.5 uppercase"
+                    >
+                      SEMI
+                    </div>
+                  </div>
+                  <!-- R15 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R15
+                    </div>
+                    <div
+                      class="my-0.5 bg-surface-container-highest text-secondary text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      L
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-secondary uppercase"
+                    >
+                      DEF
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-primary-container/30 text-on-surface px-0.5 py-0.5 uppercase"
+                    >
+                      BONU
+                    </div>
+                  </div>
+                  <!-- R16 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R16
+                    </div>
+                    <div
+                      class="my-0.5 bg-primary-container text-on-surface text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      W
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-on-surface uppercase"
+                    >
+                      PLNT
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-highest text-on-surface px-0.5 py-0.5 uppercase"
+                    >
+                      FULL
+                    </div>
+                  </div>
+                  <!-- R17 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R17
+                    </div>
+                    <div
+                      class="my-0.5 bg-surface-container-highest text-secondary text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      L
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-secondary uppercase"
+                    >
+                      TIME
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-high text-secondary px-0.5 py-0.5 uppercase"
+                    >
+                      ECO
+                    </div>
+                  </div>
+                  <!-- R18 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-on-surface font-bold"
+                    >
+                      R18*
+                    </div>
+                    <div
+                      class="my-0.5 bg-surface-container-highest text-error text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      L
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-secondary uppercase"
+                    >
+                      ELIM
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-highest text-on-surface px-0.5 py-0.5 uppercase"
+                    >
+                      FULL
+                    </div>
+                  </div>
+                  <!-- R19 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R19
+                    </div>
+                    <div
+                      class="my-0.5 bg-primary-container text-on-surface text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      W
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-on-surface uppercase"
+                    >
+                      PLNT
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-highest text-on-surface px-0.5 py-0.5 uppercase"
+                    >
+                      FULL
+                    </div>
+                  </div>
+                  <!-- R20 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R20
+                    </div>
+                    <div
+                      class="my-0.5 bg-primary-container text-on-surface text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      W
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-on-surface uppercase"
+                    >
+                      ELIM
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-highest text-on-surface px-0.5 py-0.5 uppercase"
+                    >
+                      FULL
+                    </div>
+                  </div>
+                  <!-- R21 -->
+                  <div
+                    class="flex flex-col border border-border-hairline bg-surface-container-lowest p-1 text-center"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-secondary font-bold"
+                    >
+                      R21
+                    </div>
+                    <div
+                      class="my-0.5 bg-surface-container-highest text-secondary text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      L
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-secondary uppercase"
+                    >
+                      DEF
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-high text-secondary px-0.5 py-0.5 uppercase"
+                    >
+                      SEMI
+                    </div>
+                  </div>
+                  <!-- R22 (Match Win) -->
+                  <div
+                    class="flex flex-col border-2 border-border-hairline bg-primary-container/20 p-1 text-center shadow-sm"
+                  >
+                    <div
+                      class="font-label-xs text-[9px] text-on-surface font-bold"
+                    >
+                      R22
+                    </div>
+                    <div
+                      class="my-0.5 bg-primary-container text-on-surface text-[10px] font-bold py-0.5 leading-none"
+                    >
+                      W
+                    </div>
+                    <div
+                      class="font-label-xs text-[8px] text-on-surface font-bold uppercase"
+                    >
+                      PLNT
+                    </div>
+                    <div
+                      class="mt-0.5 font-label-xs text-[8px] bg-surface-container-highest text-on-surface font-bold px-0.5 py-0.5 uppercase"
+                    >
+                      FULL
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="grid grid-cols-22 gap-1 text-center font-label-xs text-[9px] text-secondary pt-0.5 border-t border-border-hairline"
+                >
+                  <span>1-0</span><span>2-0</span><span>2-1</span
+                  ><span class="font-bold text-on-surface">2-2</span
+                  ><span>3-2</span><span>4-2</span><span>4-3</span
+                  ><span>5-3</span><span>5-4</span><span>5-5</span
+                  ><span>6-5</span
+                  ><span class="font-bold text-on-surface mr-1">7-5</span
+                  ><span class="ml-1">8-5</span><span>9-5</span><span>9-6</span
+                  ><span>10-6</span><span>10-7</span><span>10-8</span
+                  ><span>11-8</span><span>12-8</span><span>12-9</span
+                  ><span class="font-bold text-on-surface">13-9</span>
+                </div>
+              </div>
+            </div>
+            <div
+              class="grid grid-cols-2 sm:grid-cols-4 gap-space-md mt-space-md pt-space-sm bg-surface-container-lowest p-space-sm shadow-sm border border-border-hairline"
+            >
+              <div>
+                <span
+                  class="font-label-xs text-label-xs text-secondary uppercase"
+                  >Conversão Pistols</span
+                >
+                <div
+                  class="font-headline-md text-headline-md text-on-surface mt-space-xs font-bold"
+                >
+                  2 / 2 (100%)
+                </div>
+              </div>
+              <div>
+                <span
+                  class="font-label-xs text-label-xs text-secondary uppercase"
+                  >Taxa Rounds Bônus</span
+                >
+                <div
+                  class="font-headline-md text-headline-md text-on-surface mt-space-xs font-bold"
+                >
+                  1 / 2 (50.0%)
+                </div>
+              </div>
+              <div>
+                <span
+                  class="font-label-xs text-label-xs text-secondary uppercase"
+                  >Rounds Full-Buy Ganhos</span
+                >
+                <div
+                  class="font-headline-md text-headline-md text-on-surface mt-space-xs font-bold"
+                >
+                  8 / 11 (72.7%)
+                </div>
+              </div>
+              <div>
+                <span
+                  class="font-label-xs text-label-xs text-secondary uppercase"
+                  >Créditos Poupados (Eco)</span
+                >
+                <div
+                  class="font-headline-md text-headline-md text-on-surface mt-space-xs font-bold"
+                >
+                  ¤ 18.400
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Section 3: AI Tactical Coach Round Diagnostics & Kill Heatmap Layout -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+            <!-- AI Engine Coaching Panel -->
+            <div
+              class="lg:col-span-7 bg-canvas-soft p-space-md shadow-md flex flex-col justify-between"
+            >
+              <div>
+                <div
+                  class="flex items-center justify-between pb-space-sm mb-space-md"
+                >
+                  <div class="flex items-center gap-space-xs">
+                    <span class="w-2.5 h-2.5 bg-primary-container"></span>
+                    <span
+                      class="font-label-md text-label-md uppercase text-on-surface font-bold"
+                    >
+                      DIAGNÓSTICO TÁTICO • MOTOR IA (MINIMAX-V2)
+                    </span>
+                  </div>
+                  <span
+                    class="font-label-xs text-label-xs bg-surface-container-high text-on-surface px-space-xs py-space-xs"
+                  >
+                    CONFIDÊNCIA: 94.2%
+                  </span>
+                </div>
+                <!-- Round Selector Interactive Buttons -->
+                <div
+                  class="flex items-center gap-space-xs overflow-x-auto pb-space-sm mb-space-md"
+                >
+                  <button
+                    class="round-tab-btn bg-on-background text-surface-container-lowest px-space-md py-space-xs font-label-xs text-label-xs uppercase shrink-0 shadow-sm"
+                    id="btn-r4"
+                  >
+                    Round 4 • Clutch 1v2 Perdido
+                  </button>
+                  <button
+                    class="round-tab-btn bg-surface-container-lowest text-on-surface hover:bg-surface-container-high px-space-md py-space-xs font-label-xs text-label-xs uppercase shrink-0 transition-colors shadow-sm"
+                    id="btn-r12"
+                  >
+                    Round 12 • Retake B Perfeito
+                  </button>
+                  <button
+                    class="round-tab-btn bg-surface-container-lowest text-on-surface hover:bg-surface-container-high px-space-md py-space-xs font-label-xs text-label-xs uppercase shrink-0 transition-colors shadow-sm"
+                    id="btn-r18"
+                  >
+                    Round 18 • Falha Rotação Mid
+                  </button>
+                </div>
+                <!-- Dynamic AI Output Card (Defaults to Round 4) -->
+                <div
+                  class="bg-surface-container-lowest p-space-lg relative shadow-sm"
+                  id="ai-content-card"
+                >
+                  <div class="flex items-center justify-between mb-space-xs">
+                    <span
+                      class="font-label-xs text-label-xs text-secondary uppercase"
+                    >
+                      // TELEMETRIA DO LANCE: 00:18 RESTANTES • LOCAL: CATWALK →
+                      A-SITE
+                    </span>
+                    <span
+                      class="font-label-xs text-label-xs bg-error text-on-error px-space-xs py-space-xs uppercase"
+                    >
+                      DECISÃO SUB-ÓTIMA
+                    </span>
+                  </div>
+                  <!-- Win Probability Shift Bar -->
+                  <div
+                    class="my-space-md p-space-sm bg-surface-container-low shadow-inner"
+                  >
+                    <div
+                      class="flex justify-between font-label-xs text-label-xs mb-space-xs"
+                    >
+                      <span
+                        >PROBABILIDADE DE VITÓRIA (PRÉ-LANCE):
+                        <strong class="text-on-surface">64%</strong></span
+                      >
+                      <span class="text-error font-bold"
+                        >PÓS-LANCE: 18% (-46%)</span
+                      >
+                    </div>
+                    <div
+                      class="w-full h-2 bg-surface-container-highest relative"
+                    >
+                      <div
+                        class="absolute left-0 top-0 bottom-0 bg-on-background w-[64%]"
+                      ></div>
+                      <div
+                        class="absolute left-0 top-0 bottom-0 bg-primary-container w-[18%]"
+                      ></div>
+                    </div>
+                  </div>
+                  <div class="space-y-space-md">
+                    <div>
+                      <span
+                        class="font-label-xs text-label-xs uppercase text-on-surface font-bold"
+                        >ANÁLISE DE EVENTO:</span
+                      >
+                      <p
+                        class="font-body-md text-body-md text-on-surface mt-space-xs leading-relaxed"
+                      >
+                        No <strong>Round 4</strong>, após abater o Cypher
+                        inimigo, a decisão de avançar agressivamente pelo
+                        <em>Catwalk</em> com apenas 18 segundos restantes sem
+                        confirmação de posição do Breach no B-Link expôs seu
+                        flanco esquerdo. Essa jogada isolada converteu uma
+                        situação de retake favorável em duelo desfavorável sem
+                        tempo hábil para o desarmamento da Spike.
+                      </p>
+                    </div>
+                    <!-- Recommendation Box with Yellow Accent bar -->
+                    <div
+                      class="bg-canvas-soft p-space-md border-l-4 border-l-primary-container shadow-sm"
+                    >
+                      <span
+                        class="font-label-xs text-label-xs uppercase font-bold text-on-surface"
+                      >
+                        // RECOMENDAÇÃO TÁTICA DO COACH:
+                      </span>
+                      <p
+                        class="font-body-sm text-body-sm text-on-surface mt-space-xs"
+                      >
+                        • <strong>Jogar no Tempo:</strong> A Spike não estava
+                        plantada em A. Manter o posicionamento passivo em Tree
+                        forçaria o atacante a afunilar na porta de metal sob som
+                        de corrida.<br />
+                        • <strong>Utilidade Restante:</strong> Você ainda tinha
+                        1 <em>Cloudburst</em> disponível. Use a smoke defensiva
+                        para cortar a visão de Garden antes de verificar
+                        Catwalk.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="mt-space-md pt-space-sm flex items-center justify-between font-label-xs text-label-xs text-secondary"
+              >
+                <span>MODELO: MINIMAX-VALORANT-ANALYTICS-4B</span>
+                <button
+                  class="bg-primary-container text-on-surface font-label-xs text-label-xs uppercase px-space-md py-space-xs hover:bg-on-background hover:text-surface-container-lowest transition-colors shadow-sm"
+                >
+                  Copiar Relatório Tático
+                </button>
+              </div>
+            </div>
+            <!-- Tactical Map Kill Coordinates / Positioning Visualization -->
+            <div
+              class="lg:col-span-5 bg-canvas-soft p-space-md shadow-md flex flex-col justify-between"
+            >
+              <div>
+                <div
+                  class="flex items-center justify-between pb-space-sm mb-space-sm"
+                >
+                  <span
+                    class="font-label-md text-label-md uppercase text-on-surface font-bold"
+                  >
+                    // POSICIONAMENTO &amp; KILLS (ASCENT)
+                  </span>
+                  <span
+                    class="font-label-xs text-label-xs text-secondary uppercase"
+                  >
+                    CAMADA: ROUND 4
+                  </span>
+                </div>
+                <!-- Simulated High-Contrast Vector Map with Target Nodes -->
+                <div
+                  class="relative w-full aspect-square bg-surface-container-lowest overflow-hidden shadow-inner flex items-center justify-center p-space-sm"
+                >
+                  <img
+                    class="absolute inset-0 w-full h-full object-cover opacity-20 filter grayscale"
+                    data-alt="Tactical top-down minimap of Ascent Valorant bombsite layout schematic high contrast lines showing sites A B Mid and Tree courtyard."
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpMJJpE_eDe4LybOGWuu0oJ-j20g_gYPM8DBOp_F_O9SnX6XXVdG47soR_Cv531DmPiOtXn-cx90LOxGhsQujbygR5kfBI_1Bx-eaOdQh-MzAM3UmbCMgVM79qNPoqy0_27sTeJhkI3112HbBZ0NceO6sH_8SA1AOOXX3d3sSvuPL11agbLYdMHnSpFOlgHoCMDU4uc0a6oUpcDHN3IE-tICVrDotF4u3qAV8xeJ8K1sjzoUAu56gnhA"
+                  />
+                  <!-- SVG Vector Overlay with Heatmap Trails & Nodes -->
+                  <svg
+                    class="absolute inset-0 w-full h-full p-4"
+                    fill="none"
+                    viewbox="0 0 300 300"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <!-- Site Boundaries / Tactical zones -->
+                    <rect
+                      class="stroke-on-surface/30"
+                      height="70"
+                      stroke-dasharray="3 3"
+                      stroke-width="1.5"
+                      width="80"
+                      x="30"
+                      y="40"
+                    ></rect>
+                    <text
+                      class="fill-secondary font-label-xs text-[10px]"
+                      x="35"
+                      y="55"
+                    >
+                      SITE B
+                    </text>
+                    <rect
+                      class="stroke-on-surface/30"
+                      height="70"
+                      stroke-dasharray="3 3"
+                      stroke-width="1.5"
+                      width="80"
+                      x="190"
+                      y="40"
+                    ></rect>
+                    <text
+                      class="fill-secondary font-label-xs text-[10px]"
+                      x="195"
+                      y="55"
+                    >
+                      SITE A
+                    </text>
+                    <rect
+                      class="stroke-on-surface/30"
+                      height="60"
+                      stroke-width="1.5"
+                      width="80"
+                      x="110"
+                      y="120"
+                    ></rect>
+                    <text
+                      class="fill-secondary font-label-xs text-[10px]"
+                      x="125"
+                      y="145"
+                    >
+                      MID COURTYARD
+                    </text>
+                    <!-- Movement Path Line (Nexus Jett) -->
+                    <path
+                      class="stroke-on-background"
+                      d="M 230 180 L 210 130 L 160 125"
+                      stroke-dasharray="4 2"
+                      stroke-linecap="round"
+                      stroke-width="2"
+                    ></path>
+                    <circle
+                      class="fill-on-background"
+                      cx="230"
+                      cy="180"
+                      r="4"
+                    ></circle>
+                    <!-- First Kill Node -->
+                    <circle
+                      class="fill-primary-container stroke-on-background"
+                      cx="210"
+                      cy="130"
+                      r="6"
+                      stroke-width="1.5"
+                    ></circle>
+                    <text
+                      class="fill-on-surface font-label-xs text-[9px] font-bold"
+                      x="218"
+                      y="133"
+                    >
+                      FK: Cypher
+                    </text>
+                    <!-- Death Point Node -->
+                    <circle
+                      class="fill-error stroke-on-background"
+                      cx="160"
+                      cy="125"
+                      r="7"
+                      stroke-width="1.5"
+                    ></circle>
+                    <path
+                      d="M 157 122 L 163 128 M 163 122 L 157 128"
+                      stroke="#ffffff"
+                      stroke-width="1.5"
+                    ></path>
+                    <text
+                      class="fill-error font-label-xs text-[9px] font-bold"
+                      x="110"
+                      y="115"
+                    >
+                      MORTE (Nexus)
+                    </text>
+                    <!-- Enemy Breach Position -->
+                    <circle
+                      class="fill-secondary stroke-on-background"
+                      cx="140"
+                      cy="85"
+                      r="5"
+                      stroke-width="1"
+                    ></circle>
+                    <text
+                      class="fill-secondary font-label-xs text-[9px]"
+                      x="125"
+                      y="78"
+                    >
+                      Breach (B-Link)
+                    </text>
+                    <line
+                      class="stroke-error/60"
+                      stroke-dasharray="2 2"
+                      stroke-width="1"
+                      x1="140"
+                      x2="160"
+                      y1="85"
+                      y2="125"
+                    ></line>
+                  </svg>
+                </div>
+              </div>
+              <!-- Legend / Interactive Map Controls -->
+              <div
+                class="mt-space-sm pt-space-sm flex items-center justify-between font-label-xs text-label-xs"
+              >
+                <div class="flex items-center gap-space-md">
+                  <span class="flex items-center gap-space-xs">
+                    <span
+                      class="w-2 h-2 rounded-full bg-primary-container"
+                    ></span>
+                    Abate Feito
+                  </span>
+                  <span class="flex items-center gap-space-xs">
+                    <span class="w-2 h-2 rounded-full bg-error"></span> Ponto de
+                    Morte
+                  </span>
+                </div>
+                <button
+                  class="bg-surface-container-high hover:bg-on-background hover:text-surface-container-lowest px-space-sm py-space-xs font-label-xs text-label-xs uppercase transition-colors"
+                >
+                  Alternar Heatmap Geral
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Section 4: Weapon Telemetry & Combat Efficiency Breakdown -->
+          <div class="bg-canvas-soft p-space-md shadow-md mb-space-xl">
+            <div
+              class="flex items-center justify-between pb-space-sm mb-space-sm"
+            >
+              <span
+                class="font-label-md text-label-md uppercase text-on-surface font-bold"
+              >
+                // EFICIÊNCIA DE ARSENAL • NEXUS#BR1
+              </span>
+              <span
+                class="font-label-xs text-label-xs text-secondary uppercase"
+              >
+                PRECISÃO DE TIRO E DANO POR BALA
+              </span>
+            </div>
+            <div
+              class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-gutter"
+            >
+              <!-- Vandal Card -->
+              <div
+                class="bg-surface-container-lowest p-space-md shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span
+                      class="font-label-md text-label-md font-bold text-on-surface"
+                      >VANDAL</span
+                    >
+                    <span
+                      class="bg-primary-container text-on-surface font-label-xs text-label-xs px-space-xs"
+                      >18 ABATES</span
+                    >
+                  </div>
+                  <div
+                    class="mt-space-md space-y-space-xs font-label-xs text-label-xs"
+                  >
+                    <div class="flex justify-between">
+                      <span class="text-secondary">Headshot %:</span>
+                      <span class="text-on-surface font-bold">39.2%</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-secondary">Dano Médio / Round:</span>
+                      <span class="text-on-surface">164.8</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-secondary">Tempo p/ 1º Tiro:</span>
+                      <span class="text-on-surface">192 ms</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="w-full bg-surface-container-high h-1.5 mt-space-sm">
+                  <div class="bg-on-background h-full w-[39.2%]"></div>
+                </div>
+              </div>
+              <!-- Operator Card -->
+              <div
+                class="bg-surface-container-lowest p-space-md shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span
+                      class="font-label-md text-label-md font-bold text-on-surface"
+                      >OPERATOR</span
+                    >
+                    <span
+                      class="bg-surface-container-high text-on-surface font-label-xs text-label-xs px-space-xs"
+                      >5 ABATES</span
+                    >
+                  </div>
+                  <div
+                    class="mt-space-md space-y-space-xs font-label-xs text-label-xs"
+                  >
+                    <div class="flex justify-between">
+                      <span class="text-secondary">Precisão no Pick:</span>
+                      <span class="text-on-surface font-bold">83.3%</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-secondary">First Kills (Def):</span>
+                      <span class="text-on-surface">3 Kills</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-secondary">Retake Kills:</span>
+                      <span class="text-on-surface">2 Kills</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="w-full bg-surface-container-high h-1.5 mt-space-sm">
+                  <div class="bg-on-background h-full w-[83.3%]"></div>
+                </div>
+              </div>
+              <!-- Ghost Card -->
+              <div
+                class="bg-surface-container-lowest p-space-md shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span
+                      class="font-label-md text-label-md font-bold text-on-surface"
+                      >GHOST</span
+                    >
+                    <span
+                      class="bg-surface-container-high text-on-surface font-label-xs text-label-xs px-space-xs"
+                      >2 ABATES</span
+                    >
+                  </div>
+                  <div
+                    class="mt-space-md space-y-space-xs font-label-xs text-label-xs"
+                  >
+                    <div class="flex justify-between">
+                      <span class="text-secondary">Headshot %:</span>
+                      <span class="text-on-surface font-bold">66.7%</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-secondary">Dano Pistols:</span>
+                      <span class="text-on-surface">210 Dano</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-secondary">First Blood Pistol:</span>
+                      <span class="text-on-surface">1 FK</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="w-full bg-surface-container-high h-1.5 mt-space-sm">
+                  <div class="bg-on-background h-full w-[66.7%]"></div>
+                </div>
+              </div>
+              <!-- Blade Storm (Ult) Card -->
+              <div
+                class="bg-surface-container-lowest p-space-md shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span
+                      class="font-label-md text-label-md font-bold text-on-surface"
+                      >BLADE STORM</span
+                    >
+                    <span
+                      class="bg-primary-container text-on-surface font-label-xs text-label-xs px-space-xs"
+                      >1 ABATE</span
+                    >
+                  </div>
+                  <div
+                    class="mt-space-md space-y-space-xs font-label-xs text-label-xs"
+                  >
+                    <div class="flex justify-between">
+                      <span class="text-secondary">Ults Ativadas:</span>
+                      <span class="text-on-surface font-bold">2 vezes</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-secondary">Conversão Eco:</span>
+                      <span class="text-on-surface">1 Round Ganho</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-secondary">Dano Causado:</span>
+                      <span class="text-on-surface">150 Dano</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="w-full bg-surface-container-high h-1.5 mt-space-sm">
+                  <div class="bg-on-background h-full w-[50%]"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script>
+        (function () {
+          const aiCard = document.getElementById("ai-content-card");
+          const btnR4 = document.getElementById("btn-r4");
+          const btnR12 = document.getElementById("btn-r12");
+          const btnR18 = document.getElementById("btn-r18");
+          const buttons = [btnR4, btnR12, btnR18];
+
+          const roundData = {
+            r4: {
+              meta: "// TELEMETRIA DO LANCE: 00:18 RESTANTES • LOCAL: CATWALK → A-SITE",
+              statusText: "DECISÃO SUB-ÓTIMA",
+              statusClass: "bg-error text-on-error",
+              winPre: "64%",
+              winPost: "18% (-46%)",
+              winPreWidth: "64%",
+              winPostWidth: "18%",
+              summary:
+                "No <strong>Round 4</strong>, após abater o Cypher inimigo, a decisão de avançar agressivamente pelo <em>Catwalk</em> com apenas 18 segundos restantes sem confirmação de posição do Breach no B-Link expôs seu flanco esquerdo. Essa jogada isolada converteu uma situação de retake favorável em duelo desfavorável sem tempo hábil para o desarmamento da Spike.",
+              adviceTitle: "// RECOMENDAÇÃO TÁTICA DO COACH:",
+              adviceBody:
+                "• <strong>Jogar no Tempo:</strong> A Spike não estava plantada em A. Manter o posicionamento passivo em Tree forçaria o atacante a afunilar na porta de metal sob som de corrida.<br>• <strong>Utilidade Restante:</strong> Você ainda tinha 1 <em>Cloudburst</em> disponível. Use a smoke defensiva para cortar a visão de Garden antes de verificar Catwalk.",
+            },
+            r12: {
+              meta: "// TELEMETRIA DO LANCE: 00:32 RESTANTES • LOCAL: B-MAIN / B-SITE RETAKE",
+              statusText: "EXECUÇÃO EXCELENTE",
+              statusClass: "bg-primary-container text-on-surface",
+              winPre: "31%",
+              winPost: "88% (+57%)",
+              winPreWidth: "31%",
+              winPostWidth: "88%",
+              summary:
+                "No <strong>Round 12</strong>, sua sincronia com a flecha de Revelação do Sova (Vortex) permitiu uma entrada com Dash instantâneo no Default de B, neutralizando a Killjoy antes da ativação do Lockdown. Execução perfeita de entrada em trade fracionado.",
+              adviceTitle: "// RECOMENDAÇÃO TÁTICA DO COACH:",
+              adviceBody:
+                "• <strong>Ponto Positivo:</strong> Tempo de resposta de 0.4s após o ping da flecha no mapa. Salve este replay como referência de manual para retakes em dupla no B de Ascent.",
+            },
+            r18: {
+              meta: "// TELEMETRIA DO LANCE: 00:44 RESTANTES • LOCAL: MID BOTTOM → B-MARKET",
+              statusText: "ERRO COLETIVO DE ROTAÇÃO",
+              statusClass: "bg-error text-on-error",
+              winPre: "52%",
+              winPost: "22% (-30%)",
+              winPreWidth: "52%",
+              winPostWidth: "22%",
+              summary:
+                "No <strong>Round 18</strong>, a equipe mordeu a isca do barulho de utilitários em A-Main e rotacionou 3 membros de imediato pelo Mercado. Reyna inimiga dominou Mid Pizza livremente e puniu a retaguarda enquanto a Spike era plantada em B.",
+              adviceTitle: "// RECOMENDAÇÃO TÁTICA DO COACH:",
+              adviceBody:
+                "• <strong>Âncora de Mid:</strong> Jett deve segurar ângulo fechado com Operator no Mid Courtyard por pelo menos mais 10 segundos antes de validar rotação completa.<br>• <strong>Comunicação de Equipe:</strong> Exija confirmação visual da Spike antes de abandonar a linha de visão de Pizza.",
+            },
+          };
+
+          function setActiveBtn(activeBtn) {
+            buttons.forEach((b) => {
+              b.className =
+                "round-tab-btn bg-surface-container-lowest text-on-surface hover:bg-surface-container-high px-space-md py-space-xs font-label-xs text-label-xs uppercase shrink-0 transition-colors shadow-sm";
+            });
+            activeBtn.className =
+              "round-tab-btn bg-on-background text-surface-container-lowest px-space-md py-space-xs font-label-xs text-label-xs uppercase shrink-0 shadow-sm";
+          }
+
+          function renderRound(data) {
+            aiCard.innerHTML = `
+        <div class="flex items-center justify-between mb-space-xs">
+          <span class="font-label-xs text-label-xs text-secondary uppercase">
+            ${data.meta}
+          </span>
+          <span class="font-label-xs text-label-xs ${data.statusClass} px-space-xs py-space-xs uppercase">
+            ${data.statusText}
+          </span>
+        </div>
+        <div class="my-space-md p-space-sm bg-surface-container-low shadow-inner">
+          <div class="flex justify-between font-label-xs text-label-xs mb-space-xs">
+            <span>PROBABILIDADE DE VITÓRIA (PRÉ-LANCE): <strong class="text-on-surface">${data.winPre}</strong></span>
+            <span class="${data.statusText.includes("EXCELENTE") ? "text-on-surface" : "text-error"} font-bold">PÓS-LANCE: ${data.winPost}</span>
+          </div>
+          <div class="w-full h-2 bg-surface-container-highest relative">
+            <div class="absolute left-0 top-0 bottom-0 bg-on-background" style="width: ${data.winPreWidth};"></div>
+            <div class="absolute left-0 top-0 bottom-0 bg-primary-container" style="width: ${data.winPostWidth};"></div>
+          </div>
+        </div>
+        <div class="space-y-space-md">
+          <div>
+            <span class="font-label-xs text-label-xs uppercase text-on-surface font-bold">ANÁLISE DE EVENTO:</span>
+            <p class="font-body-md text-body-md text-on-surface mt-space-xs leading-relaxed">
+              ${data.summary}
+            </p>
+          </div>
+          <div class="bg-canvas-soft p-space-md border-l-4 border-l-primary-container shadow-sm">
+            <span class="font-label-xs text-label-xs uppercase font-bold text-on-surface">
+              ${data.adviceTitle}
+            </span>
+            <p class="font-body-sm text-body-sm text-on-surface mt-space-xs">
+              ${data.adviceBody}
+            </p>
+          </div>
+        </div>
+      `;
+          }
+
+          btnR4.addEventListener("click", () => {
+            setActiveBtn(btnR4);
+            renderRound(roundData.r4);
+          });
+
+          btnR12.addEventListener("click", () => {
+            setActiveBtn(btnR12);
+            renderRound(roundData.r12);
+          });
+
+          btnR18.addEventListener("click", () => {
+            setActiveBtn(btnR18);
+            renderRound(roundData.r18);
+          });
+        })();
+      </script>
+    </main>
+    <footer
+      class="w-full bg-canvas-soft border-t border-border-hairline py-space-lg"
+    >
+      <div
+        class="w-full px-margin flex flex-col md:flex-row items-center justify-between gap-space-md font-label-xs text-label-xs uppercase text-secondary"
+      >
+        <div>VALORANT.COACH // TELEMETRY MATRIX • PROTOCOL V4.2.0</div>
+        <div class="flex items-center gap-space-lg">
+          <span class="text-on-surface">LATENCY: 12MS</span
+          ><span class="text-on-surface">API REFRESH: SYNCED</span
+          ><span>© 2025 VALORANT.COACH ESPORTS ENGINE</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

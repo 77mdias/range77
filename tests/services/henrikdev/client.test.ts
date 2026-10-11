@@ -277,3 +277,56 @@ describe('henrikDevErrorStatus', () => {
     expect(henrikDevErrorStatus(Object.assign(new Error('x'), { name: 'HenrikDevApiError:x' }))).toBeNull();
   });
 });
+
+describe('fetchAccount / fetchMmr', () => {
+  it('busca a conta (v1) com nome/tag codificados e header Authorization', async () => {
+    const account = { name: 'Player One', tag: 'BR1', account_level: 242, card: { large: 'https://media/large.png' } };
+    fetchMock.mockResolvedValueOnce(jsonResponse({ status: 200, data: account }));
+
+    const result = await makeClient().fetchAccount({ name: 'Player One', tag: 'BR1' });
+
+    expect(result).toEqual(account);
+    const [url, init] = fetchMock.mock.calls[0] as [URL | Request, RequestInit];
+    expect(String(url)).toBe('https://api.henrikdev.xyz/valorant/v1/account/Player%20One/BR1');
+    expect((init.headers as Record<string, string>).Authorization).toBe('HDEV-test-key');
+  });
+
+  it('busca o MMR atual (v2) com affinity/platform e valida "data"', async () => {
+    const mmr = {
+      currenttier: 21,
+      currenttierpatched: 'Immortal 1',
+      images: { small: 'https://media/rank-small.png' },
+      ranking_in_tier: 84,
+    };
+    fetchMock.mockResolvedValueOnce(jsonResponse({ status: 200, data: mmr }));
+
+    const result = await makeClient().fetchMmr({ affinity: 'br', platform: 'pc', name: 'Player One', tag: 'BR1' });
+
+    expect(result).toEqual(mmr);
+    const [url] = fetchMock.mock.calls[0] as [URL | Request, RequestInit];
+    expect(String(url)).toBe('https://api.henrikdev.xyz/valorant/v2/mmr/br/pc/Player%20One/BR1');
+  });
+
+  it('payload sem "data" vira erro 502 MALFORMED_RESPONSE', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ status: 200 }));
+    await expect(makeClient().fetchAccount({ name: 'A', tag: 'B' })).rejects.toMatchObject({
+      name: 'HenrikDevApiError:502',
+      code: 'MALFORMED_RESPONSE',
+    });
+
+    fetchMock.mockResolvedValueOnce(jsonResponse({}));
+    await expect(
+      makeClient().fetchMmr({ affinity: 'br', platform: 'pc', name: 'A', tag: 'B' }),
+    ).rejects.toMatchObject({ name: 'HenrikDevApiError:502' });
+  });
+
+  it('erro HTTP preserva o corpo {errors:[...]}', async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ errors: [{ code: 4, message: '404 Not Found' }] }, 404),
+    );
+    await expect(makeClient().fetchAccount({ name: 'A', tag: 'B' })).rejects.toMatchObject({
+      name: 'HenrikDevApiError:404',
+      message: '404 Not Found',
+    });
+  });
+});

@@ -10,6 +10,7 @@ import {
   TableHeaderCell,
   TableRow,
 } from '@/components/ui/table';
+import { agentArtSrc, mapSplashSrc } from '@/lib/valorant-assets';
 import {
   MAIN_WINRATE_THRESHOLD,
   buildAgentCardProfiles,
@@ -106,6 +107,7 @@ function toAgentCardProps(profile: AgentCardProfile): AgentCardProps {
     winRate: `${profile.winRatePercent}%`,
     tier: profile.tier,
     tierLabel: TIER_LABELS[profile.tier],
+    portraitSrc: agentArtSrc(profile.name) ?? undefined,
     stats: [
       { label: 'ACS', value: String(profile.avgAcs) },
       { label: 'K/D', value: profile.kdRatio.toFixed(2) },
@@ -185,6 +187,7 @@ export function MapsTab({ maps }: { readonly maps: readonly GroupedStat[] }) {
             matches={profile.matches}
             record={{ wins: profile.wins, losses: profile.losses }}
             winPercent={profile.winRatePercent}
+            imageSrc={mapSplashSrc(profile.name) ?? undefined}
           />
         ))}
       </div>

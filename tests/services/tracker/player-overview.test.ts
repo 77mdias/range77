@@ -77,6 +77,12 @@ const mmrHistory = [
 const makeClient = (
   result: readonly HenrikDevMatchV4[] | Error,
   mmr: readonly unknown[] | Error = mmrHistory,
+  account: unknown | Error = { card: { large: 'https://media/card-large.png' } },
+  currentMmr: unknown | Error = {
+    currenttierpatched: 'Ascendant 3',
+    images: { small: 'https://media/rank-small.png' },
+    ranking_in_tier: 84,
+  },
 ) => ({
   fetchPlayerMatches: vi.fn(async () => {
     if (result instanceof Error) {
@@ -90,6 +96,18 @@ const makeClient = (
       throw mmr;
     }
     return mmr;
+  }),
+  fetchAccount: vi.fn(async () => {
+    if (account instanceof Error) {
+      throw account;
+    }
+    return account;
+  }),
+  fetchMmr: vi.fn(async () => {
+    if (currentMmr instanceof Error) {
+      throw currentMmr;
+    }
+    return currentMmr;
   }),
 });
 
@@ -129,6 +147,14 @@ describe('buildPlayerOverview', () => {
       platform: 'pc',
       // nível da partida MAIS RECENTE (m-1) quando há mais de um valor
       level: 242,
+      // ícone do cartão (v1 account) resolvido em paralelo
+      cardSrc: 'https://media/card-large.png',
+    });
+    // ranque atual (v2 mmr) normalizado
+    expect(overview.rank).toEqual({
+      tier: 'Ascendant 3',
+      imageSrc: 'https://media/rank-small.png',
+      rrInTier: 84,
     });
     expect(overview.matches.map((match) => match.matchId)).toEqual(['m-1', 'm-2']);
     expect(overview.agents.map((agent) => agent.key).sort()).toEqual(['Jett', 'Reyna']);
@@ -163,6 +189,27 @@ describe('buildPlayerOverview', () => {
     });
 
     expect(overview.rrHistory).toEqual([]);
+    expect(overview.matches).toHaveLength(2);
+  });
+
+  it('account/mmr indisponíveis → cardSrc null e rank null, perfil de pé', async () => {
+    const client = makeClient(
+      [win, loss],
+      mmrHistory,
+      new Error('account unavailable'),
+      new Error('mmr unavailable'),
+    );
+
+    const overview = await buildPlayerOverview({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      client: client as never,
+      snapshotStore: null,
+    });
+
+    expect(overview.player.cardSrc).toBeNull();
+    expect(overview.rank).toBeNull();
     expect(overview.matches).toHaveLength(2);
   });
 

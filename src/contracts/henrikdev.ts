@@ -246,3 +246,54 @@ export interface HenrikDevMmrHistoryResponseV2 {
     readonly history?: readonly HenrikDevMmrHistoryEntryV2[];
   };
 }
+
+/**
+ * v1/account — identidade estendida da conta: nível e CARTÃO de jogador
+ * (ícones oficiais Riot, URLs prontas). Campos opcionais: o normalizador
+ * decide o que existe antes de exibir.
+ */
+export interface HenrikDevAccountCardV1 {
+  readonly small?: string;
+  readonly large?: string;
+  readonly wide?: string;
+}
+
+export interface HenrikDevAccountV1 {
+  readonly puuid?: string;
+  readonly region?: string;
+  readonly account_level?: number;
+  readonly name?: string;
+  readonly tag?: string;
+  readonly title?: string;
+  readonly card?: HenrikDevAccountCardV1;
+  readonly updated_at?: string;
+}
+
+export interface HenrikDevAccountResponseV1 {
+  readonly status?: number;
+  readonly data?: HenrikDevAccountV1;
+}
+
+/**
+ * v2/mmr — ranque ATUAL: tier, RR dentro do tier (`ranking_in_tier`) e as
+ * imagens oficiais do elo (small/large/triangle).
+ */
+export interface HenrikDevMmrImagesV2 {
+  readonly small?: string;
+  readonly large?: string;
+  readonly triangle_down?: string;
+}
+
+export interface HenrikDevMmrV2 {
+  readonly currenttier?: number;
+  readonly currenttierpatched?: string;
+  readonly images?: HenrikDevMmrImagesV2;
+  readonly ranking_in_tier?: number;
+  readonly elo?: number;
+  readonly leaderboard_rank?: number | null;
+}
+
+export interface HenrikDevMmrResponseV2 {
+  readonly status?: number;
+  readonly data?: HenrikDevMmrV2;
+}
