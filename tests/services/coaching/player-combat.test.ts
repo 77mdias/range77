@@ -45,6 +45,7 @@ const makeFakeClient = (result: readonly HenrikDevMatchV4[] | Error) => ({
   fetchMatchById: vi.fn(async () => {
     throw new Error('fetchMatchById não usado neste fluxo');
   }),
+  fetchMmrHistory: vi.fn(async () => []),
 });
 
 afterEach(() => {

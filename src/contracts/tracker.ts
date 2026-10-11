@@ -162,3 +162,23 @@ export interface TrendSummary {
   readonly delta: number;
   readonly perMatch: readonly number[];
 }
+
+/**
+ * Resultado de um ponto de RR. `neutral` cobre ΔRR = 0 (empate 13-13 ou
+ * partida no teto) — evitamos rotular como vitória/derrota o que não é.
+ */
+export type RrOutcome = MatchResult | 'neutral';
+
+/** Um ponto da trajetória de RR (uma partida competitiva recente). */
+export interface RrHistoryPoint {
+  readonly matchId: string;
+  /** RR dentro do tier (0–100) após a partida. */
+  readonly rr: number;
+  /** Variação de RR aplicada pela partida (pode ser negativa). */
+  readonly delta: number;
+  readonly tier: string;
+  readonly tierId: number;
+  /** Derivado do sinal do delta; `neutral` quando ΔRR = 0. */
+  readonly result: RrOutcome;
+  readonly date: string;
+}

@@ -4,9 +4,11 @@ import type {
   AgentStat,
   MapStat,
   MatchSummary,
+  RrHistoryPoint,
   StreakSummary,
   TrendSummary,
 } from '@/contracts/tracker';
+import { buildRrHistory } from '@/services/analytics/rr-trend';
 import { buildTrackerAggregations } from '@/services/analytics/tracker-aggregations';
 import {
   buildCombatInsightFromMatches,
@@ -49,6 +51,8 @@ export interface PlayerOverview {
   readonly maps: readonly MapStat[];
   readonly streaks: StreakSummary;
   readonly trend: TrendSummary;
+  /** Trajetória de RR (cronológica). Vazia se o MMR history não estiver disponível. */
+  readonly rrHistory: readonly RrHistoryPoint[];
 }
 
 export interface BuildPlayerOverviewParams {
@@ -59,6 +63,30 @@ export interface BuildPlayerOverviewParams {
   /** Client injetado (testes). Sem ele, cria um com HENRIKDEV_API_KEY do env. */
   readonly client?: HenrikDevClient;
   readonly snapshotStore?: CombatSnapshotStore | null;
+}
+
+/**
+ * Busca best-effort do histórico de MMR (v2 mmr-history). É COMPLEMENTAR:
+ * se o endpoint falhar (premium/indisponível), omitimos a trajetória em vez
+ * de derrubar o perfil ou fabricar pontos de RR.
+ */
+async function loadRrHistory(
+  client: HenrikDevClient,
+  region: string,
+  name: string,
+  tag: string,
+): Promise<readonly RrHistoryPoint[]> {
+  try {
+    const history = await client.fetchMmrHistory({
+      affinity: region.toLowerCase(),
+      platform: 'pc',
+      name,
+      tag,
+    });
+    return buildRrHistory(history);
+  } catch {
+    return [];
+  }
 }
 
 export async function buildPlayerOverview(
@@ -84,13 +112,18 @@ export async function buildPlayerOverview(
     size,
   });
 
-  const combat = await buildCombatInsightFromMatches(rawMatches, {
-    region,
-    name,
-    tag,
-    size,
-    snapshotStore: store,
-  });
+  // Combate (com write-through de snapshot) e MMR history são independentes
+  // entre si — rodam em paralelo para poupar latência.
+  const [combat, rrHistory] = await Promise.all([
+    buildCombatInsightFromMatches(rawMatches, {
+      region,
+      name,
+      tag,
+      size,
+      snapshotStore: store,
+    }),
+    loadRrHistory(client, region, name, tag),
+  ]);
 
   const matches = normalizeMatchesToSummaries(rawMatches, { name, tag }, region);
   if (matches.length === 0) {
@@ -108,5 +141,6 @@ export async function buildPlayerOverview(
     maps,
     streaks,
     trend,
+    rrHistory,
   };
 }

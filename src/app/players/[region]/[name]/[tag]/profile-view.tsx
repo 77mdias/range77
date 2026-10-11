@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { AgentCard, MapCard, type AgentCardProps } from '@/components/agents';
-import { AgentRadar, TrendLine } from '@/components/charts';
+import { AgentRadar, RrTrendChart, TrendLine } from '@/components/charts';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { KpiTile } from '@/components/ui/kpi-tile';
@@ -23,6 +23,7 @@ import {
   type AgentTier,
   type MapPoolStatus,
 } from '@/services/analytics/agent-map-profiles';
+import { computeRrNet } from '@/services/analytics/rr-trend';
 import type { AgentStat, GroupedStat, MapStat, MatchSummary } from '@/contracts/tracker';
 import type { PlayerOverview } from '@/services/tracker/player-overview';
 
@@ -60,6 +61,11 @@ export function OverviewTab({ overview }: { readonly overview: PlayerOverview })
       ? `▼ ${overview.trend.delta} ACS`
       : undefined;
 
+  const rrSeries = overview.rrHistory.map((point) => ({ rr: point.rr, result: point.result }));
+  const lastRr = overview.rrHistory[overview.rrHistory.length - 1];
+  const rrNet = computeRrNet(overview.rrHistory);
+  const rrNetLabel = rrNet > 0 ? `NET: +${rrNet} RR` : `NET: ${rrNet} RR`;
+
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4" data-kpi-strip>
@@ -73,6 +79,28 @@ export function OverviewTab({ overview }: { readonly overview: PlayerOverview })
         />
         <KpiTile label="KAST" value={formatPct(metrics.kast)} trailing={`${metrics.rounds} rounds`} />
       </div>
+
+      <Card
+        label="Trajetória RR"
+        action={
+          <span className="font-hud text-label uppercase text-text-secondary">{rrNetLabel}</span>
+        }
+      >
+        <RrTrendChart series={rrSeries} />
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-hud text-label uppercase text-text-secondary">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-accent" aria-hidden /> Vitória (+RR)
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-text-primary" aria-hidden /> Derrota (-RR)
+          </span>
+          {lastRr !== undefined ? (
+            <span className="ml-auto">
+              Atual: {lastRr.rr} RR ({lastRr.tier})
+            </span>
+          ) : null}
+        </div>
+      </Card>
 
       <Card label="Tendência de ACS">
         <TrendLine values={overview.trend.perMatch} />

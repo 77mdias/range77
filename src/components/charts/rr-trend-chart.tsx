@@ -1,4 +1,3 @@
-import type { MatchResult } from '@/components/ui/match-row';
 import { cx } from '@/lib/cx';
 import {
   buildRrAreaPath,
@@ -11,8 +10,9 @@ import {
 /**
  * RrTrendChart — trajetória de RR (overview): área com gradiente no acento,
  * linha de tendência em tinta, threshold tracejado no 0 RR e pontos por
- * resultado (vitória = acento, derrota = tinta). A geometria vive em
- * `rr-trend-geometry.ts` (pura); este componente só renderiza.
+ * resultado (vitória = acento, derrota = tinta, neutro = tinta secundária).
+ * A geometria vive em `rr-trend-geometry.ts` (pura); este componente só
+ * renderiza.
  */
 
 export interface RrTrendChartProps {
@@ -97,13 +97,20 @@ export function RrTrendChart({
         {points.map((point, index) => {
           const isLast = point === last;
           const isPeak = point === peak;
+          const fill =
+            point.result === 'win'
+              ? 'var(--color-accent)'
+              : point.result === 'loss'
+                ? 'var(--color-text-primary)'
+                : 'var(--color-text-secondary)';
+          const radius = isLast || isPeak ? 5 : point.result === 'neutral' ? 3 : 3.5;
           return (
             <circle
               key={index}
               cx={point.x}
               cy={point.y}
-              r={isLast || isPeak ? 5 : point.result === 'win' ? 4 : 3.5}
-              fill={point.result === 'win' ? 'var(--color-accent)' : 'var(--color-text-primary)'}
+              r={radius}
+              fill={fill}
               stroke="var(--color-canvas)"
               strokeWidth={isLast || isPeak ? 2 : 1.5}
             />

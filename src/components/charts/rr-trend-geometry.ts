@@ -5,16 +5,22 @@ import type { MatchResult } from '@/components/ui/match-row';
  * Sem efeitos/estado — o componente só renderiza o resultado.
  */
 
+/**
+ * Resultado de um ponto de RR. `neutral` cobre ΔRR = 0 (empate/teto) — o
+ * ponto é renderizado em tinta secundária, sem afirmar vitória/derrota.
+ */
+export type RrPointResult = MatchResult | 'neutral';
+
 export interface RrPointInput {
   readonly rr: number;
-  readonly result: MatchResult;
+  readonly result: RrPointResult;
 }
 
 export interface RrPoint {
   readonly x: number;
   readonly y: number;
   readonly rr: number;
-  readonly result: MatchResult;
+  readonly result: RrPointResult;
 }
 
 /** Threshold visual (linha tracejada) — 0 RR por padrão. */

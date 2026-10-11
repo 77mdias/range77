@@ -88,6 +88,26 @@ const overview: PlayerOverview = {
   ],
   streaks: { current: { result: 'win', length: 1 }, longestWin: 1, longestLoss: 0 },
   trend: { metric: 'acs', direction: 'up', first: 200, last: 250, delta: 50, perMatch: [200, 250] },
+  rrHistory: [
+    {
+      matchId: 'm-1',
+      rr: 40,
+      delta: 15,
+      tier: 'Diamond 1',
+      tierId: 18,
+      result: 'win',
+      date: '2026-10-02T00:00:00.000Z',
+    },
+    {
+      matchId: 'm-2',
+      rr: 55,
+      delta: -5,
+      tier: 'Diamond 1',
+      tierId: 18,
+      result: 'loss',
+      date: '2026-10-03T00:00:00.000Z',
+    },
+  ],
 };
 
 describe('PlayerProfileView', () => {
@@ -105,6 +125,17 @@ describe('PlayerProfileView', () => {
     expect(html).toContain('Impacto: Equilibrado');
     expect(html).toContain('1 vitórias seguidas');
     expect(html).toContain('A mira é um ponto forte');
+    // Trajetória de RR (dados reais do MMR history) + net da janela
+    expect(html).toContain('Trajetória RR');
+    expect(html).toContain('NET: +10 RR');
+    expect(html).toContain('Atual: 55 RR (Diamond 1)');
+    expect(html).toContain('data-chart="rr-trend"');
+  });
+
+  it('sem MMR history cai no estado vazio da trajetória', () => {
+    const semRr: PlayerOverview = { ...overview, rrHistory: [] };
+    const html = renderToStaticMarkup(<PlayerProfileView overview={semRr} />);
+    expect(html).toContain('data-chart="rr-trend-empty"');
   });
 
   it('tendência de queda usa tom negativo no KPI', () => {

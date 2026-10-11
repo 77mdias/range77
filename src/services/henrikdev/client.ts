@@ -2,6 +2,8 @@ import type {
   HenrikDevMatchResponseV4,
   HenrikDevMatchV4,
   HenrikDevMatchesResponseV4,
+  HenrikDevMmrHistoryEntryV2,
+  HenrikDevMmrHistoryResponseV2,
 } from '@/contracts/henrikdev';
 
 /**
@@ -50,10 +52,23 @@ export interface FetchMatchByIdParams {
   readonly matchId: string;
 }
 
+export interface FetchMmrHistoryParams {
+  readonly affinity: string;
+  readonly platform: string;
+  readonly name: string;
+  readonly tag: string;
+}
+
 export interface HenrikDevClient {
   fetchPlayerMatches(params: FetchPlayerMatchesParams): Promise<readonly HenrikDevMatchV4[]>;
   /** Detalhe de UMA partida por match_id (v4 match_v4 — sem platform). */
   fetchMatchById(params: FetchMatchByIdParams): Promise<HenrikDevMatchV4>;
+  /**
+   * Movimento de RR das partidas competitivas recentes (v2 mmr-history).
+   * Entradas podem vir incompletas — a normalização é do
+   * `services/analytics/rr-trend.ts`.
+   */
+  fetchMmrHistory(params: FetchMmrHistoryParams): Promise<readonly HenrikDevMmrHistoryEntryV2[]>;
 }
 
 const DEFAULT_BASE_URL = 'https://api.henrikdev.xyz';
@@ -164,6 +179,25 @@ export function createHenrikDevClient(options: HenrikDevClientOptions): HenrikDe
         );
       }
       return candidate as HenrikDevMatchV4;
+    },
+
+    async fetchMmrHistory(params) {
+      const url = new URL(
+        `${baseUrl}/valorant/v2/mmr-history/${params.affinity}/${params.platform}` +
+          `/${encodeURIComponent(params.name)}/${encodeURIComponent(params.tag)}`,
+      );
+
+      const parsed = await requestJson(url);
+      const body = parsed as HenrikDevMmrHistoryResponseV2;
+      const history = body?.data?.history;
+      if (!Array.isArray(history)) {
+        throw new HenrikDevApiError(
+          502,
+          'Resposta malformada da HenrikDev: histórico de MMR ausente em "data.history"',
+          'MALFORMED_RESPONSE',
+        );
+      }
+      return history;
     },
   };
 }

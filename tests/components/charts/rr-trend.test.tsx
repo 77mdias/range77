@@ -73,4 +73,11 @@ describe('RrTrendChart', () => {
     const html = renderToStaticMarkup(<RrTrendChart series={[]} />);
     expect(html).toContain('data-chart="rr-trend-empty"');
   });
+
+  it('ponto neutro (ΔRR = 0) usa tinta secundária, sem afirmar vitória/derrota', () => {
+    const html = renderToStaticMarkup(
+      <RrTrendChart series={[{ rr: 50, result: 'neutral' }]} />,
+    );
+    expect(html).toContain('var(--color-text-secondary)');
+  });
 });

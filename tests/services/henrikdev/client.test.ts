@@ -210,3 +210,46 @@ describe('fetchMatchById', () => {
     ).rejects.toMatchObject({ status: 0, code: 'NETWORK_ERROR' });
   });
 });
+
+describe('fetchMmrHistory', () => {
+  it('busca o histórico de MMR com URL codificada e header Authorization', async () => {
+    const history = [
+      { rr: 78, last_change: 18, match_id: 'm-1', date: '2026-10-01T00:00:00Z' },
+    ];
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ status: 200, data: { account: {}, history } }),
+    );
+
+    const result = await makeClient().fetchMmrHistory({
+      affinity: 'br',
+      platform: 'pc',
+      name: 'Player One',
+      tag: 'BR1',
+    });
+
+    expect(result).toEqual(history);
+    const [url, init] = fetchMock.mock.calls[0] as [URL | Request, RequestInit];
+    expect(String(url)).toBe(
+      'https://api.henrikdev.xyz/valorant/v2/mmr-history/br/pc/Player%20One/BR1',
+    );
+    expect(new Headers(init.headers).get('authorization')).toBe('HDEV-test-key');
+  });
+
+  it('resposta sem data.history é rejeitada como malformada', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ status: 200, data: {} }));
+
+    await expect(
+      makeClient().fetchMmrHistory({ affinity: 'br', platform: 'pc', name: 'P', tag: '1' }),
+    ).rejects.toMatchObject({ status: 502, code: 'MALFORMED_RESPONSE', message: /malformada/ });
+  });
+
+  it('mapeia 403 premium como HenrikDevApiError', async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ errors: [{ code: 10_021, message: 'Premium required', status: 403 }] }, 403),
+    );
+
+    await expect(
+      makeClient().fetchMmrHistory({ affinity: 'na', platform: 'pc', name: 'P', tag: '1' }),
+    ).rejects.toMatchObject({ status: 403, code: 10_021 });
+  });
+});

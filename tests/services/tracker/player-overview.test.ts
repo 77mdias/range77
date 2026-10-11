@@ -53,7 +53,27 @@ const makeMatch = (overrides: {
 const win = makeMatch({ id: 'm-1', map: 'Ascent', agent: 'Jett', startedAt: '2026-10-02T00:00:00.000Z', result: 'win', score: 4000 });
 const loss = makeMatch({ id: 'm-2', map: 'Haven', agent: 'Reyna', startedAt: '2026-10-01T00:00:00.000Z', result: 'loss', score: 3000 });
 
-const makeClient = (result: readonly HenrikDevMatchV4[] | Error) => ({
+const mmrHistory = [
+  {
+    match_id: 'm-2',
+    rr: 60,
+    last_change: -20,
+    tier: { id: 18, name: 'Diamond 1' },
+    date: '2026-10-01T00:00:00.000Z',
+  },
+  {
+    match_id: 'm-1',
+    rr: 78,
+    last_change: 18,
+    tier: { id: 18, name: 'Diamond 1' },
+    date: '2026-10-02T00:00:00.000Z',
+  },
+];
+
+const makeClient = (
+  result: readonly HenrikDevMatchV4[] | Error,
+  mmr: readonly unknown[] | Error = mmrHistory,
+) => ({
   fetchPlayerMatches: vi.fn(async () => {
     if (result instanceof Error) {
       throw result;
@@ -61,6 +81,12 @@ const makeClient = (result: readonly HenrikDevMatchV4[] | Error) => ({
     return result;
   }),
   fetchMatchById: vi.fn(),
+  fetchMmrHistory: vi.fn(async () => {
+    if (mmr instanceof Error) {
+      throw mmr;
+    }
+    return mmr;
+  }),
 });
 
 const makeStore = () => ({
@@ -103,6 +129,30 @@ describe('buildPlayerOverview', () => {
     expect(overview.combat.player.name).toBe('Player');
     // snapshot persistido (write-through best-effort)
     expect(store.insertSnapshot).toHaveBeenCalledTimes(1);
+    // MMR history normalizado e ordenado cronologicamente
+    expect(client.fetchMmrHistory).toHaveBeenCalledWith({
+      affinity: 'br',
+      platform: 'pc',
+      name: 'Player',
+      tag: 'BR1',
+    });
+    expect(overview.rrHistory.map((point) => point.matchId)).toEqual(['m-2', 'm-1']);
+    expect(overview.rrHistory.map((point) => point.result)).toEqual(['loss', 'win']);
+  });
+
+  it('MMR history indisponível → rrHistory vazia sem derrubar o perfil', async () => {
+    const client = makeClient([win, loss], new Error('premium required'));
+
+    const overview = await buildPlayerOverview({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      client: client as never,
+      snapshotStore: null,
+    });
+
+    expect(overview.rrHistory).toEqual([]);
+    expect(overview.matches).toHaveLength(2);
   });
 
   it('propaga PlayerNoMatchesError quando não há partidas válidas', async () => {

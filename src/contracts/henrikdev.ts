@@ -212,3 +212,37 @@ export interface HenrikDevMatchesResponseV4 {
   readonly status: number;
   readonly data: readonly HenrikDevMatchV4[];
 }
+
+/* ============================================================================
+ * RAW MMR HISTORY v2 — espelho de `/valorant/v2/mmr-history/*`
+ * (fonte: docs.henrikdev.xyz, OpenAPI 4.6.0 — get-mmr-history-v2-by-name).
+ * Cada entrada é uma partida competitiva recente com o movimento de RR.
+ * ==========================================================================*/
+
+export interface HenrikDevMmrHistoryEntryV2 {
+  readonly tier?: HenrikDevTierV4;
+  readonly match_id?: string;
+  readonly map?: HenrikDevIdName;
+  readonly season?: HenrikDevSeasonV4;
+  /** RR dentro do tier atual (0–100) APÓS a partida. */
+  readonly rr?: number;
+  /** Variação de RR aplicada por esta partida (pode ser negativa ou zero). */
+  readonly last_change?: number;
+  /** MMR absoluto (elo) quando disponível. */
+  readonly elo?: number;
+  readonly refunded_rr?: number;
+  readonly was_derank_protected?: boolean;
+  readonly date?: string;
+}
+
+export interface HenrikDevMmrHistoryResponseV2 {
+  readonly status: number;
+  readonly data?: {
+    readonly account?: {
+      readonly name?: string;
+      readonly tag?: string;
+      readonly puuid?: string;
+    };
+    readonly history?: readonly HenrikDevMmrHistoryEntryV2[];
+  };
+}
