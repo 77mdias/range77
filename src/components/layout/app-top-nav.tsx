@@ -14,6 +14,7 @@ import { TopNav, type TopNavItem } from './top-nav';
 const NAV_ITEMS: readonly TopNavItem[] = [
   { href: '/', label: 'Busca' },
   { href: '/dashboard', label: 'Dashboard' },
+  { href: '/console', label: 'Console' },
 ];
 
 function resolveActiveHref(pathname: string): string | undefined {
