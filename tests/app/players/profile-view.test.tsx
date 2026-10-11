@@ -17,7 +17,7 @@ import type { GroupedStat } from '@/contracts/tracker';
  */
 
 const overview: PlayerOverview = {
-  player: { region: 'br', name: 'Player One', tag: 'BR1', platform: 'pc' },
+  player: { region: 'br', name: 'Player One', tag: 'BR1', platform: 'pc', level: 242 },
   combat: {
     player: { region: 'br', name: 'Player One', tag: 'BR1', platform: 'pc' },
     evaluation: { aimClass: 'Excelente', impactClass: 'Equilibrado' },
@@ -134,8 +134,12 @@ describe('PlayerProfileView', () => {
     expect(html).toContain('NET: +10 RR');
     expect(html).toContain('Atual: 55 RR (Diamond 1)');
     expect(html).toContain('data-chart="rr-trend"');
-    // Header enriquecido com rank atual + RR pool (mmr-history)
+    // Header enriquecido: nível, selo de verificação, rank atual e RR pool
+    expect(html).toContain('data-player-level');
+    expect(html).toContain('LVL 242');
+    expect(html).toContain('Verificado');
     expect(html).toContain('RR Pool');
+    expect(html).toContain('Diamond 1');
     // Histórico recente embutido no overview (Stitch)
     expect(html).toContain('Histórico Recente (últimos 5 jogos)');
     expect(html).toContain('data-component="match-history-table"');
@@ -157,11 +161,18 @@ describe('PlayerProfileView', () => {
     expect(html).toContain('text-loss');
   });
 
-  it('expõe as 4 abas', () => {
+  it('renderiza a página única com seções ancoradas (sem abas)', () => {
     const html = renderToStaticMarkup(<PlayerProfileView overview={overview} />);
     for (const label of ['Visão Geral', 'Partidas', 'Agentes', 'Mapas']) {
       expect(html).toContain(label);
     }
+    for (const id of ['visao-geral', 'partidas', 'agentes', 'mapas']) {
+      expect(html).toContain(`id="${id}"`);
+    }
+    expect(html).toContain('data-profile-section-nav');
+    // Layout em página única: nenhum tablist
+    expect(html).not.toContain('data-tabs');
+    expect(html).not.toContain('role="tablist"');
   });
 
   it('mostra "Sem sequência" quando não há streak atual', () => {

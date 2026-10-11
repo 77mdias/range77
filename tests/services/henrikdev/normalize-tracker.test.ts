@@ -10,6 +10,7 @@ import {
   normalizeMatchToScoreboard,
   normalizeMatchToSummary,
   normalizeMatchesToSummaries,
+  resolveAccountLevel,
   resolveWinningTeamId,
 } from '@/services/henrikdev/normalize-tracker';
 
@@ -237,6 +238,35 @@ describe('normalizeMatchesToSummaries', () => {
       'aaa',
     ]);
     expect(normalizeMatchesToSummaries(undefined, PLAYER, 'br')).toEqual([]);
+  });
+});
+
+describe('resolveAccountLevel', () => {
+  const withLevel = (
+    matchId: string,
+    startedAt: string,
+    level: number | undefined,
+  ): HenrikDevMatchV4 => ({
+    ...SAMPLE_MATCH,
+    metadata: { ...SAMPLE_MATCH.metadata, match_id: matchId, started_at: startedAt },
+    players: SAMPLE_MATCH.players.map((player) =>
+      player.puuid === 'p1' && level !== undefined ? { ...player, account_level: level } : player,
+    ),
+  });
+
+  it('usa o nível da partida MAIS RECENTE que traz o campo', () => {
+    const recent = withLevel('m-recent', '2026-10-03T00:00:00.000Z', 242);
+    const old = withLevel('m-old', '2026-10-01T00:00:00.000Z', 100);
+    expect(resolveAccountLevel([old, recent], PLAYER)).toBe(242);
+  });
+
+  it('ignora partidas sem account_level e retorna null quando ausente em todas', () => {
+    const untracked = withLevel('m-x', '2026-10-05T00:00:00.000Z', undefined);
+    expect(
+      resolveAccountLevel([untracked, withLevel('m-y', '2026-10-01T00:00:00.000Z', 50)], PLAYER),
+    ).toBe(50);
+    expect(resolveAccountLevel([untracked], PLAYER)).toBeNull();
+    expect(resolveAccountLevel(undefined, PLAYER)).toBeNull();
   });
 });
 

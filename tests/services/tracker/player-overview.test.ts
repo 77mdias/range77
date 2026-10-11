@@ -15,6 +15,7 @@ const makeMatch = (overrides: {
   startedAt: string;
   result: 'win' | 'loss';
   score: number;
+  accountLevel?: number;
 }): HenrikDevMatchV4 => ({
   metadata: {
     match_id: overrides.id,
@@ -31,6 +32,9 @@ const makeMatch = (overrides: {
       tag: 'BR1',
       team_id: 'Red',
       agent: { id: overrides.agent.toLowerCase(), name: overrides.agent },
+      ...(overrides.accountLevel !== undefined
+        ? { account_level: overrides.accountLevel }
+        : {}),
       stats: {
         score: overrides.score,
         kills: 20,
@@ -50,8 +54,8 @@ const makeMatch = (overrides: {
   kills: [],
 });
 
-const win = makeMatch({ id: 'm-1', map: 'Ascent', agent: 'Jett', startedAt: '2026-10-02T00:00:00.000Z', result: 'win', score: 4000 });
-const loss = makeMatch({ id: 'm-2', map: 'Haven', agent: 'Reyna', startedAt: '2026-10-01T00:00:00.000Z', result: 'loss', score: 3000 });
+const win = makeMatch({ id: 'm-1', map: 'Ascent', agent: 'Jett', startedAt: '2026-10-02T00:00:00.000Z', result: 'win', score: 4000, accountLevel: 242 });
+const loss = makeMatch({ id: 'm-2', map: 'Haven', agent: 'Reyna', startedAt: '2026-10-01T00:00:00.000Z', result: 'loss', score: 3000, accountLevel: 100 });
 
 const mmrHistory = [
   {
@@ -118,7 +122,14 @@ describe('buildPlayerOverview', () => {
       size: 5,
     });
 
-    expect(overview.player).toEqual({ region: 'br', name: 'Player', tag: 'BR1', platform: 'pc' });
+    expect(overview.player).toEqual({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      platform: 'pc',
+      // nível da partida MAIS RECENTE (m-1) quando há mais de um valor
+      level: 242,
+    });
     expect(overview.matches.map((match) => match.matchId)).toEqual(['m-1', 'm-2']);
     expect(overview.agents.map((agent) => agent.key).sort()).toEqual(['Jett', 'Reyna']);
     expect(overview.maps.map((map) => map.key).sort()).toEqual(['Ascent', 'Haven']);

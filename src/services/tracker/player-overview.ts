@@ -20,7 +20,7 @@ import {
   createHenrikDevClient,
   type HenrikDevClient,
 } from '@/services/henrikdev/client';
-import { normalizeMatchesToSummaries } from '@/services/henrikdev/normalize-tracker';
+import { normalizeMatchesToSummaries, resolveAccountLevel } from '@/services/henrikdev/normalize-tracker';
 import {
   createCombatSnapshotStore,
   type CombatSnapshotStore,
@@ -44,6 +44,8 @@ export interface PlayerOverview {
     readonly name: string;
     readonly tag: string;
     readonly platform: 'pc';
+    /** Nível de conta (HenrikDev `account_level`); `null` se indisponível. */
+    readonly level: number | null;
   };
   readonly combat: PlayerCombatInsight;
   readonly matches: readonly MatchSummary[];
@@ -134,7 +136,13 @@ export async function buildPlayerOverview(
   const { agents, maps, streaks, trend } = buildTrackerAggregations(matches);
 
   return {
-    player: { region: region.toLowerCase(), name, tag, platform: 'pc' },
+    player: {
+      region: region.toLowerCase(),
+      name,
+      tag,
+      platform: 'pc',
+      level: resolveAccountLevel(rawMatches, { name, tag }),
+    },
     combat,
     matches,
     agents,

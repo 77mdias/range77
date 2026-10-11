@@ -260,6 +260,31 @@ export function normalizeMatchesToSummaries(
   return summaries;
 }
 
+/**
+ * Nível de conta do jogador analisado (`account_level` do v4). A informação
+ * varia por partida, então escolhemos a da partida MAIS RECENTE que a traga —
+ * o valor mais atual disponível no payload. `null` quando ausente em todas
+ * (nunca inventamos um nível).
+ */
+export function resolveAccountLevel(
+  matches: readonly HenrikDevMatchV4[] | undefined,
+  player: { readonly name: string; readonly tag: string },
+): number | null {
+  let latest: { readonly level: number; readonly startedAt: string } | null = null;
+  for (const match of matches ?? []) {
+    const found = findTrackerPlayer(match, player.name, player.tag);
+    const level = found?.account_level;
+    if (level === undefined) {
+      continue;
+    }
+    const startedAt = match.metadata?.started_at ?? '';
+    if (latest === null || startedAt > latest.startedAt) {
+      latest = { level, startedAt };
+    }
+  }
+  return latest?.level ?? null;
+}
+
 /** Scoreboard completo (todos os jogadores da partida). */
 export function normalizeMatchToScoreboard(match: HenrikDevMatchV4): MatchScoreboardRow[] {
   return match.players.map((player) => {

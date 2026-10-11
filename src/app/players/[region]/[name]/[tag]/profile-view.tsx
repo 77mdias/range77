@@ -13,7 +13,6 @@ import {
   TableHeaderCell,
   TableRow,
 } from '@/components/ui/table';
-import { Tabs, type TabItem } from '@/components/ui/tabs';
 import { MatchHistoryTable, PlayerHeader, type MatchHistoryEntry } from '@/components/player';
 import {
   MAIN_WINRATE_THRESHOLD,
@@ -30,9 +29,10 @@ import type { PlayerOverview } from '@/services/tracker/player-overview';
 
 /**
  * PlayerProfileView — apresentação PURA (síncrona) do perfil no design
- * Stitch: PlayerHeader, strip de KPIs, tendência, avaliação e abas
- * Visão Geral | Partidas | Agentes | Mapas. Separada da página assíncrona
- * para ser testável com `renderToStaticMarkup`.
+ * Stitch. Página única: PlayerHeader, strip de KPIs, tendência, avaliação e
+ * histórico, seguidos das seções Partidas/Agentes/Mapas (nav por âncoras, sem
+ * abas). Separada da página assíncrona para ser testável com
+ * `renderToStaticMarkup`.
  */
 
 function formatPct(value: number | null | undefined): string {
@@ -95,11 +95,6 @@ export function OverviewTab({ overview }: { readonly overview: PlayerOverview })
   const lastRr = overview.rrHistory[overview.rrHistory.length - 1];
   const rrNet = computeRrNet(overview.rrHistory);
   const rrNetLabel = rrNet > 0 ? `NET: +${rrNet} RR` : `NET: ${rrNet} RR`;
-  const recentEntries = toHistoryEntries(
-    overview.matches,
-    overview.player.region,
-    indexRrDeltaByMatchId(overview.rrHistory),
-  ).slice(0, 5);
 
   return (
     <div className="flex flex-col gap-4">
@@ -140,7 +135,12 @@ export function OverviewTab({ overview }: { readonly overview: PlayerOverview })
       </Card>
 
       <Card label="Histórico Recente (últimos 5 jogos)">
-        <MatchHistoryTable matches={recentEntries} />
+        <MatchesTab
+          matches={overview.matches}
+          region={overview.player.region}
+          rrDeltas={indexRrDeltaByMatchId(overview.rrHistory)}
+          limit={5}
+        />
       </Card>
 
       <Card label="Tendência de ACS">
@@ -190,13 +190,17 @@ export function MatchesTab({
   matches,
   region,
   rrDeltas,
+  limit,
 }: {
   readonly matches: readonly MatchSummary[];
   readonly region: string;
   /** Índice `matchId → ΔRR` (mmr-history) para a coluna RR. */
   readonly rrDeltas?: ReadonlyMap<string, number>;
+  /** Máximo de linhas exibidas (ex.: 5 no histórico recente do overview). */
+  readonly limit?: number;
 }) {
-  if (matches.length === 0) {
+  const visible = limit === undefined ? matches : matches.slice(0, limit);
+  if (visible.length === 0) {
     return (
       <EmptyState
         title="Sem partidas"
@@ -205,7 +209,7 @@ export function MatchesTab({
     );
   }
 
-  return <MatchHistoryTable matches={toHistoryEntries(matches, region, rrDeltas)} />;
+  return <MatchHistoryTable matches={toHistoryEntries(visible, region, rrDeltas)} />;
 }
 
 export function GroupedStatTable({
@@ -381,6 +385,33 @@ export interface PlayerProfileViewProps {
   readonly headerAction?: ReactNode;
 }
 
+/** Seções da página única do perfil (âncoras no topo, sem abas). */
+const PROFILE_SECTIONS = [
+  { id: 'visao-geral', label: 'Visão Geral' },
+  { id: 'partidas', label: 'Partidas' },
+  { id: 'agentes', label: 'Agentes' },
+  { id: 'mapas', label: 'Mapas' },
+] as const;
+
+function ProfileSection({
+  id,
+  title,
+  children,
+}: {
+  readonly id: string;
+  readonly title: string;
+  readonly children: ReactNode;
+}) {
+  return (
+    <section id={id} data-profile-section={id} className="flex scroll-mt-24 flex-col gap-4">
+      <h2 className="font-display text-heading-sm uppercase tracking-tight text-text-primary">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
 export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewProps) {
   const { player } = overview;
   const rrDeltas = indexRrDeltaByMatchId(overview.rrHistory);
@@ -389,43 +420,57 @@ export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewP
   const headerMeta = [
     { label: 'Região', value: player.region.toUpperCase() },
     { label: 'Plataforma', value: player.platform.toUpperCase() },
+    ...(player.level !== null ? [{ label: 'Nível', value: String(player.level) }] : []),
     ...(currentRr !== undefined
       ? [{ label: 'RR Pool', value: `${currentRr.rr} / 100` }]
       : []),
   ];
 
-  const items: TabItem[] = [
-    { id: 'overview', label: 'Visão Geral', content: <OverviewTab overview={overview} /> },
-    {
-      id: 'matches',
-      label: 'Partidas',
-      content: (
-        <MatchesTab matches={overview.matches} region={player.region} rrDeltas={rrDeltas} />
-      ),
-    },
-    {
-      id: 'agents',
-      label: 'Agentes',
-      content: <AgentsTab agents={overview.agents} />,
-    },
-    {
-      id: 'maps',
-      label: 'Mapas',
-      content: <MapsTab maps={overview.maps} />,
-    },
-  ];
-
   return (
-    <div data-player-profile className="flex flex-col gap-6">
+    <div data-player-profile className="flex flex-col gap-8">
       <PlayerHeader
         name={player.name}
         tag={player.tag}
+        level={player.level ?? undefined}
         rank={currentRr?.tier}
+        // O Riot ID só chega aqui após um lookup bem-sucedido na HenrikDev —
+        // "verificado" significa exatamente isso (conta Riot resolvida).
+        verified
         meta={headerMeta}
         actions={headerAction}
       />
 
-      <Tabs items={items} ariaLabel="Seções do perfil" />
+      <nav
+        aria-label="Seções do perfil"
+        data-profile-section-nav
+        className="flex flex-wrap gap-1 border-b border-line"
+      >
+        {PROFILE_SECTIONS.map((section) => (
+          <a
+            key={section.id}
+            href={`#${section.id}`}
+            className="relative -mb-px h-10 border-b-2 border-transparent px-4 font-hud text-label uppercase leading-10 tracking-wide text-text-secondary transition-colors duration-[var(--duration-fast)] ease-out-expo hover:text-text-primary"
+          >
+            {section.label}
+          </a>
+        ))}
+      </nav>
+
+      <ProfileSection id="visao-geral" title="Visão Geral">
+        <OverviewTab overview={overview} />
+      </ProfileSection>
+
+      <ProfileSection id="partidas" title="Partidas">
+        <MatchesTab matches={overview.matches} region={player.region} rrDeltas={rrDeltas} />
+      </ProfileSection>
+
+      <ProfileSection id="agentes" title="Agentes">
+        <AgentsTab agents={overview.agents} />
+      </ProfileSection>
+
+      <ProfileSection id="mapas" title="Mapas">
+        <MapsTab maps={overview.maps} />
+      </ProfileSection>
     </div>
   );
 }
