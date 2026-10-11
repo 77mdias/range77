@@ -81,6 +81,15 @@ describe('SearchBar', () => {
       'latam',
       'br',
     ]);
+    // Rótulos amigáveis (Stitch), mas o valor enviado segue sendo a afinidade.
+    expect(options.map((option) => option.textContent)).toEqual([
+      'EMEA (EUROPE)',
+      'NA (NORTH AM)',
+      'AP (ASIA-PAC)',
+      'KR (KOREA)',
+      'LATAM',
+      'BR',
+    ]);
   });
 
   it('permite customizar o rótulo do botão de submit (submitLabel)', () => {

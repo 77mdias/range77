@@ -20,6 +20,20 @@ export interface SearchQuery {
   readonly tag: string;
 }
 
+/**
+ * Rótulos amigáveis por afinidade (fiel ao seletor do Stitch: "NA (NORTH
+ * AM)", "EMEA (EUROPE)"). O valor emitido continua sendo a afinidade crua
+ * aceita pela HenrikDev.
+ */
+const AFFINITY_LABELS: Record<HenrikDevAffinity, string> = {
+  br: 'BR',
+  latam: 'LATAM',
+  na: 'NA (NORTH AM)',
+  eu: 'EMEA (EUROPE)',
+  kr: 'KR (KOREA)',
+  ap: 'AP (ASIA-PAC)',
+};
+
 export interface SearchBarProps {
   readonly onSubmit: (query: SearchQuery) => void;
   readonly defaultRegion?: HenrikDevAffinity;
@@ -79,14 +93,14 @@ export function SearchBar({
             disabled={disabled || loading}
             onChange={(event) => setRegion(event.target.value as HenrikDevAffinity)}
             className={cx(
-              'h-12 w-28 rounded-l-md border border-line bg-surface px-3',
-              'font-hud text-body text-text-primary',
+              'h-12 w-40 rounded-l-md border border-line bg-surface px-3',
+              'font-hud text-body uppercase text-text-primary',
               'disabled:cursor-not-allowed disabled:opacity-50',
             )}
           >
             {HENRIKDEV_AFFINITIES.map((affinity) => (
               <option key={affinity} value={affinity}>
-                {affinity.toUpperCase()}
+                {AFFINITY_LABELS[affinity]}
               </option>
             ))}
           </select>
