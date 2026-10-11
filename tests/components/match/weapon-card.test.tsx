@@ -9,7 +9,7 @@ describe('WeaponCard', () => {
         name="Vandal"
         kills={18}
         primary
-        hsPercentage={39.2}
+        meter={{ value: 39.2, label: 'HS 39.2%' }}
         stats={[
           { label: 'Dano/round', value: '142' },
           { label: 'Precisão', value: '31%' },
@@ -29,7 +29,7 @@ describe('WeaponCard', () => {
         name="Ghost"
         kills={3}
         primary={false}
-        hsPercentage={12}
+        meter={{ value: 12, label: 'HS 12%' }}
         stats={[{ label: 'Dano/round', value: '61' }]}
       />,
     );

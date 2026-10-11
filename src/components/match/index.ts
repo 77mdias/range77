@@ -22,9 +22,10 @@ export {
 export {
   RoundTimeline,
   type RoundCellData,
-  type RoundEconomy,
-  type RoundOutcome,
+  type RoundSummaryData,
+  type RoundTimelineKind,
   type RoundTimelineProps,
+  type RoundTimelineSide,
 } from './round-timeline';
 export {
   ScoreBanner,

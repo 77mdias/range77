@@ -3,7 +3,7 @@ import { cx } from '@/lib/cx';
 
 /**
  * WeaponCard — eficiência de arma do arsenal: nome, chip de abates, linhas
- * de stats e medidor de HS%.
+ * de stats e um medidor opcional (ex.: share de abates, HS%).
  */
 
 export interface WeaponStat {
@@ -13,14 +13,20 @@ export interface WeaponStat {
   readonly strong?: boolean;
 }
 
+/** Medidor de base 0–100 exibido sob as estatísticas. */
+export interface WeaponMeter {
+  readonly value: number;
+  readonly label: string;
+}
+
 export interface WeaponCardProps {
   readonly name: string;
   readonly kills: number;
   /** Arma primária ganha chip em acento; secundária fica neutra. */
   readonly primary?: boolean;
   readonly stats: readonly WeaponStat[];
-  /** Percentual de HS (0–100) para o medidor; ausente → bloco omitido. */
-  readonly hsPercentage?: number;
+  /** Medidor de proporção (0–100); ausente → bloco omitido. */
+  readonly meter?: WeaponMeter;
   readonly className?: string;
 }
 
@@ -29,7 +35,7 @@ export function WeaponCard({
   kills,
   primary = true,
   stats,
-  hsPercentage,
+  meter,
   className,
 }: WeaponCardProps) {
   return (
@@ -66,18 +72,16 @@ export function WeaponCard({
         ))}
       </dl>
 
-      {hsPercentage !== undefined ? (
+      {meter === undefined ? null : (
         <div className="mt-2.5">
           <ProgressBar
-            value={hsPercentage}
+            value={meter.value}
             tone="ink"
-            ariaLabel={`Headshot com ${name}: ${hsPercentage}%`}
+            ariaLabel={`${name}: ${meter.label}`}
           />
-          <p className="mt-1 font-hud text-label uppercase text-text-secondary">
-            HS {hsPercentage}%
-          </p>
+          <p className="mt-1 font-hud text-label uppercase text-text-secondary">{meter.label}</p>
         </div>
-      ) : null}
+      )}
     </article>
   );
 }

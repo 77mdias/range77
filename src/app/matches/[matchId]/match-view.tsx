@@ -1,4 +1,3 @@
-import { RoundHeatmap } from '@/components/charts';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/states';
 import {
@@ -16,6 +15,8 @@ import {
   computeAdr,
   computeFirstBloods,
   computeMatchHalves,
+  computeRankRange,
+  computeRoundTimeline,
   computeTeamTotals,
   selectMatchMvp,
   type PlayerFirstBloods,
@@ -27,11 +28,14 @@ import { formatRelativeTime } from '@/lib/format/relative-time';
 /**
  * MatchView — apresentação PURA (síncrona) do detalhe de partida no design
  * Stitch: MatchMetaBar, ScoreBanner (perspectiva do jogador buscado quando
- * informado), RoundTimeline, heatmap de rounds por abates, tabela telemétrica
- * com FK/FD e KAST computados dos eventos de abate (ECON fica `—`: a HenrikDev
- * não fornece), MVP da partida (maior ACS) com Rating ValCoach, card do
- * jogador e metades DEF/ATK do time do jogador buscado. Separada da página
- * assíncrona para ser testável com `renderToStaticMarkup`.
+ * informado), tabela telemétrica com faixa de MMR e FK/FD/KAST computados dos
+ * eventos, timeline de rounds classificada (tipo de encerramento, lado,
+ * pistolas e placar progressivo), MVP da partida (maior ACS) com Rating
+ * ValCoach/card do jogador, metades DEF/ATK do time do jogador buscado e
+ * eficiência de arsenal do jogador (ou da partida, sem perspectiva). A
+ * HenrikDev v4 não fornece ECON rating nem dano por arma — esses campos ficam
+ * `—`/omitidos, nunca inventados. Separada da página assíncrona para ser
+ * testável com `renderToStaticMarkup`.
  */
 
 function formatDuration(ms: number): string {
@@ -39,6 +43,11 @@ function formatDuration(ms: number): string {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+/** Riot ID completo de um jogador ("Nome#TAG") ou só o nome sem tag. */
+function riotId(name: string, tag: string): string {
+  return tag === '' ? name : `${name}#${tag}`;
 }
 
 /** Riot ID do jogador buscado — usado para "VOCÊ" e perspectiva W/L e DEF/ATK. */
@@ -112,10 +121,28 @@ export function MatchView({ detail, viewer, mvpCardSrc }: MatchViewProps) {
       ? [viewerTeamId, ...teamIds.filter((id) => id !== viewerTeamId)]
       : teamIds;
 
-  const rounds: readonly RoundCellData[] = detail.rounds.map((round) => ({
-    number: round.roundNumber,
-    outcome: round.winningTeamId === perspectiveTeamId ? 'win' : 'loss',
-  }));
+  // Timeline classificada na perspectiva do time do jogador buscado (teamA
+  // como "casa" quando não há jogador informado).
+  const timeline =
+    perspectiveTeamId === undefined
+      ? null
+      : computeRoundTimeline(
+          detail.rounds,
+          detail.kills,
+          detail.scoreboard,
+          perspectiveTeamId,
+        );
+  const roundCells: readonly RoundCellData[] =
+    timeline === null
+      ? []
+      : timeline.rounds.map((round) => ({
+          number: round.roundNumber,
+          won: round.won,
+          side: round.side,
+          kind: round.kind,
+          pistol: round.pistol,
+          score: `${round.score.us}-${round.score.them}`,
+        }));
 
   // Metades DEF/ATK do time do jogador buscado (lado inferido dos plants;
   // OT → omitido). Sem jogador informado não há perspectiva — omitimos.
@@ -131,8 +158,12 @@ export function MatchView({ detail, viewer, mvpCardSrc }: MatchViewProps) {
   const roundsTotal = detail.rounds.length;
   const firstBloods = computeFirstBloods(detail.kills);
   const mvp = selectMatchMvp(detail.scoreboard);
-  const weapons = aggregateWeaponKills(detail.kills);
+  const rankRange = computeRankRange(detail.scoreboard);
+  // Arsenal na perspectiva do jogador buscado (senão, partida inteira).
+  const weapons = aggregateWeaponKills(detail.kills, viewerRow?.puuid);
   const mvpFirstBloods = mvp !== null ? firstBloods.get(mvp.puuid) : undefined;
+  const arsenalLabel =
+    viewerRow === null ? 'partida inteira' : riotId(viewerRow.name, viewerRow.tag);
 
   const ratingFor = (row: MatchScoreboardRow, fb: PlayerFirstBloods | undefined): number | null =>
     computePerformanceRating({
@@ -230,7 +261,7 @@ export function MatchView({ detail, viewer, mvpCardSrc }: MatchViewProps) {
           <div className="lg:col-span-8" data-mvp-slot>
             {mvp !== null ? (
               <MvpCallout
-                playerName={mvp.tag === '' ? mvp.name : `${mvp.name}#${mvp.tag}`}
+                playerName={riotId(mvp.name, mvp.tag)}
                 agent={mvp.agent}
                 rank={mvp.tier ?? undefined}
                 portraitSrc={
@@ -257,38 +288,49 @@ export function MatchView({ detail, viewer, mvpCardSrc }: MatchViewProps) {
           </div>
         </div>
 
-        {/* Tabela telemétrica (scoreboard duplo com FK/FD real + VOCÊ) */}
-        <ScoreboardTable teams={teams} />
+        {/* Tabela telemétrica (scoreboard duplo alinhado, faixa de MMR, VOCÊ) */}
+        <ScoreboardTable teams={teams} rankRange={rankRange} />
 
-        {/* Timeline de rounds — mantida no formato atual (decisão do dono) */}
-        <Card label={`Timeline de ${detail.rounds.length} rounds`}>
-          {rounds.length === 0 ? (
+        {/* Timeline de rounds classificada (Stitch "PLACAR DE ROUNDS") */}
+        <Card>
+          {roundCells.length === 0 ? (
             <p className="text-body text-text-secondary">Sem timeline de rounds.</p>
           ) : (
-            <RoundTimeline rounds={rounds} />
+            <RoundTimeline rounds={roundCells} summary={timeline?.summary} />
           )}
         </Card>
 
-        {perspectiveTeamId !== undefined ? (
-          <Card label="Rounds por abates">
-            <RoundHeatmap rounds={detail.rounds} kills={detail.kills} teamId={perspectiveTeamId} />
-          </Card>
-        ) : null}
-
+        {/* Eficiência de arsenal do jogador buscado (ou da partida, sem ele) */}
         {weapons.length > 0 ? (
-          <Card label="Eficiência por arma">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {weapons.slice(0, 6).map((weapon, index) => (
-                <WeaponCard
-                  key={weapon.weapon}
-                  name={weapon.weapon}
-                  kills={weapon.kills}
-                  primary={index === 0}
-                  stats={[{ label: 'Share de abates', value: `${weapon.sharePercent}%` }]}
-                />
-              ))}
-            </div>
-          </Card>
+          <div data-match-arsenal>
+            <Card
+              label={`// Eficiência de arsenal • ${arsenalLabel}`}
+              action={
+                <span className="font-hud text-label-xs uppercase text-text-secondary">
+                  {weapons.length} arma(s) com abate
+                </span>
+              }
+            >
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {weapons.slice(0, 8).map((weapon, index) => (
+                  <WeaponCard
+                    key={weapon.weapon}
+                    name={weapon.weapon}
+                    kills={weapon.kills}
+                    primary={index === 0}
+                    meter={{
+                      value: weapon.sharePercent,
+                      label: `Share ${weapon.sharePercent}%`,
+                    }}
+                    stats={[
+                      { label: 'First kills', value: String(weapon.firstKills) },
+                      { label: 'Rounds com abate', value: String(weapon.rounds) },
+                    ]}
+                  />
+                ))}
+              </div>
+            </Card>
+          </div>
         ) : null}
       </div>
     </div>

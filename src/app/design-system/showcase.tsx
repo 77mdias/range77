@@ -278,14 +278,14 @@ const SHOWCASE_TEAMS = [
 ] as const;
 
 const SHOWCASE_ROUNDS: readonly RoundCellData[] = [
-  { number: 1, outcome: 'win-defense', economy: 'pistol' },
-  { number: 2, outcome: 'win-defense', economy: 'eco' },
-  { number: 3, outcome: 'loss', economy: 'buy', flagged: true },
-  { number: 4, outcome: 'win-attack', economy: 'full' },
-  { number: 5, outcome: 'loss', economy: 'buy' },
-  { number: 6, outcome: 'win-attack', economy: 'full', flagged: true },
-  { number: 7, outcome: 'loss', economy: 'eco' },
-  { number: 8, outcome: 'win-attack', economy: 'buy' },
+  { number: 1, won: true, side: 'defense', kind: 'elim', pistol: true, score: '1-0' },
+  { number: 2, won: true, side: 'defense', kind: 'elim', score: '2-0' },
+  { number: 3, won: false, side: 'defense', kind: 'plant', score: '2-1' },
+  { number: 4, won: true, side: 'defense', kind: 'retake', score: '3-1' },
+  { number: 5, won: false, side: 'defense', kind: 'defuse', score: '3-2' },
+  { number: 6, won: true, side: 'defense', kind: 'elim', score: '4-2' },
+  { number: 7, won: false, side: 'defense', kind: 'plant', score: '4-3' },
+  { number: 8, won: true, side: 'defense', kind: 'time', score: '5-3' },
 ];
 
 function Section({ title, children }: { readonly title: string; readonly children: ReactNode }) {
@@ -834,7 +834,7 @@ export function DesignSystemShowcase() {
             <WeaponCard
               name="Vandal"
               kills={18}
-              hsPercentage={39.2}
+              meter={{ value: 39.2, label: 'HS 39.2%' }}
               stats={[
                 { label: 'Dano/round', value: '142' },
                 { label: 'Precisão', value: '31%' },
@@ -844,7 +844,7 @@ export function DesignSystemShowcase() {
             <WeaponCard
               name="Operator"
               kills={4}
-              hsPercentage={62}
+              meter={{ value: 62, label: 'HS 62%' }}
               stats={[
                 { label: 'Dano/round', value: '188' },
                 { label: 'Precisão', value: '44%' },
@@ -854,14 +854,14 @@ export function DesignSystemShowcase() {
               name="Ghost"
               kills={3}
               primary={false}
-              hsPercentage={12}
+              meter={{ value: 12, label: 'HS 12%' }}
               stats={[{ label: 'Dano/round', value: '61' }]}
             />
             <WeaponCard
               name="Blade Storm"
               kills={2}
               primary={false}
-              hsPercentage={50}
+              meter={{ value: 50, label: 'Ocupação 50%' }}
               stats={[{ label: 'Rounds', value: '2' }]}
             />
           </div>

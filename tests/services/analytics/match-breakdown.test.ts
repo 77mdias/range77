@@ -4,6 +4,8 @@ import {
   computeAdr,
   computeFirstBloods,
   computeMatchHalves,
+  computeRankRange,
+  computeRoundTimeline,
   computeTeamTotals,
   selectMatchMvp,
 } from '@/services/analytics/match-breakdown';
@@ -100,8 +102,8 @@ describe('aggregateWeaponKills', () => {
       kill({ roundNumber: 3, weapon: '' }),
     ]);
     expect(stats).toEqual([
-      { weapon: 'Vandal', kills: 2, sharePercent: 66.7 },
-      { weapon: 'Operator', kills: 1, sharePercent: 33.3 },
+      { weapon: 'Vandal', kills: 2, sharePercent: 66.7, firstKills: 1, rounds: 1 },
+      { weapon: 'Operator', kills: 1, sharePercent: 33.3, firstKills: 1, rounds: 1 },
     ]);
   });
 
@@ -115,8 +117,8 @@ describe('aggregateWeaponKills', () => {
       'a',
     );
     expect(stats).toEqual([
-      { weapon: 'Ghost', kills: 1, sharePercent: 50 },
-      { weapon: 'Vandal', kills: 1, sharePercent: 50 },
+      { weapon: 'Ghost', kills: 1, sharePercent: 50, firstKills: 1, rounds: 1 },
+      { weapon: 'Vandal', kills: 1, sharePercent: 50, firstKills: 1, rounds: 1 },
     ]);
   });
 
@@ -266,5 +268,155 @@ describe('computeMatchHalves', () => {
       overtime.push(round(n, n % 2 === 0 ? 'Red' : 'Blue', n === 1 ? 'Red' : null));
     }
     expect(computeMatchHalves(overtime, 'Red')).toBeNull();
+  });
+});
+
+describe('computeRoundTimeline', () => {
+  const roster: readonly MatchScoreboardRow[] = [
+    row({ puuid: 'r1', teamId: 'Red' }),
+    row({ puuid: 'r2', teamId: 'Red' }),
+    row({ puuid: 'r3', teamId: 'Red' }),
+    row({ puuid: 'b1', teamId: 'Blue' }),
+    row({ puuid: 'b2', teamId: 'Blue' }),
+    row({ puuid: 'b3', teamId: 'Blue' }),
+  ];
+
+  function round(
+    roundNumber: number,
+    winningTeamId: string,
+    plantTeamId: string | null = null,
+    defused = false,
+  ): MatchRound {
+    return {
+      roundNumber,
+      winningTeamId,
+      plantSite: plantTeamId === null ? null : 'A',
+      plantTeamId,
+      defused,
+    };
+  }
+
+  /** 1..12 com plants do Red; 13 com plant do Blue (troca de lado). */
+  function buildRounds(): MatchRound[] {
+    const list: MatchRound[] = [];
+    for (let n = 1; n <= 12; n += 1) {
+      if (n === 2) {
+        list.push(round(n, 'Blue', 'Red'));
+      } else if (n === 3) {
+        list.push(round(n, 'Red', 'Red', true));
+      } else if (n === 4) {
+        list.push(round(n, 'Red', null));
+      } else if (n === 5) {
+        list.push(round(n, 'Blue', null));
+      } else {
+        list.push(round(n, 'Red', 'Red'));
+      }
+    }
+    list.push(round(13, 'Blue', 'Blue'));
+    return list;
+  }
+
+  const kills: readonly KillEvent[] = [
+    kill({ roundNumber: 4, victimPuuid: 'b1', killerPuuid: 'r1' }),
+    kill({ roundNumber: 4, victimPuuid: 'b2', killerPuuid: 'r1' }),
+    kill({ roundNumber: 4, victimPuuid: 'b3', killerPuuid: 'r2' }),
+    // Vítima fora do roster → ignorada na contagem de mortes.
+    kill({ roundNumber: 3, victimPuuid: 'ghost', killerPuuid: 'r1' }),
+  ];
+
+  it('classifica encerramento, lado, pistola e placar progressivo', () => {
+    const { rounds: insights, summary } = computeRoundTimeline(
+      buildRounds(),
+      kills,
+      roster,
+      'Red',
+    );
+
+    expect(insights).toHaveLength(13);
+    expect(insights[0]).toEqual({
+      roundNumber: 1,
+      winningTeamId: 'Red',
+      won: true,
+      side: 'attack',
+      kind: 'plant',
+      pistol: true,
+      score: { us: 1, them: 0 },
+    });
+    expect(insights[1]).toMatchObject({
+      roundNumber: 2,
+      won: false,
+      side: 'attack',
+      kind: 'retake',
+      pistol: false,
+      score: { us: 1, them: 1 },
+    });
+    expect(insights[2]).toMatchObject({ roundNumber: 3, kind: 'defuse', score: { us: 2, them: 1 } });
+    expect(insights[3]).toMatchObject({ roundNumber: 4, kind: 'elim', score: { us: 3, them: 1 } });
+    expect(insights[4]).toMatchObject({
+      roundNumber: 5,
+      won: false,
+      kind: 'time',
+      score: { us: 3, them: 2 },
+    });
+    expect(insights[12]).toMatchObject({
+      roundNumber: 13,
+      won: false,
+      side: 'defense',
+      kind: 'plant',
+      pistol: true,
+      score: { us: 10, them: 3 },
+    });
+    expect(summary).toEqual({
+      roundsWon: 10,
+      roundsLost: 3,
+      roundsTotal: 13,
+      winPercent: 76.9,
+      pistol: { won: 1, played: 2, percent: 50 },
+    });
+  });
+
+  it('omite o lado quando não há plant (base indeterminável)', () => {
+    const result = computeRoundTimeline([round(1, 'Red')], [], roster, 'Red');
+    expect(result.rounds[0]).toMatchObject({ side: null, kind: 'time' });
+  });
+
+  it('partida sem rounds devolve resumo zerado e percentuais null', () => {
+    const result = computeRoundTimeline([], [], roster, 'Red');
+    expect(result.rounds).toEqual([]);
+    expect(result.summary).toEqual({
+      roundsWon: 0,
+      roundsLost: 0,
+      roundsTotal: 0,
+      winPercent: null,
+      pistol: { won: 0, played: 0, percent: null },
+    });
+  });
+});
+
+describe('computeRankRange', () => {
+  it('deriva a faixa de MMR do menor ao maior tier', () => {
+    expect(
+      computeRankRange([
+        row({ puuid: 'a', tier: 'Ascendant 1' }),
+        row({ puuid: 'b', tier: 'Immortal 2' }),
+        row({ puuid: 'c', tier: 'Diamond 3' }),
+      ]),
+    ).toBe('DIA 3 — IMM 2');
+  });
+
+  it('um único tier reconhecido devolve o próprio chip', () => {
+    expect(computeRankRange([row({ puuid: 'a', tier: 'Radiant' })])).toBe('RAD');
+  });
+
+  it('devolve null sem tiers reconhecidos', () => {
+    expect(computeRankRange([])).toBeNull();
+    expect(
+      computeRankRange([row({ puuid: 'a', tier: null }), row({ puuid: 'b', tier: '  ' })]),
+    ).toBeNull();
+    expect(computeRankRange([row({ puuid: 'a', tier: 'Mystery 3' })])).toBeNull();
+  });
+
+  it('ignora divisão não numérica (mantém o chip do tier)', () => {
+    expect(computeRankRange([row({ puuid: 'a', tier: 'Immortal X' })])).toBe('IMM X');
   });
 });

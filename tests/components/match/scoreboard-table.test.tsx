@@ -38,6 +38,15 @@ const TEAMS: readonly ScoreboardTeam[] = [
 ];
 
 describe('ScoreboardTable', () => {
+  it('exibe o cabeçalho telemétrico com badges e faixa de MMR', () => {
+    const html = renderToStaticMarkup(
+      <ScoreboardTable teams={TEAMS} rankRange="ASC 1 — IMM 2" />,
+    );
+    expect(html).toContain('Tabela telemétrica da partida');
+    expect(html).toContain('All roles computed');
+    expect(html).toContain('ASC 1 — IMM 2');
+  });
+
   it('renderiza header do time com resumo telemétrico', () => {
     const html = renderToStaticMarkup(<ScoreboardTable teams={TEAMS} />);
     expect(html).toContain('data-component="scoreboard-table"');

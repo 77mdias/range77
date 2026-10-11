@@ -5,7 +5,7 @@ import type { MatchDetail } from '@/contracts/tracker';
 
 /**
  * SUITE TDD — apresentação do detalhe de partida (RSC síncrono) no design
- * Stitch: MatchMetaBar, ScoreBanner, RoundTimeline, heatmap e scoreboard
+ * Stitch: MatchMetaBar, ScoreBanner, RoundTimeline classificada e scoreboard
  * duplo via o componente `ScoreboardTable` do design system.
  */
 
@@ -79,6 +79,8 @@ describe('MatchView', () => {
     expect(html).toContain('data-component="score-banner"');
     expect(html).toContain('13');
     expect(html).toContain('data-component="round-timeline"');
+    expect(html).toContain('Tabela telemétrica da partida');
+    expect(html).toContain('Ranked MMR range');
     expect(html).toContain('Time Red');
     expect(html).toContain('Time Blue');
     expect(html).toContain('TenZ');
@@ -153,9 +155,9 @@ describe('MatchView', () => {
     expect(html).toContain('TenZ#BR1');
     expect(html).toContain('Rating Global');
     expect(html).toContain('KAST');
-    expect(html).toContain('Eficiência por arma');
+    expect(html).toContain('Eficiência de arsenal');
     expect(html).toContain('Vandal');
-    expect(html).toContain('Share de abates');
+    expect(html).toContain('Share');
     // Hero do Stitch: banner + MVP lado a lado
     expect(html).toContain('data-mvp-slot');
     // Minimapa real do mapa + ícone do agente (assets locais)
@@ -168,7 +170,7 @@ describe('MatchView', () => {
   it('não monta armas quando não há eventos de abate (MVP segue do scoreboard)', () => {
     const html = renderToStaticMarkup(<MatchView detail={detail} />);
     expect(html).toContain('data-component="mvp-callout"');
-    expect(html).not.toContain('Eficiência por arma');
+    expect(html).not.toContain('Eficiência de arsenal');
   });
 
   it('estado vazio quando a partida não trouxe times/jogadores', () => {

@@ -340,7 +340,34 @@ W/L, DEF/ATK e a linha "VOCÊ" no scoreboard. Sem `player`, a partida é neutra
 O card in-game do MVP (v1 account, `card.large`) é buscado best-effort
 (`getPlayerCard`/`getCachedPlayerCard`) e exibido **quadrado** — nunca um
 retrato circular de agente. O chip de ranque do scoreboard abrevia o tier real
-com `formatRankChip` (`"Immortal 3"` → `IMM 3`).
+com `formatRankChip` (`"Immortal 3"` → `IMM 3`). A faixa de MMR do cabeçalho
+telemétrico sai de `computeRankRange` (menor–maior tier do scoreboard,
+`"DIA 3 — IMM 2"`); sem tier reconhecido, é omitida — nunca fabricada.
+
+### Timeline de rounds (tipo de encerramento, pistolas e placar)
+
+`computeRoundTimeline` (em `match-breakdown.ts`) classifica cada round na
+perspectiva do time do jogador buscado:
+
+| Tipo | Regra (dados do payload) |
+| --- | --- |
+| `defuse` | o round teve `defused` (vitória da defesa) |
+| `plant` | o time atacante venceu um round com plant |
+| `retake` | a defesa venceu após o plant, sem defuse |
+| `elim` | sem plant e o time derrotado foi totalmente eliminado |
+| `time` | sem plant e o time derrotado sobreviveu (tempo esgotado) |
+
+O lado (DEF/ATK) reusa a inferência de plants das metades; sem base, o lado é
+omitido. Marca os rounds de pistola (1º de cada half regulamentar: R1 e R13) e
+acumula o placar progressivo. Resumo: conversão de pistolas, rounds
+ganhos/perdidos e aproveitamento — todos derivados dos eventos.
+
+### Eficiência de arsenal
+
+`aggregateWeaponKills(kills, killerPuuid?)` agrega os abates por arma do
+jogador buscado (fallback: partida inteira sem `player`): share (%), first
+kills (abates que abriram o round) e nº de rounds com abate. Dano e HS por arma
+**não** existem no payload → omitidos. O medidor do card mostra o share.
 
 ## Do's and Don'ts
 

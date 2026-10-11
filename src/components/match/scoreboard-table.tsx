@@ -10,10 +10,12 @@ import { formatRankChip } from '@/lib/format/rank';
 import { cx } from '@/lib/cx';
 
 /**
- * ScoreboardTable — "tabela telemétrica da partida" (Stitch/match): header por
- * time (aliado/adversário, rounds e resumo) e linhas de jogadores com ACS,
- * K/D/A, +/-, ADR, HS%, KAST% e FK/FD reais. A linha do jogador buscado ganha
- * o badge "VOCÊ" e realce de fundo, como no design.
+ * ScoreboardTable — "tabela telemétrica da partida" (Stitch/match): cabeçalho
+ * com badges e faixa de MMR, header por time (aliado/adversário, rounds e
+ * resumo) e linhas de jogadores com ACS, K/D/A, +/-, ADR, HS%, KAST% e FK/FD
+ * reais. As colunas têm largura FIXA (colgroup + table-fixed) para que os dois
+ * times fiquem perfeitamente alinhados entre si. A linha do jogador buscado
+ * ganha o badge "VOCÊ" e realce de fundo, como no design.
  */
 
 export interface ScoreboardPlayer {
@@ -61,15 +63,36 @@ export interface ScoreboardTeam {
 
 export interface ScoreboardTableProps {
   readonly teams: readonly ScoreboardTeam[];
+  /** Faixa de MMR da partida (ex.: "ASC 1 — IMM 2"); ausente → não exibe. */
+  readonly rankRange?: string | null;
   readonly ariaLabel?: string;
   readonly className?: string;
 }
+
+/** Larguras fixas das 10 colunas (%), idênticas nos dois times. */
+const COLUMNS = [
+  { id: 'player', width: '24%' },
+  { id: 'agent', width: '14%' },
+  { id: 'acs', width: '7%' },
+  { id: 'kda', width: '11%' },
+  { id: 'diff', width: '7%' },
+  { id: 'adr', width: '8%' },
+  { id: 'hs', width: '7%' },
+  { id: 'kast', width: '8%' },
+  { id: 'fkfd', width: '8%' },
+  { id: 'econ', width: '6%' },
+] as const;
 
 function playerKey(team: ScoreboardTeam, player: ScoreboardPlayer): string {
   return `${team.name}:${player.name}:${player.tag ?? ''}`;
 }
 
-export function ScoreboardTable({ teams, ariaLabel, className }: ScoreboardTableProps) {
+export function ScoreboardTable({
+  teams,
+  rankRange,
+  ariaLabel,
+  className,
+}: ScoreboardTableProps) {
   return (
     <div
       data-component="scoreboard-table"
@@ -77,6 +100,26 @@ export function ScoreboardTable({ teams, ariaLabel, className }: ScoreboardTable
       role={ariaLabel === undefined ? undefined : 'group'}
       aria-label={ariaLabel}
     >
+      <header className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-hud text-label font-bold uppercase text-text-primary">
+            <span aria-hidden="true">//&nbsp;</span>Tabela telemétrica da partida
+          </span>
+          <span className="bg-accent px-1 py-0.5 font-hud text-label-xs font-semibold uppercase text-text-primary">
+            All roles computed
+          </span>
+          <span className="bg-surface-highest px-1 py-0.5 font-hud text-label-xs uppercase text-text-secondary">
+            Fonte HenrikDev v4
+          </span>
+        </div>
+        {rankRange == null ? null : (
+          <span className="font-hud text-label-xs uppercase text-text-secondary">
+            Ranked MMR range:{' '}
+            <strong className="text-text-primary">{rankRange}</strong>
+          </span>
+        )}
+      </header>
+
       {teams.map((team) => {
         const headerLabel = team.label ?? team.name;
         const outcome =
@@ -125,15 +168,21 @@ export function ScoreboardTable({ teams, ariaLabel, className }: ScoreboardTable
               </span>
             </header>
 
-            <Table aria-label={`Placar do time ${team.name}`}>
+            <Table
+              aria-label={`Placar do time ${team.name}`}
+              className="min-w-[880px] table-fixed"
+            >
+              <colgroup>
+                {COLUMNS.map((column) => (
+                  <col key={column.id} style={{ width: column.width }} />
+                ))}
+              </colgroup>
               <TableHead>
                 <TableRow>
                   <TableHeaderCell>Jogador &amp; Ranque</TableHeaderCell>
                   <TableHeaderCell>Agente</TableHeaderCell>
                   <TableHeaderCell numeric>ACS</TableHeaderCell>
-                  <TableHeaderCell numeric className="text-center">
-                    K / D / A
-                  </TableHeaderCell>
+                  <TableHeaderCell className="text-center font-hud">K / D / A</TableHeaderCell>
                   <TableHeaderCell numeric>+/-</TableHeaderCell>
                   <TableHeaderCell numeric>ADR</TableHeaderCell>
                   <TableHeaderCell numeric>HS %</TableHeaderCell>
@@ -194,13 +243,13 @@ export function ScoreboardTable({ teams, ariaLabel, className }: ScoreboardTable
                             className="size-6 shrink-0 border border-line object-cover"
                           />
                         ) : null}
-                        <span className="font-hud text-label uppercase">{player.agent}</span>
+                        <span className="truncate font-hud text-label uppercase">{player.agent}</span>
                       </span>
                     </TableCell>
                     <TableCell numeric className="font-semibold">
                       {player.acs}
                     </TableCell>
-                    <TableCell numeric className="text-center font-semibold">
+                    <TableCell className="text-center font-hud font-semibold">
                       {player.kills} / {player.deaths} / {player.assists}
                     </TableCell>
                     <TableCell
