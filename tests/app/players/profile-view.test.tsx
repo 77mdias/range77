@@ -134,6 +134,11 @@ describe('PlayerProfileView', () => {
     expect(html).toContain('NET: +10 RR');
     expect(html).toContain('Atual: 55 RR (Diamond 1)');
     expect(html).toContain('data-chart="rr-trend"');
+    // Header enriquecido com rank atual + RR pool (mmr-history)
+    expect(html).toContain('RR Pool');
+    // Histórico recente embutido no overview (Stitch)
+    expect(html).toContain('Histórico Recente (últimos 5 jogos)');
+    expect(html).toContain('data-component="match-history-table"');
   });
 
   it('sem MMR history cai no estado vazio da trajetória', () => {

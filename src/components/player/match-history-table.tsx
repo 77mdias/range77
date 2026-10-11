@@ -80,10 +80,28 @@ export function MatchHistoryTable({
         <TableBody>
           {matches.map((match) => {
             const win = match.result === 'win';
-            const row = (
-              <>
+            // `<tr>` só pode conter <td>/<th>: o link de linha vive DENTRO da
+            // primeira célula. Com `absolute inset-0` ele cobre a linha inteira
+            // (containing block = o <tr> posicionado) — HTML válido com o alvo
+            // de clique preservado.
+            const rowLink =
+              match.href === undefined ? null : (
+                <a
+                  href={match.href}
+                  aria-label={`Detalhes da partida em ${match.map}`}
+                  data-match-history-link
+                  className="absolute inset-0"
+                />
+              );
+
+            return (
+              <TableRow
+                key={match.id}
+                className={match.href === undefined ? undefined : 'relative'}
+              >
                 <TableCell>
                   <Badge variant={win ? 'win' : 'loss'}>{win ? 'Vitória' : 'Derrota'}</Badge>
+                  {rowLink}
                 </TableCell>
                 <TableCell>
                   <span className="flex items-center gap-1.5 font-semibold">
@@ -112,6 +130,9 @@ export function MatchHistoryTable({
                   {match.kd !== undefined ? formatKd(match.kd) : '—'}
                 </TableCell>
                 <TableCell numeric className="font-hud">
+                  {match.acs}
+                </TableCell>
+                <TableCell numeric className="font-hud">
                   {match.hsPercentage ?? '—'}
                 </TableCell>
                 <TableCell
@@ -131,24 +152,6 @@ export function MatchHistoryTable({
                       ? `+${match.rrDelta}`
                       : match.rrDelta}
                 </TableCell>
-              </>
-            );
-
-            if (match.href === undefined) {
-              return <TableRow key={match.id}>{row}</TableRow>;
-            }
-
-            // Linha clicável via stretched-link (pseudo-elemento cobre a
-            // linha inteira) — mantém o HTML da tabela válido.
-            return (
-              <TableRow key={match.id} className="relative">
-                {row}
-                <a
-                  href={match.href}
-                  aria-label={`Detalhes da partida em ${match.map}`}
-                  data-match-history-link
-                  className="absolute inset-0 after:absolute after:inset-0"
-                />
               </TableRow>
             );
           })}

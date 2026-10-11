@@ -43,6 +43,16 @@ describe('MatchHistoryTable', () => {
     expect(html).toContain('13–9');
     expect(html).toContain('24/14/6');
     expect(html).toContain('Ascent');
+    // colunas alinhadas com o header (ACS presente antes de HS% e RR)
+    expect(html).toContain('287');
+    expect(html).toContain('31');
+  });
+
+  it('emite HTML de tabela válido (link dentro de <td>, nunca filho de <tr>)', () => {
+    const html = renderToStaticMarkup(<MatchHistoryTable matches={MATCHES} />);
+    expect(html).toContain('data-match-history-link');
+    // o <a> NÃO pode ser filho direto de <tr> (HTML inválido / aviso do React)
+    expect(html).not.toMatch(/<tr[^>]*>\s*<a[^>]*data-match-history-link/);
   });
 
   it('destaca K/D positivo e RR delta negativo', () => {

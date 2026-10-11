@@ -14,7 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, type TabItem } from '@/components/ui/tabs';
-import { MatchHistoryTable, PlayerHeader } from '@/components/player';
+import { MatchHistoryTable, PlayerHeader, type MatchHistoryEntry } from '@/components/player';
 import {
   MAIN_WINRATE_THRESHOLD,
   buildAgentCardProfiles,
@@ -44,6 +44,30 @@ function displayKd(kills: number, deaths: number): number {
   return deaths === 0 ? kills : kills / deaths;
 }
 
+/** Linhas do histórico (compartilhado entre o overview e a aba Partidas). */
+function toHistoryEntries(
+  matches: readonly MatchSummary[],
+  region: string,
+  rrDeltas: ReadonlyMap<string, number> | undefined,
+): MatchHistoryEntry[] {
+  return matches.map((match) => ({
+    id: match.matchId,
+    agent: match.agent,
+    map: match.map,
+    result: match.result,
+    scoreTeam: match.score.us,
+    scoreEnemy: match.score.them,
+    kills: match.kills,
+    deaths: match.deaths,
+    assists: match.assists,
+    kd: displayKd(match.kills, match.deaths),
+    acs: match.acs,
+    hsPercentage: match.hsPercentage,
+    rrDelta: rrDeltas?.get(match.matchId),
+    href: `/matches/${match.matchId}?region=${region}`,
+  }));
+}
+
 export function OverviewTab({ overview }: { readonly overview: PlayerOverview }) {
   const metrics = overview.combat.raw_metrics;
   const { current, longestWin, longestLoss } = overview.streaks;
@@ -71,6 +95,11 @@ export function OverviewTab({ overview }: { readonly overview: PlayerOverview })
   const lastRr = overview.rrHistory[overview.rrHistory.length - 1];
   const rrNet = computeRrNet(overview.rrHistory);
   const rrNetLabel = rrNet > 0 ? `NET: +${rrNet} RR` : `NET: ${rrNet} RR`;
+  const recentEntries = toHistoryEntries(
+    overview.matches,
+    overview.player.region,
+    indexRrDeltaByMatchId(overview.rrHistory),
+  ).slice(0, 5);
 
   return (
     <div className="flex flex-col gap-4">
@@ -108,6 +137,10 @@ export function OverviewTab({ overview }: { readonly overview: PlayerOverview })
             </span>
           ) : null}
         </div>
+      </Card>
+
+      <Card label="Histórico Recente (últimos 5 jogos)">
+        <MatchHistoryTable matches={recentEntries} />
       </Card>
 
       <Card label="Tendência de ACS">
@@ -172,26 +205,7 @@ export function MatchesTab({
     );
   }
 
-  return (
-    <MatchHistoryTable
-      matches={matches.map((match) => ({
-        id: match.matchId,
-        agent: match.agent,
-        map: match.map,
-        result: match.result,
-        scoreTeam: match.score.us,
-        scoreEnemy: match.score.them,
-        kills: match.kills,
-        deaths: match.deaths,
-        assists: match.assists,
-        kd: displayKd(match.kills, match.deaths),
-        acs: match.acs,
-        hsPercentage: match.hsPercentage,
-        rrDelta: rrDeltas?.get(match.matchId),
-        href: `/matches/${match.matchId}?region=${region}`,
-      }))}
-    />
-  );
+  return <MatchHistoryTable matches={toHistoryEntries(matches, region, rrDeltas)} />;
 }
 
 export function GroupedStatTable({
@@ -370,6 +384,15 @@ export interface PlayerProfileViewProps {
 export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewProps) {
   const { player } = overview;
   const rrDeltas = indexRrDeltaByMatchId(overview.rrHistory);
+  const currentRr = overview.rrHistory[overview.rrHistory.length - 1];
+
+  const headerMeta = [
+    { label: 'Região', value: player.region.toUpperCase() },
+    { label: 'Plataforma', value: player.platform.toUpperCase() },
+    ...(currentRr !== undefined
+      ? [{ label: 'RR Pool', value: `${currentRr.rr} / 100` }]
+      : []),
+  ];
 
   const items: TabItem[] = [
     { id: 'overview', label: 'Visão Geral', content: <OverviewTab overview={overview} /> },
@@ -397,10 +420,8 @@ export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewP
       <PlayerHeader
         name={player.name}
         tag={player.tag}
-        meta={[
-          { label: 'Região', value: player.region.toUpperCase() },
-          { label: 'Plataforma', value: player.platform.toUpperCase() },
-        ]}
+        rank={currentRr?.tier}
+        meta={headerMeta}
         actions={headerAction}
       />
 
