@@ -129,6 +129,10 @@ describe('PlayerProfileView', () => {
     expect(html).toContain('Impacto: Equilibrado');
     expect(html).toContain('1 vitórias seguidas');
     expect(html).toContain('A mira é um ponto forte');
+    // Hooks de coaching viram CoachingTips (Protocol advice, sem impacto inventado)
+    expect(html).toContain('data-component="coaching-tip"');
+    expect(html).toContain('data-coaching-tips');
+    expect(html).not.toContain('IMPACTO ESTIMADO');
     // Trajetória de RR (dados reais do MMR history) + net da janela
     expect(html).toContain('Trajetória RR');
     expect(html).toContain('NET: +10 RR');
@@ -143,6 +147,10 @@ describe('PlayerProfileView', () => {
     // Histórico recente embutido no overview (Stitch)
     expect(html).toContain('Histórico Recente (últimos 5 jogos)');
     expect(html).toContain('data-component="match-history-table"');
+    // Sandbox de IA rotulado como demo (reuso do console)
+    expect(html).toContain('Consultar IA (sandbox demo)');
+    expect(html).toContain('data-profile-ai-sandbox');
+    expect(html).toContain('SANDBOX DEMO');
   });
 
   it('sem MMR history cai no estado vazio da trajetória', () => {

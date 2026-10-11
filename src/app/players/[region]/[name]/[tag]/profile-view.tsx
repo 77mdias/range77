@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { RrTrendChart, TrendLine } from '@/components/charts';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { CoachingTip } from '@/components/ui/coaching-tip';
 import { KpiTile } from '@/components/ui/kpi-tile';
 import { EmptyState } from '@/components/ui/states';
 import { MatchHistoryTable, PlayerHeader, type MatchHistoryEntry } from '@/components/player';
@@ -10,6 +11,7 @@ import { computeRrNet, indexRrDeltaByMatchId } from '@/services/analytics/rr-tre
 import type { MatchSummary } from '@/contracts/tracker';
 import type { PlayerOverview } from '@/services/tracker/player-overview';
 import { AgentsMapsExplorer } from './agents-maps-explorer';
+import { ProfileAiSandbox } from './ai-sandbox';
 
 /**
  * PlayerProfileView — apresentação PURA (síncrona) do perfil no design
@@ -93,7 +95,15 @@ export function OverviewTab({ overview }: { readonly overview: PlayerOverview })
           accentTone={trendUp ? 'positive' : trendDown ? 'negative' : 'neutral'}
         />
         <KpiTile label="KAST" value={formatPct(metrics.kast)} trailing={`${metrics.rounds} rounds`} />
-        <KpiTile label="First Blood / R" value={firstBloodRate} />
+        <KpiTile
+          label="First Blood / R"
+          value={firstBloodRate}
+          trailing={
+            metrics.firstDeaths === null
+              ? undefined
+              : `FB ${metrics.firstBloods ?? 0} / FD ${metrics.firstDeaths}`
+          }
+        />
       </div>
 
       <Card
@@ -158,14 +168,27 @@ export function OverviewTab({ overview }: { readonly overview: PlayerOverview })
       </Card>
 
       {overview.combat.coaching_hooks.length > 0 ? (
-        <Card label="Hooks de coaching">
-          <ul className="flex list-disc flex-col gap-1 pl-5 text-body text-text-secondary">
+        <Card label="Protocol advice">
+          <div className="flex flex-col gap-3" data-coaching-tips>
             {overview.combat.coaching_hooks.map((hook) => (
-              <li key={hook}>{hook}</li>
+              <CoachingTip key={hook} title="Protocol advice">
+                {hook}
+              </CoachingTip>
             ))}
-          </ul>
+          </div>
         </Card>
       ) : null}
+
+      <Card
+        label="Consultar IA (sandbox demo)"
+        action={
+          <span className="font-hud text-label uppercase text-text-secondary">
+            Respostas simuladas
+          </span>
+        }
+      >
+        <ProfileAiSandbox />
+      </Card>
     </div>
   );
 }
