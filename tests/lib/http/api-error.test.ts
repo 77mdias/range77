@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { EnvironmentValidationError } from '@/config/env';
-import { describeUpstreamError, errorResponse, mapUpstreamError } from '@/lib/http/api-error';
+import { describeUpstreamError, errorResponse, hasErrorName, mapUpstreamError } from '@/lib/http/api-error';
 import { HenrikDevApiError } from '@/services/henrikdev/client';
 
 /**
@@ -59,6 +59,30 @@ describe('describeUpstreamError', () => {
     expect(mapped.detail).toMatch(/boom/);
 
     expect(describeUpstreamError('string solta', labels).detail).toBe('string solta');
+  });
+
+  it('mapeia o erro SERIALIZADO pela fronteira `use cache` (só name/message sobrevivem)', () => {
+    // Regressão: o Next reconstrói o erro ao cruzar `'use cache'`, perdendo o
+    // protótipo (instanceof) e as props. O status codificado no `name` mantém
+    // o mapeamento HTTP — este era o bug do jogador demo caindo em INTERNAL_ERROR.
+    const serialized = Object.assign(new Error('Region not found'), {
+      name: 'HenrikDevApiError:404',
+    });
+
+    expect(describeUpstreamError(serialized, labels)).toMatchObject({
+      status: 404,
+      code: 'THING_NOT_FOUND',
+      message: 'Coisa não encontrada.',
+    });
+  });
+
+  it('detecta erros por name (robusto à serialização do cache)', () => {
+    expect(hasErrorName(new EnvironmentValidationError('x'), 'EnvironmentValidationError')).toBe(true);
+    expect(
+      hasErrorName(Object.assign(new Error('x'), { name: 'CombatMetricsError' }), 'CombatMetricsError'),
+    ).toBe(true);
+    expect(hasErrorName(new Error('x'), 'CombatMetricsError')).toBe(false);
+    expect(hasErrorName('string', 'CombatMetricsError')).toBe(false);
   });
 });
 

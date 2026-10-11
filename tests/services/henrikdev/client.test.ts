@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { HenrikDevMatchV4 } from '@/contracts/henrikdev';
 import {
   createHenrikDevClient,
+  henrikDevErrorStatus,
   HenrikDevApiError,
 } from '@/services/henrikdev/client';
 
@@ -251,5 +252,28 @@ describe('fetchMmrHistory', () => {
     await expect(
       makeClient().fetchMmrHistory({ affinity: 'na', platform: 'pc', name: 'P', tag: '1' }),
     ).rejects.toMatchObject({ status: 403, code: 10_021 });
+  });
+});
+
+describe('henrikDevErrorStatus', () => {
+  it('lê o status de uma instância viva do erro', () => {
+    expect(henrikDevErrorStatus(new HenrikDevApiError(404, 'x', 23))).toBe(404);
+    expect(henrikDevErrorStatus(new HenrikDevApiError(0, 'rede'))).toBe(0);
+  });
+
+  it('recupera o status de um erro SERIALIZADO pela fronteira `use cache`', () => {
+    // O Next reconstrói o erro como `Error` comum preservando só name/message —
+    // por isso o status é codificado no `name` (ver HenrikDevApiError).
+    const serialized = Object.assign(new Error('Region not found'), {
+      name: 'HenrikDevApiError:404',
+    });
+
+    expect(henrikDevErrorStatus(serialized)).toBe(404);
+  });
+
+  it('retorna null para erros alheios ou nomes sem status numérico', () => {
+    expect(henrikDevErrorStatus(new Error('boom'))).toBeNull();
+    expect(henrikDevErrorStatus('string')).toBeNull();
+    expect(henrikDevErrorStatus(Object.assign(new Error('x'), { name: 'HenrikDevApiError:x' }))).toBeNull();
   });
 });

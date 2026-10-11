@@ -5,10 +5,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/states';
 import { getCachedPlayerOverview } from '@/lib/cache/tracker';
 import { getTrackedPlayersStore } from '@/lib/db/tracked-players-store';
-import { describeUpstreamError, mappedToApiErrorBody } from '@/lib/http/api-error';
+import {
+  describeUpstreamError,
+  hasErrorName,
+  mappedToApiErrorBody,
+} from '@/lib/http/api-error';
 import { getSession } from '@/lib/session';
 import { parsePlayerRouteParams } from '@/lib/validation/player-params';
-import { PlayerNoMatchesError } from '@/services/coaching/player-combat';
 import { FollowButton } from './follow-button';
 import { PlayerProfileView } from './profile-view';
 
@@ -96,7 +99,7 @@ async function PlayerProfileData({
     const headerAction = await FollowSection({ region, name, tag });
     return <PlayerProfileView overview={overview} headerAction={headerAction} />;
   } catch (error) {
-    if (error instanceof PlayerNoMatchesError) {
+    if (hasErrorName(error, 'PlayerNoMatchesError')) {
       return (
         <ErrorState
           error={{
@@ -109,17 +112,18 @@ async function PlayerProfileData({
         />
       );
     }
-    return (
-      <ErrorState
-        error={mappedToApiErrorBody(
-          describeUpstreamError(error, {
-            notFoundCode: 'PLAYER_NOT_FOUND',
-            notFoundMessage: 'Jogador não encontrado na HenrikDev.',
-            notFoundHint: 'Confira o Riot ID (nome#tag) e a região da conta.',
-          }),
-        )}
-      />
+
+    const mapped = describeUpstreamError(error, {
+      notFoundCode: 'PLAYER_NOT_FOUND',
+      notFoundMessage: 'Jogador não encontrado na HenrikDev.',
+      notFoundHint: 'Confira o Riot ID (nome#tag) e a região da conta.',
+    });
+    // Diagnóstico no servidor (o ErrorState não vaza a causa ao cliente).
+    console.error(
+      `[players/[region]/[name]/[tag]] ${mapped.code} → HTTP ${mapped.status}` +
+        (mapped.detail !== undefined ? ` | causa: ${mapped.detail}` : ''),
     );
+    return <ErrorState error={mappedToApiErrorBody(mapped)} />;
   }
 }
 

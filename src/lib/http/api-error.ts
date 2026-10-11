@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { EnvironmentValidationError } from '@/config/env';
 import type { ApiErrorBody } from '@/contracts/coach';
-import { HenrikDevApiError } from '@/services/henrikdev/client';
+import { henrikDevErrorStatus } from '@/services/henrikdev/client';
 
 /**
  * Mapeamento HTTP compartilhado (Route Handlers) — traduz erros das camadas
@@ -15,7 +14,21 @@ import { HenrikDevApiError } from '@/services/henrikdev/client';
  *   outros upstream → 502 UPSTREAM_ERROR
  *   env inválido → 500 CONFIG_ERROR
  *   desconhecido → 500 INTERNAL_ERROR (sem vazar stack no body)
+ *
+ * IMPORTANTE — fronteira `'use cache'`: o Next serializa erros lançados dentro
+ * de funções cacheadas, reconstruindo um `Error` comum que preserva apenas
+ * `name`/`message`. O protótipo (classe) e as props próprias somem, então
+ * `instanceof` falha DEPOIS do cache. Por isso a detecção abaixo é ESTRUTURAL
+ * (`hasErrorName` / `henrikDevErrorStatus`), nunca por classe.
  */
+
+/**
+ * Detecta um erro pelo `name` — que sobrevive à serialização da fronteira
+ * `'use cache'`, ao contrário do protótipo exigido por `instanceof`.
+ */
+export function hasErrorName(error: unknown, name: string): error is Error {
+  return error instanceof Error && error.name === name;
+}
 
 export interface MappedErrorDescriptor {
   readonly status: number;
@@ -48,9 +61,12 @@ export function describeUpstreamError(
   error: unknown,
   labels: UpstreamLabels,
 ): MappedErrorDescriptor {
-  if (error instanceof HenrikDevApiError) {
-    const detail = `HenrikDevApiError status=${error.status} code=${String(error.code ?? '?')}: ${error.message}`;
-    if (error.status === 404) {
+  const upstreamStatus = henrikDevErrorStatus(error);
+  if (upstreamStatus !== null) {
+    const detail = `HenrikDevApiError status=${upstreamStatus}: ${
+      error instanceof Error ? error.message : String(error)
+    }`;
+    if (upstreamStatus === 404) {
       return {
         status: 404,
         code: labels.notFoundCode,
@@ -59,7 +75,7 @@ export function describeUpstreamError(
         detail,
       };
     }
-    if (error.status === 429) {
+    if (upstreamStatus === 429) {
       return {
         status: 503,
         code: 'UPSTREAM_RATE_LIMITED',
@@ -68,7 +84,7 @@ export function describeUpstreamError(
         detail,
       };
     }
-    if (error.status === 401) {
+    if (upstreamStatus === 401) {
       return {
         status: 500,
         code: 'CONFIG_ERROR',
@@ -77,7 +93,7 @@ export function describeUpstreamError(
         detail,
       };
     }
-    if (error.status === 0) {
+    if (upstreamStatus === 0) {
       return {
         status: 502,
         code: 'UPSTREAM_UNREACHABLE',
@@ -89,13 +105,20 @@ export function describeUpstreamError(
     return {
       status: 502,
       code: 'UPSTREAM_ERROR',
-      message: `Erro upstream da HenrikDev: ${error.message}`,
+      message: `Erro upstream da HenrikDev: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
       detail,
     };
   }
 
-  if (error instanceof EnvironmentValidationError) {
-    return { status: 500, code: 'CONFIG_ERROR', message: error.message, detail: error.message };
+  if (hasErrorName(error, 'EnvironmentValidationError')) {
+    return {
+      status: 500,
+      code: 'CONFIG_ERROR',
+      message: error instanceof Error ? error.message : String(error),
+      detail: error instanceof Error ? error.message : String(error),
+    };
   }
 
   return {

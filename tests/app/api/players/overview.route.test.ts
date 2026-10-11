@@ -95,6 +95,21 @@ describe('GET /api/players/[region]/[name]/[tag]/overview', () => {
     expect(body.error.code).toBe('NO_VALID_MATCHES');
   });
 
+  it('reconhece o PlayerNoMatchesError SERIALIZADO pela fronteira `use cache`', async () => {
+    // Depois do cache só `name`/`message` sobrevivem: um `Error` comum com o
+    // mesmo name deve gerar o mesmo mapeamento (regressão do cache boundary).
+    vi.mocked(buildPlayerOverview).mockRejectedValueOnce(
+      Object.assign(new Error('sem partidas válidas'), { name: 'PlayerNoMatchesError' }),
+    );
+
+    const response = await GET(request(), context());
+    const body = (await response.json()) as { error: { code: string; message: string } };
+
+    expect(response.status).toBe(404);
+    expect(body.error.code).toBe('NO_VALID_MATCHES');
+    expect(body.error.message).toMatch(/sem partidas válidas/);
+  });
+
   it('mapeia 404 upstream → PLAYER_NOT_FOUND com hint de Riot ID', async () => {
     vi.mocked(buildPlayerOverview).mockRejectedValueOnce(
       new HenrikDevApiError(404, 'Riot ID not found', 10_001),

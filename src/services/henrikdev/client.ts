@@ -16,6 +16,9 @@ import type {
  *   a rota faz o mapping HTTP adequado para o chatbot.
  */
 
+/** Prefixo estável do `name`; o status HTTP é anexado (`HenrikDevApiError:404`). */
+export const HENRIKDEV_ERROR_NAME = 'HenrikDevApiError';
+
 export class HenrikDevApiError extends Error {
   constructor(
     /** Status HTTP upstream (0 = falha antes de resposta). */
@@ -25,8 +28,33 @@ export class HenrikDevApiError extends Error {
     readonly code?: number | string,
   ) {
     super(message);
-    this.name = 'HenrikDevApiError';
+    // A fronteira `'use cache'` do Next serializa o erro ao propagar e preserva
+    // apenas `name`/`message` (protótipo e props próprias — `status`/`code` —
+    // somem, invalidando `instanceof`). Embutir o status no `name` mantém o
+    // mapeamento HTTP funcionando DEPOIS do cache. Ver `henrikDevErrorStatus`.
+    this.name = `${HENRIKDEV_ERROR_NAME}:${status}`;
   }
+}
+
+/**
+ * Status HTTP de um erro da HenrikDev, robusto à serialização imposta pela
+ * fronteira `'use cache'`. Antes do cache vale o `instanceof`; depois, só o
+ * `name` sobrevive — por isso o status é lido do prefixo codificado nele.
+ */
+export function henrikDevErrorStatus(error: unknown): number | null {
+  if (error instanceof HenrikDevApiError) {
+    return error.status;
+  }
+  if (error instanceof Error) {
+    const prefix = `${HENRIKDEV_ERROR_NAME}:`;
+    if (error.name.startsWith(prefix)) {
+      const parsed = Number.parseInt(error.name.slice(prefix.length), 10);
+      if (Number.isInteger(parsed)) {
+        return parsed;
+      }
+    }
+  }
+  return null;
 }
 
 export interface HenrikDevClientOptions {

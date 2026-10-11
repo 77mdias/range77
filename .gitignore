@@ -19,3 +19,6 @@ next-env.d.ts
 .DS_Store
 .idea/
 .vscode/
+
+# Artefatos do Playwright MCP (snapshots, logs, screenshots)
+.playwright-mcp/

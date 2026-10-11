@@ -1,14 +1,10 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import { NextResponse } from 'next/server';
-import { EnvironmentValidationError } from '@/config/env';
 import type { ApiErrorBody } from '@/contracts/coach';
-import { CombatMetricsError } from '@/services/analytics/combat';
+import { hasErrorName } from '@/lib/http/api-error';
 import { parsePlayerRouteParams } from '@/lib/validation/player-params';
-import {
-  buildPlayerCombatInsight,
-  PlayerNoMatchesError,
-} from '@/services/coaching/player-combat';
-import { HenrikDevApiError } from '@/services/henrikdev/client';
+import { buildPlayerCombatInsight } from '@/services/coaching/player-combat';
+import { henrikDevErrorStatus } from '@/services/henrikdev/client';
 
 /**
  * ROTA: GET /api/players/[region]/[name]/[tag]
@@ -61,9 +57,12 @@ interface MappedErrorDescriptor {
 }
 
 function describeError(error: unknown): MappedErrorDescriptor {
-  if (error instanceof HenrikDevApiError) {
-    const detail = `HenrikDevApiError status=${error.status} code=${String(error.code ?? '?')}: ${error.message}`;
-    if (error.status === 404) {
+  const upstreamStatus = henrikDevErrorStatus(error);
+  if (upstreamStatus !== null) {
+    const detail = `HenrikDevApiError status=${upstreamStatus}: ${
+      error instanceof Error ? error.message : String(error)
+    }`;
+    if (upstreamStatus === 404) {
       return {
         status: 404,
         code: 'PLAYER_NOT_FOUND',
@@ -72,7 +71,7 @@ function describeError(error: unknown): MappedErrorDescriptor {
         detail,
       };
     }
-    if (error.status === 429) {
+    if (upstreamStatus === 429) {
       return {
         status: 503,
         code: 'UPSTREAM_RATE_LIMITED',
@@ -81,7 +80,7 @@ function describeError(error: unknown): MappedErrorDescriptor {
         detail,
       };
     }
-    if (error.status === 401) {
+    if (upstreamStatus === 401) {
       return {
         status: 500,
         code: 'CONFIG_ERROR',
@@ -90,7 +89,7 @@ function describeError(error: unknown): MappedErrorDescriptor {
         detail,
       };
     }
-    if (error.status === 0) {
+    if (upstreamStatus === 0) {
       return {
         status: 502,
         code: 'UPSTREAM_UNREACHABLE',
@@ -102,12 +101,14 @@ function describeError(error: unknown): MappedErrorDescriptor {
     return {
       status: 502,
       code: 'UPSTREAM_ERROR',
-      message: `Erro upstream da HenrikDev: ${error.message}`,
+      message: `Erro upstream da HenrikDev: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
       detail,
     };
   }
 
-  if (error instanceof PlayerNoMatchesError) {
+  if (hasErrorName(error, 'PlayerNoMatchesError')) {
     return {
       status: 404,
       code: 'NO_VALID_MATCHES',
@@ -116,11 +117,11 @@ function describeError(error: unknown): MappedErrorDescriptor {
     };
   }
 
-  if (error instanceof EnvironmentValidationError) {
+  if (hasErrorName(error, 'EnvironmentValidationError')) {
     return { status: 500, code: 'CONFIG_ERROR', message: error.message, detail: error.message };
   }
 
-  if (error instanceof CombatMetricsError) {
+  if (hasErrorName(error, 'CombatMetricsError')) {
     return { status: 500, code: 'ANALYTICS_ERROR', message: error.message, detail: error.message };
   }
 

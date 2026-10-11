@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCachedPlayerOverview } from '@/lib/cache/tracker';
-import { errorResponse, mapUpstreamError } from '@/lib/http/api-error';
+import { errorResponse, hasErrorName, mapUpstreamError } from '@/lib/http/api-error';
 import { parsePlayerRouteParams } from '@/lib/validation/player-params';
-import { PlayerNoMatchesError } from '@/services/coaching/player-combat';
 
 /**
  * ROTA: GET /api/players/[region]/[name]/[tag]/overview
@@ -50,7 +49,7 @@ export async function GET(
     const overview = await getCachedPlayerOverview(parsed.region, parsed.name, parsed.tag, size);
     return NextResponse.json(overview);
   } catch (error) {
-    if (error instanceof PlayerNoMatchesError) {
+    if (hasErrorName(error, 'PlayerNoMatchesError')) {
       return errorResponse(
         404,
         'NO_VALID_MATCHES',
