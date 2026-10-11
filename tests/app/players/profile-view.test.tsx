@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { PlayerProfileView, MatchesTab } from '@/app/players/[region]/[name]/[tag]/profile-view';
 import {
   AgentsTab,
   GroupedStatTable,
   MapsTab,
-  MatchesTab,
-  PlayerProfileView,
-} from '@/app/players/[region]/[name]/[tag]/profile-view';
+} from '@/app/players/[region]/[name]/[tag]/agents-maps-sections';
+import { AgentsMapsExplorer } from '@/app/players/[region]/[name]/[tag]/agents-maps-explorer';
 import type { PlayerOverview } from '@/services/tracker/player-overview';
 import type { GroupedStat } from '@/contracts/tracker';
 
@@ -163,10 +163,10 @@ describe('PlayerProfileView', () => {
 
   it('renderiza a página única com seções ancoradas (sem abas)', () => {
     const html = renderToStaticMarkup(<PlayerProfileView overview={overview} />);
-    for (const label of ['Visão Geral', 'Partidas', 'Agentes', 'Mapas']) {
+    for (const label of ['Visão Geral', 'Partidas', 'Agentes &amp; Mapas']) {
       expect(html).toContain(label);
     }
-    for (const id of ['visao-geral', 'partidas', 'agentes', 'mapas']) {
+    for (const id of ['visao-geral', 'partidas', 'agentes-mapas']) {
       expect(html).toContain(`id="${id}"`);
     }
     expect(html).toContain('data-profile-section-nav');
@@ -296,5 +296,31 @@ describe('MapsTab', () => {
 
   it('estado vazio sem agregações de mapa', () => {
     expect(renderToStaticMarkup(<MapsTab maps={[]} />)).toContain('Sem mapas');
+  });
+});
+
+describe('AgentsMapsExplorer', () => {
+  it('renderiza FilterBar com filtros reais e recomputa agentes/mapas do histórico', () => {
+    const html = renderToStaticMarkup(<AgentsMapsExplorer matches={overview.matches} />);
+    expect(html).toContain('data-agents-maps-explorer');
+    expect(html).toContain('Filtros ativos:');
+    expect(html).toContain('Temporada');
+    expect(html).toContain('Todas as temporadas');
+    expect(html).toContain('Fila');
+    expect(html).toContain('Mínimo de 3 jogos');
+    expect(html).toContain('data-sample-total');
+    expect(html).toContain('Amostra total: 1 partidas');
+    // Recomputou agente/mapa a partir de overview.matches (não dos props prontos)
+    expect(html).toContain('data-agent-cards');
+    expect(html).toContain('Jett');
+    expect(html).toContain('data-map-cards');
+    expect(html).toContain('Ascent');
+  });
+
+  it('sem partidas cai nos estados vazios das duas seções', () => {
+    const html = renderToStaticMarkup(<AgentsMapsExplorer matches={[]} />);
+    expect(html).toContain('Amostra total: 0 partidas');
+    expect(html).toContain('Sem agentes');
+    expect(html).toContain('Sem mapas');
   });
 });

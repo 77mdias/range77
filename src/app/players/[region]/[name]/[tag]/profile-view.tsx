@@ -1,38 +1,22 @@
 import type { ReactNode } from 'react';
-import { AgentCard, MapCard, type AgentCardProps } from '@/components/agents';
-import { AgentRadar, RrTrendChart, TrendLine } from '@/components/charts';
+import { RrTrendChart, TrendLine } from '@/components/charts';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { KpiTile } from '@/components/ui/kpi-tile';
 import { EmptyState } from '@/components/ui/states';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeaderCell,
-  TableRow,
-} from '@/components/ui/table';
 import { MatchHistoryTable, PlayerHeader, type MatchHistoryEntry } from '@/components/player';
-import {
-  MAIN_WINRATE_THRESHOLD,
-  buildAgentCardProfiles,
-  buildMapCardProfiles,
-  type AgentCardProfile,
-  type AgentTier,
-  type MapPoolStatus,
-} from '@/services/analytics/agent-map-profiles';
 import { computeFirstBloodRate, computeWinrate } from '@/services/analytics/tracker-aggregations';
 import { computeRrNet, indexRrDeltaByMatchId } from '@/services/analytics/rr-trend';
-import type { AgentStat, GroupedStat, MapStat, MatchSummary } from '@/contracts/tracker';
+import type { MatchSummary } from '@/contracts/tracker';
 import type { PlayerOverview } from '@/services/tracker/player-overview';
+import { AgentsMapsExplorer } from './agents-maps-explorer';
 
 /**
  * PlayerProfileView — apresentação PURA (síncrona) do perfil no design
  * Stitch. Página única: PlayerHeader, strip de KPIs, tendência, avaliação e
- * histórico, seguidos das seções Partidas/Agentes/Mapas (nav por âncoras, sem
- * abas). Separada da página assíncrona para ser testável com
- * `renderToStaticMarkup`.
+ * histórico, seguidos da seção "Agentes & Mapas" (ilha client com filtros
+ * reais) — nav por âncoras, sem abas. Separada da página assíncrona para ser
+ * testável com `renderToStaticMarkup`.
  */
 
 function formatPct(value: number | null | undefined): string {
@@ -41,7 +25,7 @@ function formatPct(value: number | null | undefined): string {
 
 /** K/D de exibição (presentacional; divisão por zero → kills). */
 function displayKd(kills: number, deaths: number): number {
-  return deaths === 0 ? kills : kills / deaths;
+  return deaths === 0 ? kills : Math.round((kills / deaths) * 100) / 100;
 }
 
 /** Linhas do histórico (compartilhado entre o overview e a aba Partidas). */
@@ -212,173 +196,6 @@ export function MatchesTab({
   return <MatchHistoryTable matches={toHistoryEntries(visible, region, rrDeltas)} />;
 }
 
-export function GroupedStatTable({
-  rows,
-  keyLabel,
-}: {
-  readonly rows: readonly GroupedStat[];
-  readonly keyLabel: string;
-}) {
-  if (rows.length === 0) {
-    return (
-      <EmptyState
-        title="Sem dados"
-        description="Nenhuma partida válida para agregar nesta seção."
-      />
-    );
-  }
-
-  return (
-    <Table>
-      <TableHead>
-        <TableRow>
-          <TableHeaderCell>{keyLabel}</TableHeaderCell>
-          <TableHeaderCell numeric>J</TableHeaderCell>
-          <TableHeaderCell numeric>Win%</TableHeaderCell>
-          <TableHeaderCell numeric>KDA</TableHeaderCell>
-          <TableHeaderCell numeric>ACS</TableHeaderCell>
-          <TableHeaderCell numeric>HS%</TableHeaderCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {rows.map((row) => (
-          <TableRow key={row.key}>
-            <TableCell>{row.key}</TableCell>
-            <TableCell numeric>{row.matches}</TableCell>
-            <TableCell numeric>{row.winrate}%</TableCell>
-            <TableCell numeric>{row.kda}</TableCell>
-            <TableCell numeric>{row.avgAcs}</TableCell>
-            <TableCell numeric>{formatPct(row.avgHsPercentage)}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-}
-
-/** Rótulos/tom por tier — mapeamento de apresentação (texto puro). */
-const TIER_LABELS: Record<AgentTier, string> = {
-  main: 'Tier S main',
-  solid: 'Solid sec',
-  bottleneck: 'Bottleneck',
-};
-
-function toAgentCardProps(profile: AgentCardProfile): AgentCardProps {
-  const tacticalNote: AgentCardProps['tacticalNote'] =
-    profile.tier === 'bottleneck'
-      ? {
-          tone: 'warning',
-          title: 'Alerta // gargalo crítico:',
-          description: `Win rate de ${profile.winRatePercent}% derruba o elo — revise o kit e as rotinas com ${profile.name}.`,
-        }
-      : profile.tier === 'main'
-        ? {
-            tone: 'positive',
-            title: 'Status tático // recomendado:',
-            description: `Mantenha ${profile.name} como main — impacto consistente (${profile.winRatePercent}% WR).`,
-          }
-        : {
-            tone: 'neutral',
-            title: '// Viável:',
-            description: `${profile.name} segura como opção no pool (${profile.winRatePercent}% WR).`,
-          };
-
-  return {
-    name: profile.name,
-    matches: profile.matches,
-    winRate: `${profile.winRatePercent}%`,
-    tier: profile.tier,
-    tierLabel: TIER_LABELS[profile.tier],
-    stats: [
-      { label: 'ACS', value: String(profile.avgAcs) },
-      { label: 'K/D', value: profile.kdRatio.toFixed(2) },
-      { label: 'HS%', value: profile.hsPercent === null ? '—' : `${profile.hsPercent}%` },
-    ],
-    progresses: [
-      {
-        label: 'Win rate',
-        percent: profile.winRatePercent,
-        displayValue: `${profile.winRatePercent}%`,
-      },
-      {
-        label: 'Headshot',
-        percent: profile.hsPercent ?? 0,
-        displayValue: profile.hsPercent === null ? '—' : `${profile.hsPercent}%`,
-      },
-    ],
-    tacticalNote,
-  };
-}
-
-export function AgentsTab({ agents }: { readonly agents: readonly AgentStat[] }) {
-  const profiles = buildAgentCardProfiles(agents);
-
-  if (profiles.length === 0) {
-    return (
-      <EmptyState
-        title="Sem agentes"
-        description="Nenhuma partida válida para computar o desempenho por agente."
-      />
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3" data-agent-cards>
-        {profiles.map((profile) => (
-          <AgentCard key={profile.name} {...toAgentCardProps(profile)} />
-        ))}
-      </div>
-      <AgentRadar agents={agents} />
-      <GroupedStatTable rows={agents} keyLabel="Agente" />
-    </div>
-  );
-}
-
-const STATUS_LABELS: Record<MapPoolStatus, string> = {
-  best: 'Melhor mapa',
-  stable: 'Estável',
-  neutral: 'Neutro',
-  worst: 'Pior mapa',
-};
-
-export function MapsTab({ maps }: { readonly maps: readonly MapStat[] }) {
-  const profiles = buildMapCardProfiles(maps);
-
-  if (profiles.length === 0) {
-    return (
-      <EmptyState
-        title="Sem mapas"
-        description="Nenhuma partida válida para computar o desempenho por mapa."
-      />
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-map-cards>
-        {profiles.map((profile) => (
-          <MapCard
-            key={profile.name}
-            map={profile.name}
-            status={profile.status}
-            statusLabel={STATUS_LABELS[profile.status]}
-            winRate={`${profile.winRatePercent}%`}
-            matches={profile.matches}
-            record={{ wins: profile.wins, losses: profile.losses }}
-            winPercent={profile.winRatePercent}
-          />
-        ))}
-      </div>
-      <p className="font-hud text-label uppercase text-text-secondary">
-        Referência de benchmark: {MAIN_WINRATE_THRESHOLD}% WR — split ATK/DEF chega com o
-        endpoint de detalhe por mapa.
-      </p>
-      <GroupedStatTable rows={maps} keyLabel="Mapa" />
-    </div>
-  );
-}
-
 export interface PlayerProfileViewProps {
   readonly overview: PlayerOverview;
   /** Slot de ação do header (ex.: botão Seguir — injetado pela página). */
@@ -389,8 +206,7 @@ export interface PlayerProfileViewProps {
 const PROFILE_SECTIONS = [
   { id: 'visao-geral', label: 'Visão Geral' },
   { id: 'partidas', label: 'Partidas' },
-  { id: 'agentes', label: 'Agentes' },
-  { id: 'mapas', label: 'Mapas' },
+  { id: 'agentes-mapas', label: 'Agentes & Mapas' },
 ] as const;
 
 function ProfileSection({
@@ -464,12 +280,8 @@ export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewP
         <MatchesTab matches={overview.matches} region={player.region} rrDeltas={rrDeltas} />
       </ProfileSection>
 
-      <ProfileSection id="agentes" title="Agentes">
-        <AgentsTab agents={overview.agents} />
-      </ProfileSection>
-
-      <ProfileSection id="mapas" title="Mapas">
-        <MapsTab maps={overview.maps} />
+      <ProfileSection id="agentes-mapas" title="Agentes & Mapas">
+        <AgentsMapsExplorer matches={overview.matches} />
       </ProfileSection>
     </div>
   );

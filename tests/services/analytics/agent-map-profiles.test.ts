@@ -4,6 +4,7 @@ import {
   MAIN_WINRATE_THRESHOLD,
   MIN_SAMPLE,
   buildAgentCardProfiles,
+  buildMapPoolAdvice,
   buildMapCardProfiles,
   classifyAgentTier,
   kdRatio,
@@ -155,5 +156,38 @@ describe('buildMapCardProfiles', () => {
     ]);
     expect(profiles[0]?.status).toBe('stable');
     expect(profiles[1]?.status).toBe('neutral');
+  });
+});
+
+describe('buildMapPoolAdvice', () => {
+  it('deriva conselho do pior mapa elegível e cita o melhor distinto', () => {
+    const advice = buildMapPoolAdvice([
+      stat('Ascent', { matches: 18, winrate: 72 }),
+      stat('Breeze', { matches: 8, winrate: 31 }),
+      stat('Split', { matches: 2, winrate: 100 }),
+    ]);
+    expect(advice).toEqual({
+      worstMap: 'Breeze',
+      worstWinRate: 31,
+      worstMatches: 8,
+      bestMap: 'Ascent',
+      bestWinRate: 72,
+    });
+  });
+
+  it('mapa único elegível: conselho sem melhor distinto', () => {
+    const advice = buildMapPoolAdvice([stat('Icebox', { matches: 5, winrate: 40 })]);
+    expect(advice).toEqual({
+      worstMap: 'Icebox',
+      worstWinRate: 40,
+      worstMatches: 5,
+      bestMap: null,
+      bestWinRate: null,
+    });
+  });
+
+  it('sem amostra elegível não há conselho (nada fabricado)', () => {
+    expect(buildMapPoolAdvice([])).toBeNull();
+    expect(buildMapPoolAdvice([stat('Ascent', { matches: 1, winrate: 10 })])).toBeNull();
   });
 });
