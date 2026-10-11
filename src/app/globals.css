@@ -144,7 +144,7 @@
   --color-on-accent: var(--color-ink); /* conteúdo sobre fundo accent */
 }
 
-/* — Papéis de fonte (carregadas via next/font no layout) — */
+/* — Papéis de fonte (self-hosted via `next/font/local` no layout) — */
 :root {
   --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
     Roboto, Helvetica, Arial, sans-serif;
