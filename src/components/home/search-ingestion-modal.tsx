@@ -22,7 +22,7 @@ export interface IngestionStep {
 
 export interface SearchIngestionModalProps {
   readonly open: boolean;
-  /** Alvo da ingestão (Riot ID, ex.: "NEXUS#BR1"). */
+  /** Alvo da ingestão (Riot ID, ex.: "twmz#tower"). */
   readonly target: string;
   readonly steps: readonly IngestionStep[];
   /** 0–100 (calculado pelo pai a partir dos steps). */

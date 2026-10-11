@@ -46,11 +46,11 @@ describe('HomePage', () => {
     expect(output).toContain('Buscar');
   });
 
-  it('renderiza os perfis demo catalogados', () => {
+  it('renderiza o perfil demo catalogado apontando para um jogador real', () => {
     const output = html();
     expect(output).toContain('data-component="demo-profile-grid"');
-    expect(output).toContain('NEXUS#BR1');
-    expect(output).toContain('ASPAS#LEV');
+    expect(output).toContain('twmz#tower');
+    expect(output).not.toContain('NEXUS#BR1');
   });
 
   it('o modal de ingestão só aparece quando aberto', () => {

@@ -30,11 +30,11 @@ import { parseRiotId } from '@/lib/validation/riot-id';
 
 const DEMO_REGION = 'br' as const;
 
+/** Perfil demo real (HenrikDev): nome verdadeiro — nada de Riot ID fictício. */
+const DEMO_RIOT_ID = 'twmz#tower' as const;
+
 const DEMO_PROFILES: readonly DemoProfile[] = [
-  { riotId: 'NEXUS#BR1', regionChip: 'BR', rank: 'Ascendant 3', rr: '78 RR', highlighted: true },
-  { riotId: 'ASPAS#LEV', regionChip: 'LATAM', rank: 'Radiant', rr: '840 RR' },
-  { riotId: 'MWZERA#FUR', regionChip: 'BR', rank: 'Radiant', rr: '620 RR' },
-  { riotId: 'CAUANZIN#LOUD', regionChip: 'BR', rank: 'Radiant', rr: '710 RR' },
+  { riotId: DEMO_RIOT_ID, regionChip: 'BR', rank: 'Diamond 2', rr: '10 RR', highlighted: true },
 ];
 
 const STEP_DELAYS_MS = [600, 1400, 2200];
@@ -126,7 +126,7 @@ export function HomeLanding() {
   const timers = useRef<number[]>([]);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [target, setTarget] = useState('NEXUS#BR1');
+  const [target, setTarget] = useState<string>(DEMO_RIOT_ID);
   const [route, setRoute] = useState<string | null>(null);
   const [stepStates, setStepStates] = useState<readonly IngestionStepState[]>(INITIAL_STEPS);
 
@@ -305,8 +305,8 @@ export function HomeLanding() {
           { label: 'Patch Riot Games', value: 'v9.11 compat' },
         ]}
         actions={
-          <Button size="sm" onClick={() => startIngestion('NEXUS#BR1', DEMO_REGION)}>
-            Testar perfil demo (NEXUS#BR1)
+          <Button size="sm" onClick={() => startIngestion(DEMO_RIOT_ID, DEMO_REGION)}>
+            Testar perfil demo ({DEMO_RIOT_ID})
           </Button>
         }
       />

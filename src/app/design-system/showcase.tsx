@@ -268,13 +268,10 @@ export function DesignSystemShowcase() {
   const [minGames, setMinGames] = useState(true);
   const [chatLog, setChatLog] = useState<readonly string[]>([]);
   const [ingestionOpen, setIngestionOpen] = useState(false);
-  const [ingestionTarget, setIngestionTarget] = useState('NEXUS#BR1');
+  const [ingestionTarget, setIngestionTarget] = useState('twmz#tower');
 
   const DEMO_PROFILES: readonly DemoProfile[] = [
-    { riotId: 'NEXUS#BR1', regionChip: 'BR', rank: 'Ascendant 3', rr: '78 RR', highlighted: true },
-    { riotId: 'ASPAS#LEV', regionChip: 'LATAM', rank: 'Radiant', rr: '840 RR' },
-    { riotId: 'MWZERA#FUR', regionChip: 'BR', rank: 'Radiant', rr: '620 RR' },
-    { riotId: 'CAUANZIN#LOUD', regionChip: 'BR', rank: 'Radiant', rr: '710 RR' },
+    { riotId: 'twmz#tower', regionChip: 'BR', rank: 'Diamond 2', rr: '10 RR', highlighted: true },
   ];
 
   return (

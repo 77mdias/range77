@@ -7,7 +7,7 @@ import { cx } from '@/lib/cx';
  */
 
 export interface DemoProfile {
-  /** Riot ID completo (ex.: "NEXUS#BR1"). */
+  /** Riot ID completo (ex.: "twmz#tower"). */
   readonly riotId: string;
   readonly regionChip: string;
   readonly rank: string;
