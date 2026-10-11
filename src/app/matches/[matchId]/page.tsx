@@ -2,18 +2,22 @@ import { Suspense } from 'react';
 import type { ReactNode } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/states';
-import { getCachedMatchDetail } from '@/lib/cache/tracker';
+import { getCachedMatchDetail, getCachedPlayerCard } from '@/lib/cache/tracker';
 import { describeUpstreamError, mappedToApiErrorBody } from '@/lib/http/api-error';
 import { parseMatchRouteParams } from '@/lib/validation/match-params';
-import { MatchView } from './match-view';
+import { parseRiotId } from '@/lib/validation/riot-id';
+import { selectMatchMvp } from '@/services/analytics/match-breakdown';
+import { MatchView, type MatchViewer } from './match-view';
 
 /**
- * PÁGINA: /matches/[matchId]?region=xx
+ * PÁGINA: /matches/[matchId]?region=xx&player=Nome%23Tag
  *
  * O `match_id` é global, mas a HenrikDev exige a afinidade para rotear a
  * busca — ela chega via query string (`?region=`), com fallback para `br`.
- * Cache Data + cache durável (Neon) tornam visitas repetidas baratas.
- * Next 16: `params` e `searchParams` são Promises e DEVEM ser aguardadas.
+ * `player` (Riot ID do jogador buscado) habilita a perspectiva "VOCÊ"
+ * (linha destacada, W/L e DEF/ATK do time dele). Cache Data + cache durável
+ * (Neon) tornam visitas repetidas baratas. Next 16: `params` e `searchParams`
+ * são Promises e DEVEM ser aguardadas.
  */
 
 const DEFAULT_REGION = 'br';
@@ -23,7 +27,7 @@ export const instant = false;
 
 interface PageProps {
   params: Promise<{ matchId: string }>;
-  searchParams: Promise<{ region?: string | string[] }>;
+  searchParams: Promise<{ region?: string | string[]; player?: string | string[] }>;
 }
 
 function PageFrame({ children }: { readonly children: ReactNode }) {
@@ -43,13 +47,18 @@ function MatchSkeleton() {
 async function MatchDetailData({
   region,
   matchId,
+  viewer,
 }: {
   readonly region: string;
   readonly matchId: string;
+  readonly viewer: MatchViewer | null;
 }) {
   try {
     const detail = await getCachedMatchDetail(region, matchId);
-    return <MatchView detail={detail} />;
+    const mvp = selectMatchMvp(detail.scoreboard);
+    const mvpCardSrc =
+      mvp === null || mvp.tag === '' ? null : await getCachedPlayerCard(mvp.name, mvp.tag);
+    return <MatchView detail={detail} viewer={viewer} mvpCardSrc={mvpCardSrc} />;
   } catch (error) {
     return (
       <ErrorState
@@ -79,10 +88,16 @@ export default async function MatchPage({ params, searchParams }: PageProps) {
     );
   }
 
+  // `player` (Riot ID) é opcional: sem ele a página segue neutra (sem "VOCÊ").
+  const rawPlayer = typeof query.player === 'string' ? query.player : undefined;
+  const parsedPlayer = rawPlayer === undefined ? null : parseRiotId(rawPlayer);
+  const viewer: MatchViewer | null =
+    parsedPlayer !== null && parsedPlayer.ok ? parsedPlayer.value : null;
+
   return (
     <PageFrame>
       <Suspense fallback={<MatchSkeleton />}>
-        <MatchDetailData region={parsed.region} matchId={parsed.matchId} />
+        <MatchDetailData region={parsed.region} matchId={parsed.matchId} viewer={viewer} />
       </Suspense>
     </PageFrame>
   );

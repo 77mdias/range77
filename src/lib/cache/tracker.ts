@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import type { MatchDetail } from '@/contracts/tracker';
 import { getMatchDetail } from '@/services/tracker/match-detail';
+import { getPlayerCard } from '@/services/tracker/player-card';
 import {
   buildPlayerOverview,
   type PlayerOverview,
@@ -33,4 +34,15 @@ export async function getCachedMatchDetail(
   cacheTag(`match:${region.toLowerCase()}:${matchId}`);
   // O cache durável (Neon) é consultado no miss do cache Data.
   return getMatchDetail({ region, matchId });
+}
+
+/**
+ * Cartão de jogador (in-game player card) para o destaque de MVP, via v1
+ * account. Cacheado por Riot ID — best-effort: `null` quando indisponível.
+ */
+export async function getCachedPlayerCard(name: string, tag: string): Promise<string | null> {
+  'use cache';
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 });
+  cacheTag(`player-card:${name.toLowerCase()}:${tag.toLowerCase()}`);
+  return getPlayerCard({ name, tag });
 }

@@ -46,7 +46,12 @@ export function BreakdownView({ overview }: { readonly overview: PlayerOverview 
             </span>
           }
         />
-        <MatchesTab matches={overview.matches} region={overview.player.region} rrDeltas={rrDeltas} />
+        <MatchesTab
+          matches={overview.matches}
+          region={overview.player.region}
+          player={{ name: overview.player.name, tag: overview.player.tag }}
+          rrDeltas={rrDeltas}
+        />
       </section>
     </div>
   );

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   aggregateWeaponKills,
+  computeAdr,
   computeFirstBloods,
   computeMatchHalves,
   computeTeamTotals,
@@ -179,6 +180,18 @@ describe('computeTeamTotals', () => {
       totalDeaths: 0,
       totalAssists: 0,
     });
+  });
+});
+
+describe('computeAdr', () => {
+  it('divide o dano pelos rounds jogados (1 casa)', () => {
+    expect(computeAdr(4000, 20)).toBe(200);
+    expect(computeAdr(3710, 24)).toBe(154.6);
+  });
+
+  it('sem rounds devolve null (nunca divide por zero)', () => {
+    expect(computeAdr(4000, 0)).toBeNull();
+    expect(computeAdr(0, 0)).toBeNull();
   });
 });
 

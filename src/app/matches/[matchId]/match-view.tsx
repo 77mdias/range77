@@ -13,6 +13,7 @@ import {
 import type { MatchDetail, MatchScoreboardRow } from '@/contracts/tracker';
 import {
   aggregateWeaponKills,
+  computeAdr,
   computeFirstBloods,
   computeMatchHalves,
   computeTeamTotals,
@@ -25,12 +26,12 @@ import { formatRelativeTime } from '@/lib/format/relative-time';
 
 /**
  * MatchView — apresentação PURA (síncrona) do detalhe de partida no design
- * Stitch: MatchMetaBar, ScoreBanner (neutro — sem perspectiva de jogador),
- * RoundTimeline, heatmap de rounds por abates, scoreboard duplo com FK/FD e
- * KAST computados dos eventos de abate (ECON fica `—`: a HenrikDev não
- * fornece), MVP da partida (maior ACS) com Rating ValCoach e metades DEF/ATK
- * inferidas dos plants, e eficiência por arma. Separada da página assíncrona
- * para ser testável com `renderToStaticMarkup`.
+ * Stitch: MatchMetaBar, ScoreBanner (perspectiva do jogador buscado quando
+ * informado), RoundTimeline, heatmap de rounds por abates, tabela telemétrica
+ * com FK/FD e KAST computados dos eventos de abate (ECON fica `—`: a HenrikDev
+ * não fornece), MVP da partida (maior ACS) com Rating ValCoach, card do
+ * jogador e metades DEF/ATK do time do jogador buscado. Separada da página
+ * assíncrona para ser testável com `renderToStaticMarkup`.
  */
 
 function formatDuration(ms: number): string {
@@ -40,7 +41,21 @@ function formatDuration(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
-export function MatchView({ detail }: { readonly detail: MatchDetail }) {
+/** Riot ID do jogador buscado — usado para "VOCÊ" e perspectiva W/L e DEF/ATK. */
+export interface MatchViewer {
+  readonly name: string;
+  readonly tag: string;
+}
+
+export interface MatchViewProps {
+  readonly detail: MatchDetail;
+  /** Jogador buscado (vindo da query `?player=`) → destaca a linha e a perspectiva. */
+  readonly viewer?: MatchViewer | null;
+  /** Card in-game do MVP (quadrado); ausente → fallback ao ícone do agente. */
+  readonly mvpCardSrc?: string | null;
+}
+
+export function MatchView({ detail, viewer, mvpCardSrc }: MatchViewProps) {
   const teamIds =
     detail.teams.length > 0
       ? detail.teams.map((team) => team.teamId)
@@ -64,16 +79,50 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
     return detail.rounds.filter((round) => round.winningTeamId === teamId).length;
   };
 
-  const scoreA = teamA !== undefined ? roundsWon(teamA) : 0;
-  const scoreB = teamB !== undefined ? roundsWon(teamB) : 0;
+  // Jogador buscado (mesma referência do array do scoreboard) → perspectiva.
+  const viewerRow =
+    viewer == null
+      ? null
+      : (detail.scoreboard.find(
+          (row) =>
+            row.name.toLowerCase() === viewer.name.toLowerCase() &&
+            row.tag.toLowerCase() === viewer.tag.toLowerCase(),
+        ) ?? null);
+  const viewerTeamId = viewerRow?.teamId;
+  const hasPerspective = viewerTeamId !== undefined;
+  const perspectiveTeamId = viewerTeamId ?? teamA;
+  const opponentTeamId =
+    perspectiveTeamId === undefined
+      ? undefined
+      : teamIds.find((id) => id !== perspectiveTeamId);
+
+  const usScore = perspectiveTeamId !== undefined ? roundsWon(perspectiveTeamId) : 0;
+  const themScore = opponentTeamId !== undefined ? roundsWon(opponentTeamId) : 0;
+  const result: 'win' | 'loss' | undefined = hasPerspective
+    ? usScore > themScore
+      ? 'win'
+      : usScore < themScore
+        ? 'loss'
+        : undefined
+    : undefined;
+
+  // Time do jogador buscado primeiro (aliado), adversário depois.
+  const orderedTeamIds =
+    hasPerspective && viewerTeamId !== undefined && teamIds.includes(viewerTeamId)
+      ? [viewerTeamId, ...teamIds.filter((id) => id !== viewerTeamId)]
+      : teamIds;
 
   const rounds: readonly RoundCellData[] = detail.rounds.map((round) => ({
     number: round.roundNumber,
-    outcome: round.winningTeamId === teamA ? 'win' : 'loss',
+    outcome: round.winningTeamId === perspectiveTeamId ? 'win' : 'loss',
   }));
 
-  // Metades DEF/ATK do time A (lado inferido dos plants; OT → omitido).
-  const halves = teamA !== undefined ? computeMatchHalves(detail.rounds, teamA) : null;
+  // Metades DEF/ATK do time do jogador buscado (lado inferido dos plants;
+  // OT → omitido). Sem jogador informado não há perspectiva — omitimos.
+  const halves =
+    hasPerspective && perspectiveTeamId !== undefined
+      ? computeMatchHalves(detail.rounds, perspectiveTeamId)
+      : null;
   const halvesLabel =
     halves === null
       ? undefined
@@ -95,8 +144,12 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
       kastPercentage: row.kastPercentage,
     });
 
-  const teams = teamIds.map((teamId) => {
+  const teams = orderedTeamIds.map((teamId) => {
     const totals = computeTeamTotals(teamId, detail.scoreboard);
+    const isViewerTeam = teamId === viewerTeamId;
+    const opponent = teamIds.find((id) => id !== teamId);
+    const won =
+      opponent === undefined ? undefined : roundsWon(teamId) > roundsWon(opponent);
     const players = detail.scoreboard
       .filter((row) => row.teamId === teamId)
       .map((row) => {
@@ -112,11 +165,13 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
           deaths: row.deaths,
           assists: row.assists,
           kdDiff: row.kills - row.deaths,
+          adr: computeAdr(row.damageDealt, roundsTotal),
           hsPercentage: row.hsPercentage,
           kastPercentage: row.kastPercentage,
           firstBloods: fb?.firstBloods,
           firstDeaths: fb?.firstDeaths,
           rating: ratingFor(row, fb),
+          isViewer: row === viewerRow,
         };
       });
     const ratings = players
@@ -128,11 +183,20 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
         : Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) * 100) /
           100;
 
+    const label = isViewerTeam
+      ? 'Time aliado'
+      : hasPerspective
+        ? 'Time adversário'
+        : `Time ${teamId}`;
+
     return {
       name: `Time ${teamId}`,
+      label,
+      won,
       roundsWon: roundsWon(teamId),
       totalDamage: totals.totalDamage,
       avgRating,
+      isViewerTeam,
       players,
     };
   });
@@ -155,8 +219,9 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
         <div className="grid gap-3 lg:grid-cols-12">
           <div className="lg:col-span-4">
             <ScoreBanner
-              scoreTeam={scoreA}
-              scoreEnemy={scoreB}
+              result={result}
+              scoreTeam={usScore}
+              scoreEnemy={themScore}
               map={detail.map}
               halves={halvesLabel}
               mapImageSrc={mapMinimapSrc(detail.map) ?? undefined}
@@ -168,7 +233,9 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
                 playerName={mvp.tag === '' ? mvp.name : `${mvp.name}#${mvp.tag}`}
                 agent={mvp.agent}
                 rank={mvp.tier ?? undefined}
-                portraitSrc={agentIconSrc(mvp.agent) ?? agentArtSrc(mvp.agent) ?? undefined}
+                portraitSrc={
+                  mvpCardSrc ?? agentIconSrc(mvp.agent) ?? agentArtSrc(mvp.agent) ?? undefined
+                }
                 rating={ratingFor(mvp, mvpFirstBloods)}
                 kills={mvp.kills}
                 deaths={mvp.deaths}
@@ -190,7 +257,7 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
           </div>
         </div>
 
-        {/* Tabela telemétrica (scoreboard duplo com FK/FD real) */}
+        {/* Tabela telemétrica (scoreboard duplo com FK/FD real + VOCÊ) */}
         <ScoreboardTable teams={teams} />
 
         {/* Timeline de rounds — mantida no formato atual (decisão do dono) */}
@@ -202,9 +269,9 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
           )}
         </Card>
 
-        {teamA !== undefined ? (
+        {perspectiveTeamId !== undefined ? (
           <Card label="Rounds por abates">
-            <RoundHeatmap rounds={detail.rounds} kills={detail.kills} teamId={teamA} />
+            <RoundHeatmap rounds={detail.rounds} kills={detail.kills} teamId={perspectiveTeamId} />
           </Card>
         ) : null}
 

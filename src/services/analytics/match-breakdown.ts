@@ -202,6 +202,17 @@ export function computeMatchHalves(
   return { defense, attack };
 }
 
+/**
+ * ADR — dano por round (dano total causado / rounds jogados). Sem rounds
+ * (> 0) devolve `null` em vez de dividir por zero. Arredonda a 1 casa.
+ */
+export function computeAdr(damageDealt: number, roundsPlayed: number): number | null {
+  if (roundsPlayed <= 0) {
+    return null;
+  }
+  return roundTo(damageDealt / roundsPlayed, 1);
+}
+
 /** Soma dano/kills/deaths/assists de um time. Time ausente → zeros. */
 export function computeTeamTotals(
   teamId: string,

@@ -1,9 +1,10 @@
 import { cx } from '@/lib/cx';
 
 /**
- * MvpCallout — destaque do melhor jogador da partida (Stitch/match): retrato
- * com fita MVP, nome/agente/rank e a linha de identidade (Rating Global,
- * KDA com diff e First Kills) + micro-métricas (ACS/HS/KAST).
+ * MvpCallout — destaque do melhor jogador da partida (Stitch/match): CARD do
+ * jogador (quadrado, ao contrário do retrato circular do ícone de agente) com
+ * fita MVP, nome/agente/rank e a linha de identidade (Rating Global, KDA com
+ * diff e First Kills) + micro-métricas (ACS/HS/KAST).
  */
 
 export interface MvpMetric {
@@ -53,9 +54,9 @@ export function MvpCallout({
       )}
     >
       <div className="flex min-w-0 items-center gap-3">
-        <div className="relative size-14 shrink-0 overflow-hidden rounded-full border border-line bg-surface-hover">
+        <div className="relative size-14 shrink-0 overflow-hidden border border-line bg-surface-hover shadow-hard-1">
           {portraitSrc !== undefined ? (
-            // eslint-disable-next-line @next/next/no-img-element -- retrato/ícone do agente
+            // eslint-disable-next-line @next/next/no-img-element -- card do jogador (quadrado) ou ícone do agente
             <img src={portraitSrc} alt="" className="size-full object-cover" />
           ) : (
             <span

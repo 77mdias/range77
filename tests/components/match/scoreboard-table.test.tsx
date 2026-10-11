@@ -90,13 +90,56 @@ describe('ScoreboardTable', () => {
         ]}
       />,
     );
-    expect(html).toContain('KAST%');
-    expect(html).toContain('FK/FD');
+    expect(html).toContain('KAST %');
+    expect(html).toContain('FK / FD');
+    expect(html).toContain('ADR');
     expect(html).toContain('ECON');
-    expect(html).toContain('3/1');
+    expect(html).toContain('3 / 1');
     expect(html).toContain('68.4');
     expect(html).toContain('72%');
     expect(html).toContain('—');
+  });
+
+  it('destaca a linha do jogador buscado com VOCÊ e chip abreviado', () => {
+    const html = renderToStaticMarkup(
+      <ScoreboardTable
+        teams={[
+          {
+            name: 'Time Red',
+            label: 'Time aliado',
+            isViewerTeam: true,
+            players: [
+              {
+                name: 'TenZ',
+                tag: 'BR1',
+                rank: 'Immortal 3',
+                agent: 'Jett',
+                agentIconSrc: '/assets/images/agents/jett.png',
+                acs: 300,
+                kills: 24,
+                deaths: 14,
+                assists: 6,
+                kdDiff: 10,
+                adr: 184.2,
+                hsPercentage: 30,
+                isViewer: true,
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+    expect(html).toContain('VOCÊ');
+    expect(html).toContain('data-viewer="true"');
+    expect(html).toContain('Time aliado');
+    // Chip abreviado + tier por extenso na segunda linha.
+    expect(html).toContain('IMM 3');
+    expect(html).toContain('Immortal 3');
+    // ADR computado exibido.
+    expect(html).toContain('184.2');
+    // Ícone do agente quadrado (sem raio circular).
+    expect(html).toContain('size-6 shrink-0 border border-line object-cover');
+    expect(html).not.toContain('rounded-full');
   });
 
   it('KD negativo usa vermelho', () => {

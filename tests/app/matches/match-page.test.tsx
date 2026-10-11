@@ -5,7 +5,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
  * SUITE TDD — página do detalhe: validação de params/região (branch síncrona).
  */
 
-vi.mock('@/lib/cache/tracker', () => ({ getCachedMatchDetail: vi.fn() }));
+vi.mock('@/lib/cache/tracker', () => ({
+  getCachedMatchDetail: vi.fn(),
+  getCachedPlayerCard: vi.fn(),
+}));
 
 import MatchPage from '@/app/matches/[matchId]/page';
 

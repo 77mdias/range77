@@ -43,7 +43,9 @@ function toHistoryEntries(
   matches: readonly MatchSummary[],
   region: string,
   rrDeltas: ReadonlyMap<string, number> | undefined,
+  player: { readonly name: string; readonly tag: string },
 ): MatchHistoryEntry[] {
+  const viewer = encodeURIComponent(`${player.name}#${player.tag}`);
   return matches.map((match) => ({
     id: match.matchId,
     agent: match.agent,
@@ -59,7 +61,7 @@ function toHistoryEntries(
     acs: match.acs,
     hsPercentage: match.hsPercentage,
     rrDelta: rrDeltas?.get(match.matchId),
-    href: `/matches/${match.matchId}?region=${region}`,
+    href: `/matches/${match.matchId}?region=${region}&player=${viewer}`,
   }));
 }
 
@@ -123,11 +125,14 @@ export function buildInsightColumns(overview: PlayerOverview): {
 export function MatchesTab({
   matches,
   region,
+  player,
   rrDeltas,
   limit,
 }: {
   readonly matches: readonly MatchSummary[];
   readonly region: string;
+  /** Riot ID do jogador buscado → links já levam a perspectiva `?player=`. */
+  readonly player: { readonly name: string; readonly tag: string };
   /** Índice `matchId → ΔRR` (mmr-history) para a coluna RR. */
   readonly rrDeltas?: ReadonlyMap<string, number>;
   /** Máximo de linhas exibidas (ex.: 5 no histórico recente do overview). */
@@ -143,7 +148,7 @@ export function MatchesTab({
     );
   }
 
-  return <MatchHistoryTable matches={toHistoryEntries(visible, region, rrDeltas)} />;
+  return <MatchHistoryTable matches={toHistoryEntries(visible, region, rrDeltas, player)} />;
 }
 
 export interface PlayerProfileViewProps {
@@ -307,7 +312,13 @@ export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewP
               </span>
             }
           >
-            <MatchesTab matches={overview.matches} region={player.region} rrDeltas={rrDeltas} limit={5} />
+            <MatchesTab
+              matches={overview.matches}
+              region={player.region}
+              player={{ name: player.name, tag: player.tag }}
+              rrDeltas={rrDeltas}
+              limit={5}
+            />
           </Card>
 
           <div className="grid gap-3 md:grid-cols-2" data-insight-columns>

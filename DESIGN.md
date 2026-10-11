@@ -318,12 +318,29 @@ Métrica **composta** (não oficial) normalizada por referências de jogador mé
 As dimensões sem dado são omitidas e os pesos renormalizados entre as
 restantes; sem rounds → `null`. Formulação em `src/services/analytics/rating.ts`.
 
+### ADR (dano por round)
+
+`ADR = dano causado / rounds jogados` — por jogador e por partida
+(`computeAdr`, com 1 casa; sem rounds → `null`). É o correspondente
+**por partida** da média ponderada de amostra usada no coaching
+(`calculateAdr` em `adr.ts`).
+
 ### Metades por lado (DEF/ATK)
 
 O payload v4 não traz o lado inicial. O time atacante de cada half é **inferido
 dos plants** (só o atacante planta) e o outro half assume a troca de lados.
 Sem plant em nenhum half, ou em partidas com overtime (>24 rounds), o rótulo é
-omitido. Em `computeMatchHalves`.
+omitido. Em `computeMatchHalves`, sempre na **perspectiva do jogador buscado**
+(o time dele é o "aliado"): a página recebe o Riot ID via `?player=` e deriva
+W/L, DEF/ATK e a linha "VOCÊ" no scoreboard. Sem `player`, a partida é neutra
+(nem DEF/ATK, nem W/L).
+
+### Card do jogador e chip de ranque
+
+O card in-game do MVP (v1 account, `card.large`) é buscado best-effort
+(`getPlayerCard`/`getCachedPlayerCard`) e exibido **quadrado** — nunca um
+retrato circular de agente. O chip de ranque do scoreboard abrevia o tier real
+com `formatRankChip` (`"Immortal 3"` → `IMM 3`).
 
 ## Do's and Don'ts
 

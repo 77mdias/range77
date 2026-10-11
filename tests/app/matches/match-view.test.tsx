@@ -83,9 +83,34 @@ describe('MatchView', () => {
     expect(html).toContain('Time Blue');
     expect(html).toContain('TenZ');
     expect(html).toContain('Enemy');
-    expect(html).toContain('24/14/6');
+    expect(html).toContain('24 / 14 / 6');
     expect(html).toContain('+10');
     expect(html).toContain('Immortal 3');
+  });
+
+  it('usa a perspectiva do jogador buscado: VOCÊ, W/L e DEF/ATK do time dele', () => {
+    const html = renderToStaticMarkup(
+      <MatchView
+        detail={detail}
+        viewer={{ name: 'TenZ', tag: 'BR1' }}
+        mvpCardSrc="/assets/images/cards/player-card.png"
+      />,
+    );
+    expect(html).toContain('VOCÊ');
+    expect(html).toContain('Vitória');
+    expect(html).toContain('Time aliado');
+    expect(html).toContain('Time adversário');
+    // Metades do time do jogador: ATK 1-1 (rounds 1 e 2), DEF 0-0.
+    expect(html).toContain('DEF: 0-0 • ATK: 1-1');
+    expect(html).toContain('/assets/images/cards/player-card.png');
+  });
+
+  it('sem jogador informado a página fica neutra (sem VOCÊ nem DEF/ATK)', () => {
+    const html = renderToStaticMarkup(<MatchView detail={detail} />);
+    expect(html).not.toContain('VOCÊ');
+    expect(html).not.toContain('DEF:');
+    expect(html).toContain('Time Red');
+    expect(html).toContain('Time Blue');
   });
 
   it('HS% indisponível vira travessão no scoreboard', () => {

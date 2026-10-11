@@ -245,23 +245,34 @@ describe('PlayerProfileView', () => {
 });
 
 describe('MatchesTab', () => {
-  it('lista as partidas com link para o detalhe', () => {
-    const html = renderToStaticMarkup(<MatchesTab matches={overview.matches} region="br" />);
+  it('lista as partidas com link para o detalhe (com perspectiva do jogador)', () => {
+    const html = renderToStaticMarkup(
+      <MatchesTab matches={overview.matches} region="br" player={{ name: 'TenZ', tag: 'BR1' }} />,
+    );
     expect(html).toContain('Ascent');
-    expect(html).toContain('/matches/m-1?region=br');
+    expect(html).toContain('/matches/m-1?region=br&amp;player=TenZ%23BR1');
     expect(html).toContain('20/10/5');
   });
 
   it('preenche o ΔRR quando o MMR history casa por matchId', () => {
     const deltas = new Map([['m-1', 15]]);
     const html = renderToStaticMarkup(
-      <MatchesTab matches={overview.matches} region="br" rrDeltas={deltas} />,
+      <MatchesTab
+        matches={overview.matches}
+        region="br"
+        player={{ name: 'TenZ', tag: 'BR1' }}
+        rrDeltas={deltas}
+      />,
     );
     expect(html).toContain('+15');
   });
 
   it('estado vazio sem partidas', () => {
-    expect(renderToStaticMarkup(<MatchesTab matches={[]} region="br" />)).toContain('Sem partidas');
+    expect(
+      renderToStaticMarkup(
+        <MatchesTab matches={[]} region="br" player={{ name: 'TenZ', tag: 'BR1' }} />,
+      ),
+    ).toContain('Sem partidas');
   });
 });
 
