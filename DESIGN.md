@@ -296,11 +296,14 @@ e ficam documentadas aqui — o resto vira `—`, nunca número inventado.
 - **K**ill: o jogador matou alguém no round.
 - **A**ssist: o jogador assistiu um abate no round.
 - **S**urvived: o jogador não morreu no round.
-- **T**raded: o jogador morreu e um companheiro de time matou o assassino ainda
-  no **mesmo round**.
+- **T**raded: o jogador morreu e um companheiro de time matou o assassino em
+  até **5 s** (`KAST_TRADE_WINDOW_MS`) após a morte, dentro do mesmo round.
 
-Derivado de `rounds[]` + `kills[]` (killer/victim/assistants por PUUID). Sem
-timeline de abates não há base → fica `null` (a view mostra `—`).
+Derivado de `rounds[]` + `kills[]` (killer/victim/assistants e
+`time_in_round_in_ms` por PUUID). A janela de trade evita creditar vinganças
+tardias — o assassino morrer no fim do round, depois de outros abates, não é
+trade (era a fonte de inflação do KAST). Sem timeline de abates, ou sem os
+timestamps da morte e da vingança, não há base → sem T (a view mostra `—`).
 
 ### Rating ValCoach
 

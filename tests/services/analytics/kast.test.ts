@@ -7,8 +7,8 @@ import {
 
 /**
  * SUITE TDD — KAST: fração de rounds com K/A/S/T por jogador (K = kill,
- * A = assist, S = survived, T = traded no mesmo round). Derivado dos eventos
- * de abate — a HenrikDev não fornece o número.
+ * A = assist, S = survived, T = traded no mesmo round DENTRO da janela de
+ * 5s). Derivado dos eventos de abate — a HenrikDev não fornece o número.
  */
 
 const TEAMS = new Map([
@@ -23,8 +23,9 @@ function kill(
   killerPuuid: string,
   victimPuuid: string,
   assistantPuuids: readonly string[] = [],
+  timeInRoundMs: number | null = 1000,
 ): KastKill {
-  return { roundNumber, killerPuuid, victimPuuid, assistantPuuids };
+  return { roundNumber, killerPuuid, victimPuuid, assistantPuuids, timeInRoundMs };
 }
 
 describe('computeKastByPlayer', () => {
@@ -33,14 +34,14 @@ describe('computeKastByPlayer', () => {
       roundNumbers: [1, 2, 3, 4],
       teamByPuuid: TEAMS,
       kills: [
-        // Round 1: b1 mata r1 (assist b2) e r2 vinga r1 matando b1.
-        kill(1, 'b1', 'r1', ['b2']),
-        kill(1, 'r2', 'b1'),
+        // Round 1: b1 mata r1 (assist b2) e r2 vinga r1 matando b1 0,5s depois.
+        kill(1, 'b1', 'r1', ['b2'], 1000),
+        kill(1, 'r2', 'b1', [], 1500),
         // Round 2: b1 mata r1; r2 mata b2 (Blue matou r1, logo b2 não é vingado).
-        kill(2, 'b1', 'r1'),
-        kill(2, 'r2', 'b2'),
+        kill(2, 'b1', 'r1', [], 1000),
+        kill(2, 'r2', 'b2', [], 5000),
         // Round 3: r2 mata b2 (Blue não matou ninguém → b2 sem trade).
-        kill(3, 'r2', 'b2'),
+        kill(3, 'r2', 'b2', [], 1000),
         // Round 4: sem abates → todos sobrevivem (S).
       ],
     });
@@ -97,6 +98,89 @@ describe('computeKastByPlayer', () => {
     });
     expect(result.has('')).toBe(false);
     expect(result.get('r1')).toBe(100);
+  });
+
+  it('não conta trade quando o assassino morre depois da janela de 5s', () => {
+    const result = computeKastByPlayer({
+      roundNumbers: [1],
+      teamByPuuid: TEAMS,
+      kills: [
+        kill(1, 'b1', 'r1', [], 1000),
+        kill(1, 'r2', 'b1', [], 7000), // 6s depois → fora da janela
+      ],
+    });
+    expect(result.get('r1')).toBe(0);
+  });
+
+  it('permite sobrescrever a janela de trade', () => {
+    const result = computeKastByPlayer({
+      roundNumbers: [1],
+      teamByPuuid: TEAMS,
+      tradeWindowMs: 7000,
+      kills: [
+        kill(1, 'b1', 'r1', [], 1000),
+        kill(1, 'r2', 'b1', [], 7000), // 6s depois, dentro da janela ampliada
+      ],
+    });
+    expect(result.get('r1')).toBe(100);
+  });
+
+  it('não conta trade sem timestamp na morte ou na vingança', () => {
+    const semTimestamp = computeKastByPlayer({
+      roundNumbers: [1],
+      teamByPuuid: TEAMS,
+      kills: [
+        kill(1, 'b1', 'r1', [], null),
+        kill(1, 'r2', 'b1', [], null),
+      ],
+    });
+    expect(semTimestamp.get('r1')).toBe(0);
+
+    const vingancaSemTimestamp = computeKastByPlayer({
+      roundNumbers: [1],
+      teamByPuuid: TEAMS,
+      kills: [
+        kill(1, 'b1', 'r1', [], 1000),
+        kill(1, 'r2', 'b1', [], null),
+      ],
+    });
+    expect(vingancaSemTimestamp.get('r1')).toBe(0);
+  });
+
+  it('não conta trade quando quem vinga é do time errado', () => {
+    const result = computeKastByPlayer({
+      roundNumbers: [1],
+      teamByPuuid: TEAMS,
+      kills: [
+        kill(1, 'b1', 'r1', [], 1000),
+        kill(1, 'b2', 'b1', [], 1200), // b2 é Blue, não companheiro de r1
+      ],
+    });
+    expect(result.get('r1')).toBe(0);
+  });
+
+  it('não conta trade quando o assassino se mata (sem companheiro)', () => {
+    const result = computeKastByPlayer({
+      roundNumbers: [1],
+      teamByPuuid: TEAMS,
+      kills: [
+        kill(1, 'b1', 'r1', [], 1000),
+        kill(1, 'b1', 'b1', [], 1200), // suicídio/ambiente
+      ],
+    });
+    expect(result.get('r1')).toBe(0);
+  });
+
+  it('não conta trade quando a vingança é anterior à morte', () => {
+    const result = computeKastByPlayer({
+      roundNumbers: [1],
+      teamByPuuid: TEAMS,
+      kills: [
+        kill(1, 'b1', 'r1', [], 1000),
+        kill(1, 'r2', 'b1', [], 900), // antes da morte → não vinga
+      ],
+    });
+    expect(result.get('r1')).toBe(0);
   });
 
   it('devolve mapa vazio sem rounds, sem jogadores ou sem abates', () => {

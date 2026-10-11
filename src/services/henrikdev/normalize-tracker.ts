@@ -413,8 +413,8 @@ export function normalizeMatchToKills(match: HenrikDevMatchV4): KillEvent[] {
 /**
  * Adapta o payload v4 bruto para a entrada neutra do cálculo de KAST: mapa
  * PUUID→time, números de round (de `rounds[]`, com fallback nos abates) e
- * eventos de abate com assistentes. Compartilhado entre o detalhe da partida
- * e a amostra de combate (visão geral).
+ * eventos de abate com assistentes e timestamp (necessário à janela de trade).
+ * Compartilhado entre o detalhe da partida e a amostra de combate (visão geral).
  */
 export function buildKastInputFromMatch(match: HenrikDevMatchV4): KastInput {
   const teamByPuuid = new Map<string, string>();
@@ -429,6 +429,7 @@ export function buildKastInputFromMatch(match: HenrikDevMatchV4): KastInput {
     killerPuuid: kill.killer?.puuid ?? '',
     victimPuuid: kill.victim?.puuid ?? '',
     assistantPuuids: (kill.assistants ?? []).map((assistant) => assistant.puuid ?? ''),
+    timeInRoundMs: kill.time_in_round_in_ms ?? null,
   }));
 
   const declaredRounds = (match.rounds ?? []).map((round) => round.id + 1);
