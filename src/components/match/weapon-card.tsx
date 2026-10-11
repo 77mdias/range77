@@ -19,8 +19,8 @@ export interface WeaponCardProps {
   /** Arma primária ganha chip em acento; secundária fica neutra. */
   readonly primary?: boolean;
   readonly stats: readonly WeaponStat[];
-  /** Percentual de HS (0–100) para o medidor. */
-  readonly hsPercentage: number;
+  /** Percentual de HS (0–100) para o medidor; ausente → bloco omitido. */
+  readonly hsPercentage?: number;
   readonly className?: string;
 }
 
@@ -66,16 +66,18 @@ export function WeaponCard({
         ))}
       </dl>
 
-      <div className="mt-2.5">
-        <ProgressBar
-          value={hsPercentage}
-          tone="ink"
-          ariaLabel={`Headshot com ${name}: ${hsPercentage}%`}
-        />
-        <p className="mt-1 font-hud text-label uppercase text-text-secondary">
-          HS {hsPercentage}%
-        </p>
-      </div>
+      {hsPercentage !== undefined ? (
+        <div className="mt-2.5">
+          <ProgressBar
+            value={hsPercentage}
+            tone="ink"
+            ariaLabel={`Headshot com ${name}: ${hsPercentage}%`}
+          />
+          <p className="mt-1 font-hud text-label uppercase text-text-secondary">
+            HS {hsPercentage}%
+          </p>
+        </div>
+      ) : null}
     </article>
   );
 }

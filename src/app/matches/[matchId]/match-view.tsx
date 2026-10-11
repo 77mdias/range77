@@ -3,20 +3,29 @@ import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/states';
 import {
   MatchMetaBar,
+  MvpCallout,
   RoundTimeline,
   ScoreBanner,
   ScoreboardTable,
+  WeaponCard,
   type RoundCellData,
 } from '@/components/match';
 import type { MatchDetail } from '@/contracts/tracker';
+import {
+  aggregateWeaponKills,
+  computeFirstBloods,
+  computeTeamTotals,
+  selectMatchMvp,
+} from '@/services/analytics/match-breakdown';
 import { formatRelativeTime } from '@/lib/format/relative-time';
 
 /**
  * MatchView — apresentação PURA (síncrona) do detalhe de partida no design
  * Stitch: MatchMetaBar, ScoreBanner (neutro — sem perspectiva de jogador),
- * RoundTimeline, heatmap de rounds por abates e scoreboard duplo via o
- * componente `ScoreboardTable` do design system. Separada da página
- * assíncrona para ser testável com `renderToStaticMarkup`.
+ * RoundTimeline, heatmap de rounds por abates, scoreboard duplo com FK/FD
+ * computado dos eventos de abate (KAST%/ECON ficam `—`: a HenrikDev não
+ * fornece), MVP da partida (maior ACS) e eficiência por arma. Separada da
+ * página assíncrona para ser testável com `renderToStaticMarkup`.
  */
 
 function formatDuration(ms: number): string {
@@ -58,25 +67,36 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
     outcome: round.winningTeamId === teamA ? 'win' : 'loss',
   }));
 
+  const firstBloods = computeFirstBloods(detail.kills);
+  const mvp = selectMatchMvp(detail.scoreboard);
+  const weapons = aggregateWeaponKills(detail.kills);
+  const mvpFirstBloods = mvp !== null ? firstBloods.get(mvp.puuid) : undefined;
+
   const teams = teamIds.map((teamId) => {
-    const declared = detail.teams.find((team) => team.teamId === teamId);
+    const totals = computeTeamTotals(teamId, detail.scoreboard);
     return {
       name: `Time ${teamId}`,
       roundsWon: roundsWon(teamId),
+      totalDamage: totals.totalDamage,
       players: detail.scoreboard
         .filter((row) => row.teamId === teamId)
-        .map((row) => ({
-          name: row.name,
-          tag: row.tag === '' ? undefined : row.tag,
-          rank: row.tier ?? undefined,
-          agent: row.agent,
-          acs: row.acs,
-          kills: row.kills,
-          deaths: row.deaths,
-          assists: row.assists,
-          kdDiff: row.kills - row.deaths,
-          hsPercentage: row.hsPercentage,
-        })),
+        .map((row) => {
+          const fb = firstBloods.get(row.puuid);
+          return {
+            name: row.name,
+            tag: row.tag === '' ? undefined : row.tag,
+            rank: row.tier ?? undefined,
+            agent: row.agent,
+            acs: row.acs,
+            kills: row.kills,
+            deaths: row.deaths,
+            assists: row.assists,
+            kdDiff: row.kills - row.deaths,
+            hsPercentage: row.hsPercentage,
+            firstBloods: fb?.firstBloods,
+            firstDeaths: fb?.firstDeaths,
+          };
+        }),
     };
   });
 
@@ -116,6 +136,43 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
         ) : null}
 
         <ScoreboardTable teams={teams} />
+
+        {mvp !== null ? (
+          <MvpCallout
+            playerName={mvp.tag === '' ? mvp.name : `${mvp.name}#${mvp.tag}`}
+            agent={mvp.agent}
+            rank={mvp.tier ?? undefined}
+            stats={[
+              { label: 'K/D/A', value: `${mvp.kills}/${mvp.deaths}/${mvp.assists}` },
+              { label: 'ACS', value: String(mvp.acs) },
+              {
+                label: 'HS',
+                value: mvp.hsPercentage === null ? '—' : `${mvp.hsPercentage}%`,
+              },
+            ]}
+            metrics={[
+              { label: 'FB', value: String(mvpFirstBloods?.firstBloods ?? 0) },
+              { label: 'FD', value: String(mvpFirstBloods?.firstDeaths ?? 0) },
+              { label: 'Dano', value: mvp.damageDealt.toLocaleString('pt-BR') },
+            ]}
+          />
+        ) : null}
+
+        {weapons.length > 0 ? (
+          <Card label="Eficiência por arma">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {weapons.slice(0, 6).map((weapon, index) => (
+                <WeaponCard
+                  key={weapon.weapon}
+                  name={weapon.weapon}
+                  kills={weapon.kills}
+                  primary={index === 0}
+                  stats={[{ label: 'Share de abates', value: `${weapon.sharePercent}%` }]}
+                />
+              ))}
+            </div>
+          </Card>
+        ) : null}
       </div>
     </div>
   );

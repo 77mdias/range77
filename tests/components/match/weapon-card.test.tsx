@@ -35,4 +35,17 @@ describe('WeaponCard', () => {
     );
     expect(html).toContain('bg-surface-hover');
   });
+
+  it('arma sem HS% omite o medidor (dado ausente)', () => {
+    const html = renderToStaticMarkup(
+      <WeaponCard
+        name="Operator"
+        kills={4}
+        stats={[{ label: 'Share de abates', value: '20%' }]}
+      />,
+    );
+    expect(html).toContain('Operator');
+    expect(html).toContain('4 abates');
+    expect(html).not.toContain('HS ');
+  });
 });

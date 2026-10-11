@@ -91,6 +91,49 @@ describe('MatchView', () => {
     expect(html).toContain('—');
   });
 
+  it('monta MVP (maior ACS) com FK/FD dos eventos e dano total por time', () => {
+    const withKills: MatchDetail = {
+      ...detail,
+      kills: [
+        {
+          roundNumber: 1,
+          timeInMatchMs: 1000,
+          timeInRoundMs: 1000,
+          killerPuuid: 'p1',
+          killerName: 'TenZ',
+          victimPuuid: 'p2',
+          victimName: 'Enemy',
+          assistantNames: [],
+          weapon: 'Vandal',
+        },
+        {
+          roundNumber: 2,
+          timeInMatchMs: 2000,
+          timeInRoundMs: 1000,
+          killerPuuid: 'p2',
+          killerName: 'Enemy',
+          victimPuuid: 'p1',
+          victimName: 'TenZ',
+          assistantNames: [],
+          weapon: 'Operator',
+        },
+      ],
+    };
+    const html = renderToStaticMarkup(<MatchView detail={withKills} />);
+    expect(html).toContain('data-component="mvp-callout"');
+    expect(html).toContain('TenZ#BR1');
+    expect(html).toContain('Dano total');
+    expect(html).toContain('Eficiência por arma');
+    expect(html).toContain('Vandal');
+    expect(html).toContain('Share de abates');
+  });
+
+  it('não monta armas quando não há eventos de abate (MVP segue do scoreboard)', () => {
+    const html = renderToStaticMarkup(<MatchView detail={detail} />);
+    expect(html).toContain('data-component="mvp-callout"');
+    expect(html).not.toContain('Eficiência por arma');
+  });
+
   it('estado vazio quando a partida não trouxe times/jogadores', () => {
     const empty: MatchDetail = { ...detail, teams: [], scoreboard: [], rounds: [] };
     expect(renderToStaticMarkup(<MatchView detail={empty} />)).toContain('Sem dados da partida');

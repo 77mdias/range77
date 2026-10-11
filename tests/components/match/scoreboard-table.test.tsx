@@ -54,6 +54,51 @@ describe('ScoreboardTable', () => {
     expect(html).toContain('text-win');
   });
 
+  it('renderiza colunas KAST%/FK-FD/ECON com dado real e fallback —', () => {
+    const html = renderToStaticMarkup(
+      <ScoreboardTable
+        teams={[
+          {
+            name: 'T',
+            players: [
+              {
+                name: 'Real',
+                agent: 'Omen',
+                acs: 200,
+                kills: 15,
+                deaths: 10,
+                assists: 5,
+                kdDiff: 5,
+                hsPercentage: 20,
+                kastPercentage: 72,
+                firstBloods: 3,
+                firstDeaths: 1,
+                econRating: 68.4,
+              },
+              {
+                name: 'SemDado',
+                agent: 'Sova',
+                acs: 100,
+                kills: 5,
+                deaths: 15,
+                assists: 2,
+                kdDiff: -10,
+                hsPercentage: null,
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+    expect(html).toContain('KAST%');
+    expect(html).toContain('FK/FD');
+    expect(html).toContain('ECON');
+    expect(html).toContain('3/1');
+    expect(html).toContain('68.4');
+    expect(html).toContain('72%');
+    expect(html).toContain('—');
+  });
+
   it('KD negativo usa vermelho', () => {
     const html = renderToStaticMarkup(
       <ScoreboardTable

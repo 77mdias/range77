@@ -26,7 +26,14 @@ export interface ScoreboardPlayer {
   readonly kdDiff: number;
   /** HS% computável; `null`/ausente → `—`. */
   readonly hsPercentage?: number | null;
+  /** KAST% (HenrikDev não fornece); `null`/ausente → `—`. */
+  readonly kastPercentage?: number | null;
+  /** First bloods computados dos eventos de abate. */
   readonly firstBloods?: number;
+  /** First deaths computados dos eventos de abate. */
+  readonly firstDeaths?: number;
+  /** ECON rating (HenrikDev v4 não fornece); `null`/ausente → `—`. */
+  readonly econRating?: number | null;
   readonly avgDamage?: number;
 }
 
@@ -90,6 +97,9 @@ export function ScoreboardTable({ teams, ariaLabel, className }: ScoreboardTable
                 <TableHeaderCell numeric>K/D/A</TableHeaderCell>
                 <TableHeaderCell numeric>+/-</TableHeaderCell>
                 <TableHeaderCell numeric>HS%</TableHeaderCell>
+                <TableHeaderCell numeric>KAST%</TableHeaderCell>
+                <TableHeaderCell numeric>FK/FD</TableHeaderCell>
+                <TableHeaderCell numeric>ECON</TableHeaderCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -121,6 +131,13 @@ export function ScoreboardTable({ teams, ariaLabel, className }: ScoreboardTable
                     {player.kdDiff >= 0 ? `+${player.kdDiff}` : player.kdDiff}
                   </TableCell>
                   <TableCell numeric>{player.hsPercentage == null ? '—' : `${player.hsPercentage}%`}</TableCell>
+                  <TableCell numeric>{player.kastPercentage == null ? '—' : `${player.kastPercentage}%`}</TableCell>
+                  <TableCell numeric className="font-hud">
+                    {player.firstBloods === undefined && player.firstDeaths === undefined
+                      ? '—'
+                      : `${player.firstBloods ?? 0}/${player.firstDeaths ?? 0}`}
+                  </TableCell>
+                  <TableCell numeric>{player.econRating == null ? '—' : player.econRating.toFixed(1)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
