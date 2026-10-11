@@ -126,6 +126,13 @@ describe('MatchView', () => {
     expect(html).toContain('Eficiência por arma');
     expect(html).toContain('Vandal');
     expect(html).toContain('Share de abates');
+    // Hero do Stitch: banner + MVP lado a lado
+    expect(html).toContain('data-mvp-slot');
+    // Minimapa real do mapa + ícone do agente (assets locais)
+    expect(html).toContain('/assets/images/maps/ascent-map.png');
+    expect(html).toContain('/assets/images/agents/jett.png');
+    // Match ID real na meta bar
+    expect(html).toContain('Match ID: a1b2c3d4-e5f6-7890-abcd-ef1234567890');
   });
 
   it('não monta armas quando não há eventos de abate (MVP segue do scoreboard)', () => {

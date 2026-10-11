@@ -116,6 +116,7 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
       />
 
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-6">
+        {/* Hero (Stitch match): resultado final + MVP da partida */}
         <div className="grid gap-3 lg:grid-cols-12">
           <div className="lg:col-span-4">
             <ScoreBanner
@@ -125,45 +126,47 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
               mapImageSrc={mapMinimapSrc(detail.map) ?? undefined}
             />
           </div>
-          <div className="lg:col-span-8" data-round-strip>
-            <Card label={`Timeline de ${detail.rounds.length} rounds`}>
-              {rounds.length === 0 ? (
-                <p className="text-body text-text-secondary">Sem timeline de rounds.</p>
-              ) : (
-                <RoundTimeline rounds={rounds} />
-              )}
-            </Card>
+          <div className="lg:col-span-8" data-mvp-slot>
+            {mvp !== null ? (
+              <MvpCallout
+                playerName={mvp.tag === '' ? mvp.name : `${mvp.name}#${mvp.tag}`}
+                agent={mvp.agent}
+                rank={mvp.tier ?? undefined}
+                portraitSrc={agentIconSrc(mvp.agent) ?? agentArtSrc(mvp.agent) ?? undefined}
+                stats={[
+                  { label: 'K/D/A', value: `${mvp.kills}/${mvp.deaths}/${mvp.assists}` },
+                  { label: 'ACS', value: String(mvp.acs) },
+                  {
+                    label: 'HS',
+                    value: mvp.hsPercentage === null ? '—' : `${mvp.hsPercentage}%`,
+                  },
+                ]}
+                metrics={[
+                  { label: 'FB', value: String(mvpFirstBloods?.firstBloods ?? 0) },
+                  { label: 'FD', value: String(mvpFirstBloods?.firstDeaths ?? 0) },
+                  { label: 'Dano', value: mvp.damageDealt.toLocaleString('pt-BR') },
+                ]}
+              />
+            ) : null}
           </div>
         </div>
+
+        {/* Tabela telemétrica (scoreboard duplo com FK/FD real) */}
+        <ScoreboardTable teams={teams} />
+
+        {/* Timeline de rounds — mantida no formato atual (decisão do dono) */}
+        <Card label={`Timeline de ${detail.rounds.length} rounds`}>
+          {rounds.length === 0 ? (
+            <p className="text-body text-text-secondary">Sem timeline de rounds.</p>
+          ) : (
+            <RoundTimeline rounds={rounds} />
+          )}
+        </Card>
 
         {teamA !== undefined ? (
           <Card label="Rounds por abates">
             <RoundHeatmap rounds={detail.rounds} kills={detail.kills} teamId={teamA} />
           </Card>
-        ) : null}
-
-        <ScoreboardTable teams={teams} />
-
-        {mvp !== null ? (
-          <MvpCallout
-            playerName={mvp.tag === '' ? mvp.name : `${mvp.name}#${mvp.tag}`}
-            agent={mvp.agent}
-            rank={mvp.tier ?? undefined}
-            portraitSrc={agentIconSrc(mvp.agent) ?? agentArtSrc(mvp.agent) ?? undefined}
-            stats={[
-              { label: 'K/D/A', value: `${mvp.kills}/${mvp.deaths}/${mvp.assists}` },
-              { label: 'ACS', value: String(mvp.acs) },
-              {
-                label: 'HS',
-                value: mvp.hsPercentage === null ? '—' : `${mvp.hsPercentage}%`,
-              },
-            ]}
-            metrics={[
-              { label: 'FB', value: String(mvpFirstBloods?.firstBloods ?? 0) },
-              { label: 'FD', value: String(mvpFirstBloods?.firstDeaths ?? 0) },
-              { label: 'Dano', value: mvp.damageDealt.toLocaleString('pt-BR') },
-            ]}
-          />
         ) : null}
 
         {weapons.length > 0 ? (
