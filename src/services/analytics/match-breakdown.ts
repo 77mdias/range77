@@ -1,4 +1,4 @@
-import type { KillEvent, MatchScoreboardRow } from '@/contracts/tracker';
+import type { KillEvent, MatchRound, MatchScoreboardRow } from '@/contracts/tracker';
 import { roundTo } from './combat';
 
 /**
@@ -138,6 +138,68 @@ export function selectMatchMvp(
     }
   }
   return best;
+}
+
+/** Rounds de um half regulamentar (12) — OT fica fora do rótulo DEF/ATK. */
+const REGULATION_HALF_ROUNDS = 12;
+
+/** Vitórias/derrotas do time por lado (DEF/ATK), derivadas dos plants. */
+export interface MatchHalves {
+  readonly defense: { readonly won: number; readonly lost: number };
+  readonly attack: { readonly won: number; readonly lost: number };
+}
+
+/**
+ * Divide os rounds regulamentares (≤24) por LADO do time pedido.
+ *
+ * O payload v4 não traz o lado inicial; inferimos o time atacante de cada
+ * half pelo `plantTeamId` (só o atacante planta). Se um half não tem plant,
+ * usamos o outro (lados trocam) — se nenhum tiver, devolvemos `null` em vez
+ * de chutar. Partidas com OT (>24 rounds) também devolvem `null`: os lados
+ * extra não seguem o padrão regulamentar e rotulá-los seria enganoso.
+ */
+export function computeMatchHalves(
+  rounds: readonly MatchRound[],
+  teamId: string,
+): MatchHalves | null {
+  if (rounds.length === 0 || rounds.length > REGULATION_HALF_ROUNDS * 2) {
+    return null;
+  }
+
+  const teamIds = [...new Set(rounds.map((round) => round.winningTeamId))];
+  if (teamIds.length < 2) {
+    return null;
+  }
+
+  const attackIn = (predicate: (roundNumber: number) => boolean): string | null =>
+    rounds.find((round) => predicate(round.roundNumber) && round.plantTeamId !== null)
+      ?.plantTeamId ?? null;
+
+  const attackFirst = attackIn((n) => n <= REGULATION_HALF_ROUNDS);
+  const attackSecond = attackIn((n) => n > REGULATION_HALF_ROUNDS);
+
+  const opponentOf = (team: string): string | undefined => teamIds.find((id) => id !== team);
+  const resolvedFirst = attackFirst ?? (attackSecond !== null ? opponentOf(attackSecond) : undefined);
+  const resolvedSecond =
+    attackSecond ?? (attackFirst !== null ? opponentOf(attackFirst) : undefined);
+  if (resolvedFirst === undefined || resolvedSecond === undefined) {
+    return null;
+  }
+
+  const defense = { won: 0, lost: 0 };
+  const attack = { won: 0, lost: 0 };
+  for (const round of rounds) {
+    const attackingTeam =
+      round.roundNumber <= REGULATION_HALF_ROUNDS ? resolvedFirst : resolvedSecond;
+    const side = attackingTeam === teamId ? attack : defense;
+    if (round.winningTeamId === teamId) {
+      side.won += 1;
+    } else {
+      side.lost += 1;
+    }
+  }
+
+  return { defense, attack };
 }
 
 /** Soma dano/kills/deaths/assists de um time. Time ausente → zeros. */

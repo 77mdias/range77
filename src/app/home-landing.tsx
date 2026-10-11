@@ -239,7 +239,7 @@ export function HomeLanding() {
 
       {/* ── Arquitetura de 3 camadas ────────────────────────────────── */}
       <section aria-label="Arquitetura de 3 camadas" className="border-b border-line bg-surface-raised px-4 py-12">
-        <div className="mx-auto w-full max-w-7xl">
+        <div className="w-full">
           <SectionHeader
             title="Arquitetura de 3 camadas: redução de tokens e zero alucinação"
             annotation="MOTOR DE CONVERSÃO MATEMÁTICA"
@@ -287,7 +287,7 @@ export function HomeLanding() {
 
       {/* ── Módulos do ecossistema ──────────────────────────────────── */}
       <section aria-label="Módulos do ecossistema" className="px-4 py-12">
-        <div className="mx-auto w-full max-w-7xl">
+        <div className="w-full">
           <SectionHeader
             title="Recursos táticos calibrados para alta performance"
             annotation="MÓDULOS INTEGRADOS"

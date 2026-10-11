@@ -9,10 +9,14 @@ describe('MvpCallout', () => {
         playerName="TenZ"
         agent="Jett"
         rank="Ascendant 3"
-        stats={[{ label: 'K/D/A', value: '24/14/6' }]}
+        rating={1.48}
+        kills={26}
+        deaths={13}
+        assists={4}
+        firstKills={4}
         metrics={[
           { label: 'ACS', value: '312' },
-          { label: 'HS', value: '34.8%' },
+          { label: 'HS Rate', value: '34.8%' },
           { label: 'KAST', value: '81.8%' },
         ]}
       />,
@@ -23,5 +27,7 @@ describe('MvpCallout', () => {
     expect(html).toContain('Jett');
     expect(html).toContain('312');
     expect(html).toContain('81.8%');
+    expect(html).toContain('1.48');
+    expect(html).toContain('+13 DIFF');
   });
 });

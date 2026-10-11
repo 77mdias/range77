@@ -230,7 +230,7 @@ export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewP
       />
 
       {/* ── Strip de KPIs (3 linhas: label+meta, valor, trailing real) ─ */}
-      <div className="mx-auto w-full max-w-7xl px-4 pt-6">
+      <div className="w-full px-4 pt-6 md:px-6 xl:px-8">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6" data-kpi-strip>
           <KpiTile
             label="K/D Ratio"
@@ -270,7 +270,7 @@ export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewP
       </div>
 
       {/* ── Workspace 8/4 ───────────────────────────────────────────── */}
-      <div className="mx-auto grid w-full max-w-7xl gap-4 px-4 py-6 xl:grid-cols-12">
+      <div className="grid w-full gap-4 px-4 py-6 md:px-6 xl:grid-cols-12 xl:px-8">
         {/* Coluna esquerda (8): telemetria + histórico + insights */}
         <div className="flex flex-col gap-4 xl:col-span-8">
           <Card

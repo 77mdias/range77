@@ -5,6 +5,8 @@ import {
   type HenrikDevPlayerV4,
 } from '@/contracts/henrikdev';
 import type { MatchCombatStats } from '@/contracts/henrikdev';
+import { computePlayerKast } from '@/services/analytics/kast';
+import { buildKastInputFromMatch } from './normalize-tracker';
 
 /**
  * PASSO 3 — IMPLEMENTAÇÃO: normalizador HenrikDev v4 → MatchCombatStats.
@@ -109,6 +111,11 @@ export function normalizeMatchesToCombat(
     }
 
     const entry = computeEntryDuels(match.kills, found.puuid);
+    // KAST do jogador analisado, derivado dos eventos de abate do MESMO payload.
+    const kast =
+      match.kills !== undefined && match.kills.length > 0
+        ? computePlayerKast(buildKastInputFromMatch(match), found.puuid)
+        : null;
 
     result.push({
       kills: found.stats.kills,
@@ -119,6 +126,7 @@ export function normalizeMatchesToCombat(
       bodyshots: found.stats.bodyshots,
       legshots: found.stats.legshots,
       score: found.stats.score,
+      ...(kast !== null ? { kast } : {}),
       ...(entry !== null
         ? { firstBloods: entry.firstBloods, firstDeaths: entry.firstDeaths }
         : {}),

@@ -18,7 +18,7 @@ export function BreakdownView({ overview }: { readonly overview: PlayerOverview 
   return (
     <div
       data-player-breakdown
-      className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6"
+      className="flex w-full flex-col gap-6 px-4 py-6 md:px-6 xl:px-8"
     >
       <SectionHeader
         as="h1"

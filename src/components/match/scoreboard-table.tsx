@@ -161,7 +161,7 @@ export function ScoreboardTable({ teams, ariaLabel, className }: ScoreboardTable
 
       <footer className="mt-2 flex items-center gap-2 border-t border-line pt-2 font-hud text-label uppercase text-text-secondary">
         <Badge variant="neutral">Fonte: HenrikDev v4</Badge>
-        Scoreboard normalizado — KAST/ECON chegam com o contrato estendido
+        Scoreboard normalizado — KAST/Rating computados dos eventos; ECON indisponível na fonte
       </footer>
     </div>
   );

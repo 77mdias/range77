@@ -281,12 +281,14 @@ describe('normalizeMatchToScoreboard', () => {
       acs: 300,
       damageDealt: 4000,
       damageReceived: 2500,
+      kastPercentage: 50,
       economy: { spent: 20000, loadoutValue: 18000 },
       abilityCasts: { ability1: 4, ability2: 5, grenade: 6, ultimate: 2 },
     });
     expect(rows[1]).toMatchObject({
       puuid: 'p2',
       hsPercentage: null,
+      kastPercentage: 50,
       economy: null,
       abilityCasts: null,
       tier: null,
@@ -319,15 +321,32 @@ describe('normalizeMatchToScoreboard', () => {
 describe('rounds', () => {
   it('normaliza rounds genéricos com plant/defuse', () => {
     expect(normalizeMatchToRounds(SAMPLE_MATCH)).toEqual([
-      { roundNumber: 1, winningTeamId: 'Red', plantSite: 'A', defused: false },
-      { roundNumber: 2, winningTeamId: 'Blue', plantSite: null, defused: true },
+      { roundNumber: 1, winningTeamId: 'Red', plantSite: 'A', plantTeamId: null, defused: false },
+      { roundNumber: 2, winningTeamId: 'Blue', plantSite: null, plantTeamId: null, defused: true },
+    ]);
+  });
+
+  it('captura o time que plantou (atacante do round)', () => {
+    const withTeam = {
+      ...SAMPLE_MATCH,
+      rounds: [
+        {
+          id: 0,
+          winning_team: 'Red',
+          plant: { round_time_in_ms: 30000, site: 'B', player: { puuid: 'p1', team: 'Red' } },
+          defuse: null,
+        },
+      ],
+    };
+    expect(normalizeMatchToRounds(withTeam)).toEqual([
+      { roundNumber: 1, winningTeamId: 'Red', plantSite: 'B', plantTeamId: 'Red', defused: false },
     ]);
   });
 
   it('normaliza rounds relativos ao jogador', () => {
     expect(normalizeMatchToPlayerRounds(SAMPLE_MATCH, 'Red')).toEqual([
-      { roundNumber: 1, winningTeamId: 'Red', plantSite: 'A', defused: false, playerTeamId: 'Red', won: true },
-      { roundNumber: 2, winningTeamId: 'Blue', plantSite: null, defused: true, playerTeamId: 'Red', won: false },
+      { roundNumber: 1, winningTeamId: 'Red', plantSite: 'A', plantTeamId: null, defused: false, playerTeamId: 'Red', won: true },
+      { roundNumber: 2, winningTeamId: 'Blue', plantSite: null, plantTeamId: null, defused: true, playerTeamId: 'Red', won: false },
     ]);
   });
 

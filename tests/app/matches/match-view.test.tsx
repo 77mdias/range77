@@ -38,6 +38,7 @@ const detail: MatchDetail = {
       hsPercentage: 30,
       damageDealt: 4000,
       damageReceived: 2500,
+      kastPercentage: 50,
       economy: null,
       abilityCasts: null,
     },
@@ -56,13 +57,14 @@ const detail: MatchDetail = {
       hsPercentage: null,
       damageDealt: 1000,
       damageReceived: 3000,
+      kastPercentage: null,
       economy: null,
       abilityCasts: null,
     },
   ],
   rounds: [
-    { roundNumber: 1, winningTeamId: 'Red', plantSite: 'A', defused: false },
-    { roundNumber: 2, winningTeamId: 'Blue', plantSite: null, defused: true },
+    { roundNumber: 1, winningTeamId: 'Red', plantSite: 'A', plantTeamId: 'Red', defused: false },
+    { roundNumber: 2, winningTeamId: 'Blue', plantSite: null, plantTeamId: null, defused: true },
   ],
   kills: [],
 };
@@ -104,6 +106,7 @@ describe('MatchView', () => {
           victimPuuid: 'p2',
           victimName: 'Enemy',
           assistantNames: [],
+          assistantPuuids: [],
           weapon: 'Vandal',
         },
         {
@@ -115,6 +118,7 @@ describe('MatchView', () => {
           victimPuuid: 'p1',
           victimName: 'TenZ',
           assistantNames: [],
+          assistantPuuids: [],
           weapon: 'Operator',
         },
       ],
@@ -122,7 +126,8 @@ describe('MatchView', () => {
     const html = renderToStaticMarkup(<MatchView detail={withKills} />);
     expect(html).toContain('data-component="mvp-callout"');
     expect(html).toContain('TenZ#BR1');
-    expect(html).toContain('Dano total');
+    expect(html).toContain('Rating Global');
+    expect(html).toContain('KAST');
     expect(html).toContain('Eficiência por arma');
     expect(html).toContain('Vandal');
     expect(html).toContain('Share de abates');

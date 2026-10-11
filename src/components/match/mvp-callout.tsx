@@ -1,8 +1,9 @@
 import { cx } from '@/lib/cx';
 
 /**
- * MvpCallout — destaque do melhor jogador da partida: retrato com fita
- * MVP, nome/agente/rank, linha de stats e grade de micro-métricas.
+ * MvpCallout — destaque do melhor jogador da partida (Stitch/match): retrato
+ * com fita MVP, nome/agente/rank e a linha de identidade (Rating Global,
+ * KDA com diff e First Kills) + micro-métricas (ACS/HS/KAST).
  */
 
 export interface MvpMetric {
@@ -14,7 +15,14 @@ export interface MvpCalloutProps {
   readonly playerName: string;
   readonly agent: string;
   readonly rank?: string;
-  readonly stats?: readonly { readonly label: string; readonly value: string }[];
+  /** Rating ValCoach computado (composto); ausente/`null` → `—`. */
+  readonly rating?: number | null;
+  readonly kills: number;
+  readonly deaths: number;
+  readonly assists: number;
+  /** Aberturas vencidas (FK); ausente/`null` → trecho omitido. */
+  readonly firstKills?: number | null;
+  /** Micro-métricas (ACS, HS RATE, KAST). */
   readonly metrics: readonly MvpMetric[];
   readonly portraitSrc?: string;
   readonly className?: string;
@@ -24,11 +32,18 @@ export function MvpCallout({
   playerName,
   agent,
   rank,
-  stats,
+  rating,
+  kills,
+  deaths,
+  assists,
+  firstKills,
   metrics,
   portraitSrc,
   className,
 }: MvpCalloutProps) {
+  const kdDiff = kills - deaths;
+  const diffLabel = kdDiff >= 0 ? `+${kdDiff}` : String(kdDiff);
+
   return (
     <section
       data-component="mvp-callout"
@@ -37,10 +52,10 @@ export function MvpCallout({
         className,
       )}
     >
-      <div className="flex items-center gap-3">
-        <div className="relative size-14 shrink-0 overflow-hidden bg-surface-hover">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="relative size-14 shrink-0 overflow-hidden rounded-full border border-line bg-surface-hover">
           {portraitSrc !== undefined ? (
-            // eslint-disable-next-line @next/next/no-img-element -- retrato remoto
+            // eslint-disable-next-line @next/next/no-img-element -- retrato/ícone do agente
             <img src={portraitSrc} alt="" className="size-full object-cover" />
           ) : (
             <span
@@ -59,23 +74,38 @@ export function MvpCallout({
             <h2 className="font-display text-heading-sm uppercase tracking-tight text-text-primary">
               {playerName}
             </h2>
-            <span className="bg-surface-hover px-1.5 py-0.5 font-hud text-label uppercase text-text-primary">
+            <span className="border border-line bg-surface-hover px-1.5 py-0.5 font-hud text-label uppercase text-text-primary">
               {agent}
             </span>
             {rank !== undefined ? (
-              <span className="font-hud text-label uppercase text-text-secondary">{rank}</span>
+              <span className="font-hud text-label uppercase text-tertiary">{rank}</span>
             ) : null}
           </div>
-          {stats !== undefined && stats.length > 0 ? (
-            <p className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-body text-text-secondary">
-              {stats.map((stat) => (
-                <span key={stat.label}>
-                  {stat.label}{' '}
-                  <strong className="font-hud font-semibold text-text-primary">{stat.value}</strong>
+          <p className="mt-1 flex flex-wrap gap-x-2 font-body-sm text-text-secondary">
+            <span>
+              Rating Global:{' '}
+              <strong className="font-hud font-semibold text-text-primary">
+                {rating === null || rating === undefined ? '—' : rating.toFixed(2)}
+              </strong>
+            </span>
+            <span aria-hidden="true">•</span>
+            <span>
+              KDA:{' '}
+              <strong className="font-hud font-semibold text-text-primary">
+                {kills}/{deaths}/{assists}
+              </strong>{' '}
+              ({diffLabel} DIFF)
+            </span>
+            {firstKills !== null && firstKills !== undefined ? (
+              <>
+                <span aria-hidden="true">•</span>
+                <span>
+                  <strong className="font-hud font-semibold text-text-primary">{firstKills}</strong>{' '}
+                  First Kills
                 </span>
-              ))}
-            </p>
-          ) : null}
+              </>
+            ) : null}
+          </p>
         </div>
       </div>
 

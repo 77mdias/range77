@@ -10,23 +10,27 @@ import {
   WeaponCard,
   type RoundCellData,
 } from '@/components/match';
-import type { MatchDetail } from '@/contracts/tracker';
+import type { MatchDetail, MatchScoreboardRow } from '@/contracts/tracker';
 import {
   aggregateWeaponKills,
   computeFirstBloods,
+  computeMatchHalves,
   computeTeamTotals,
   selectMatchMvp,
+  type PlayerFirstBloods,
 } from '@/services/analytics/match-breakdown';
+import { computePerformanceRating } from '@/services/analytics/rating';
 import { agentArtSrc, agentIconSrc, mapMinimapSrc } from '@/lib/valorant-assets';
 import { formatRelativeTime } from '@/lib/format/relative-time';
 
 /**
  * MatchView — apresentação PURA (síncrona) do detalhe de partida no design
  * Stitch: MatchMetaBar, ScoreBanner (neutro — sem perspectiva de jogador),
- * RoundTimeline, heatmap de rounds por abates, scoreboard duplo com FK/FD
- * computado dos eventos de abate (KAST%/ECON ficam `—`: a HenrikDev não
- * fornece), MVP da partida (maior ACS) e eficiência por arma. Separada da
- * página assíncrona para ser testável com `renderToStaticMarkup`.
+ * RoundTimeline, heatmap de rounds por abates, scoreboard duplo com FK/FD e
+ * KAST computados dos eventos de abate (ECON fica `—`: a HenrikDev não
+ * fornece), MVP da partida (maior ACS) com Rating ValCoach e metades DEF/ATK
+ * inferidas dos plants, e eficiência por arma. Separada da página assíncrona
+ * para ser testável com `renderToStaticMarkup`.
  */
 
 function formatDuration(ms: number): string {
@@ -68,37 +72,68 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
     outcome: round.winningTeamId === teamA ? 'win' : 'loss',
   }));
 
+  // Metades DEF/ATK do time A (lado inferido dos plants; OT → omitido).
+  const halves = teamA !== undefined ? computeMatchHalves(detail.rounds, teamA) : null;
+  const halvesLabel =
+    halves === null
+      ? undefined
+      : `DEF: ${halves.defense.won}-${halves.defense.lost} • ATK: ${halves.attack.won}-${halves.attack.lost}`;
+
+  const roundsTotal = detail.rounds.length;
   const firstBloods = computeFirstBloods(detail.kills);
   const mvp = selectMatchMvp(detail.scoreboard);
   const weapons = aggregateWeaponKills(detail.kills);
   const mvpFirstBloods = mvp !== null ? firstBloods.get(mvp.puuid) : undefined;
 
+  const ratingFor = (row: MatchScoreboardRow, fb: PlayerFirstBloods | undefined): number | null =>
+    computePerformanceRating({
+      kills: row.kills,
+      deaths: row.deaths,
+      assists: row.assists,
+      rounds: roundsTotal,
+      firstKills: fb?.firstBloods ?? null,
+      kastPercentage: row.kastPercentage,
+    });
+
   const teams = teamIds.map((teamId) => {
     const totals = computeTeamTotals(teamId, detail.scoreboard);
+    const players = detail.scoreboard
+      .filter((row) => row.teamId === teamId)
+      .map((row) => {
+        const fb = firstBloods.get(row.puuid);
+        return {
+          name: row.name,
+          tag: row.tag === '' ? undefined : row.tag,
+          rank: row.tier ?? undefined,
+          agent: row.agent,
+          agentIconSrc: agentIconSrc(row.agent),
+          acs: row.acs,
+          kills: row.kills,
+          deaths: row.deaths,
+          assists: row.assists,
+          kdDiff: row.kills - row.deaths,
+          hsPercentage: row.hsPercentage,
+          kastPercentage: row.kastPercentage,
+          firstBloods: fb?.firstBloods,
+          firstDeaths: fb?.firstDeaths,
+          rating: ratingFor(row, fb),
+        };
+      });
+    const ratings = players
+      .map((player) => player.rating)
+      .filter((rating): rating is number => rating !== null);
+    const avgRating =
+      ratings.length === 0
+        ? undefined
+        : Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) * 100) /
+          100;
+
     return {
       name: `Time ${teamId}`,
       roundsWon: roundsWon(teamId),
       totalDamage: totals.totalDamage,
-      players: detail.scoreboard
-        .filter((row) => row.teamId === teamId)
-        .map((row) => {
-          const fb = firstBloods.get(row.puuid);
-          return {
-            name: row.name,
-            tag: row.tag === '' ? undefined : row.tag,
-            rank: row.tier ?? undefined,
-            agent: row.agent,
-            agentIconSrc: agentIconSrc(row.agent),
-            acs: row.acs,
-            kills: row.kills,
-            deaths: row.deaths,
-            assists: row.assists,
-            kdDiff: row.kills - row.deaths,
-            hsPercentage: row.hsPercentage,
-            firstBloods: fb?.firstBloods,
-            firstDeaths: fb?.firstDeaths,
-          };
-        }),
+      avgRating,
+      players,
     };
   });
 
@@ -115,7 +150,7 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
         ]}
       />
 
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-6">
+      <div className="flex w-full flex-col gap-4 px-4 py-6 md:px-6 xl:px-8">
         {/* Hero (Stitch match): resultado final + MVP da partida */}
         <div className="grid gap-3 lg:grid-cols-12">
           <div className="lg:col-span-4">
@@ -123,6 +158,7 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
               scoreTeam={scoreA}
               scoreEnemy={scoreB}
               map={detail.map}
+              halves={halvesLabel}
               mapImageSrc={mapMinimapSrc(detail.map) ?? undefined}
             />
           </div>
@@ -133,18 +169,21 @@ export function MatchView({ detail }: { readonly detail: MatchDetail }) {
                 agent={mvp.agent}
                 rank={mvp.tier ?? undefined}
                 portraitSrc={agentIconSrc(mvp.agent) ?? agentArtSrc(mvp.agent) ?? undefined}
-                stats={[
-                  { label: 'K/D/A', value: `${mvp.kills}/${mvp.deaths}/${mvp.assists}` },
+                rating={ratingFor(mvp, mvpFirstBloods)}
+                kills={mvp.kills}
+                deaths={mvp.deaths}
+                assists={mvp.assists}
+                firstKills={mvpFirstBloods?.firstBloods ?? null}
+                metrics={[
                   { label: 'ACS', value: String(mvp.acs) },
                   {
-                    label: 'HS',
+                    label: 'HS Rate',
                     value: mvp.hsPercentage === null ? '—' : `${mvp.hsPercentage}%`,
                   },
-                ]}
-                metrics={[
-                  { label: 'FB', value: String(mvpFirstBloods?.firstBloods ?? 0) },
-                  { label: 'FD', value: String(mvpFirstBloods?.firstDeaths ?? 0) },
-                  { label: 'Dano', value: mvp.damageDealt.toLocaleString('pt-BR') },
+                  {
+                    label: 'KAST',
+                    value: mvp.kastPercentage === null ? '—' : `${mvp.kastPercentage}%`,
+                  },
                 ]}
               />
             ) : null}

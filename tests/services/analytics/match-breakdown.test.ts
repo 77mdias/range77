@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   aggregateWeaponKills,
   computeFirstBloods,
+  computeMatchHalves,
   computeTeamTotals,
   selectMatchMvp,
 } from '@/services/analytics/match-breakdown';
-import type { KillEvent, MatchScoreboardRow } from '@/contracts/tracker';
+import type { KillEvent, MatchRound, MatchScoreboardRow } from '@/contracts/tracker';
 
 /**
  * SUITE TDD — match-breakdown: agregações puras do detalhe de partida
@@ -21,6 +22,7 @@ function kill(overrides: Partial<KillEvent> & Pick<KillEvent, 'roundNumber'>): K
     victimPuuid: 'b',
     victimName: 'B',
     assistantNames: [],
+    assistantPuuids: [],
     weapon: 'Vandal',
     ...overrides,
   };
@@ -41,6 +43,7 @@ function row(overrides: Partial<MatchScoreboardRow> & Pick<MatchScoreboardRow, '
     hsPercentage: null,
     damageDealt: 0,
     damageReceived: 0,
+    kastPercentage: null,
     economy: null,
     abilityCasts: null,
     ...overrides,
@@ -176,5 +179,79 @@ describe('computeTeamTotals', () => {
       totalDeaths: 0,
       totalAssists: 0,
     });
+  });
+});
+
+describe('computeMatchHalves', () => {
+  function round(roundNumber: number, winningTeamId: string, plantTeamId: string | null = null): MatchRound {
+    return {
+      roundNumber,
+      winningTeamId,
+      plantSite: plantTeamId === null ? null : 'A',
+      plantTeamId,
+      defused: false,
+    };
+  }
+
+  /** Primeiro half (1–12) e segundo (13–24) com vencedores assimétricos. */
+  function regulationRounds(): MatchRound[] {
+    const rounds: MatchRound[] = [];
+    for (let n = 1; n <= 24; n += 1) {
+      const winnerFirstHalf = n <= 4 ? 'Red' : 'Blue';
+      const winnerSecondHalf = n <= 22 ? 'Red' : 'Blue';
+      rounds.push(round(n, n <= 12 ? winnerFirstHalf : winnerSecondHalf));
+    }
+    return rounds;
+  }
+
+  it('divide DEF/ATK do time com plants nos dois halfs', () => {
+    const rounds = regulationRounds().map((r) =>
+      r.roundNumber === 1 ? { ...r, plantTeamId: 'Red', plantSite: 'A' } : r,
+    );
+    const withSecond = rounds.map((r) =>
+      r.roundNumber === 13 ? { ...r, plantTeamId: 'Blue', plantSite: 'B' } : r,
+    );
+
+    expect(computeMatchHalves(withSecond, 'Red')).toEqual({
+      defense: { won: 10, lost: 2 },
+      attack: { won: 4, lost: 8 },
+    });
+    expect(computeMatchHalves(withSecond, 'Blue')).toEqual({
+      defense: { won: 8, lost: 4 },
+      attack: { won: 2, lost: 10 },
+    });
+  });
+
+  it('infere o lado do 1º half pelo plant do 2º (lados trocam)', () => {
+    const rounds = [round(1, 'Red'), round(13, 'Blue', 'Blue')];
+    expect(computeMatchHalves(rounds, 'Red')).toEqual({
+      defense: { won: 0, lost: 1 },
+      attack: { won: 1, lost: 0 },
+    });
+  });
+
+  it('infere o lado do 2º half pelo plant do 1º', () => {
+    const rounds = [round(1, 'Red', 'Red'), round(13, 'Blue')];
+    expect(computeMatchHalves(rounds, 'Red')).toEqual({
+      defense: { won: 0, lost: 1 },
+      attack: { won: 1, lost: 0 },
+    });
+  });
+
+  it('devolve null sem plants (lado inicial indeterminável)', () => {
+    expect(computeMatchHalves([round(1, 'Red'), round(13, 'Blue')], 'Red')).toBeNull();
+  });
+
+  it('devolve null com menos de dois times ou lista vazia', () => {
+    expect(computeMatchHalves([], 'Red')).toBeNull();
+    expect(computeMatchHalves([round(1, 'Red'), round(2, 'Red')], 'Red')).toBeNull();
+  });
+
+  it('devolve null em partidas com overtime (>24 rounds)', () => {
+    const overtime: MatchRound[] = [];
+    for (let n = 1; n <= 26; n += 1) {
+      overtime.push(round(n, n % 2 === 0 ? 'Red' : 'Blue', n === 1 ? 'Red' : null));
+    }
+    expect(computeMatchHalves(overtime, 'Red')).toBeNull();
   });
 });

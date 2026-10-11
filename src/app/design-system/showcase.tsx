@@ -294,7 +294,7 @@ export function DesignSystemShowcase() {
   ];
 
   return (
-    <div data-design-system className="mx-auto w-full max-w-6xl px-4 py-10">
+    <div data-design-system className="w-full px-4 py-10 md:px-6 xl:px-8">
       <header className="pb-8">
         <p className="text-label uppercase text-text-secondary">Design System</p>
         <h1 className="font-display text-display-lg text-text-primary">STYLEGUIDE VIVA</h1>
@@ -752,15 +752,15 @@ export function DesignSystemShowcase() {
                 playerName="TenZ"
                 agent="Jett"
                 rank="Ascendant 3"
-                stats={[
-                  { label: 'K/D/A', value: '24/14/6' },
-                  { label: 'KAST', value: '81.8%' },
-                  { label: 'First bloods', value: '4' },
-                ]}
+                rating={1.48}
+                kills={26}
+                deaths={13}
+                assists={4}
+                firstKills={4}
                 metrics={[
                   { label: 'ACS', value: '312' },
-                  { label: 'HS', value: '34.8%' },
-                  { label: 'ADR', value: '168' },
+                  { label: 'HS Rate', value: '34.8%' },
+                  { label: 'KAST', value: '81.8%' },
                 ]}
               />
             </div>

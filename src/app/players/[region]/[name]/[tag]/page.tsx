@@ -35,7 +35,7 @@ interface PageProps {
 }
 
 function PageFrame({ children }: { readonly children: ReactNode }) {
-  return <div className="mx-auto w-full max-w-6xl px-4 py-10">{children}</div>;
+  return <div className="w-full px-4 py-10 md:px-6 xl:px-8">{children}</div>;
 }
 
 function ProfileSkeleton() {

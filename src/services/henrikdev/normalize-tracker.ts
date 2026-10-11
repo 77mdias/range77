@@ -20,6 +20,10 @@ import type {
   HenrikDevMmrV2,
 } from '@/contracts/henrikdev';
 import { roundTo } from '@/services/analytics/combat';
+import {
+  computeKastByPlayer,
+  type KastInput,
+} from '@/services/analytics/kast';
 
 /**
  * PASSO 3 — IMPLEMENTAÇÃO: normalizador HenrikDev v4 → contratos do tracker.
@@ -324,6 +328,7 @@ export function resolveRankSummary(mmr: HenrikDevMmrV2 | null | undefined): Play
 
 /** Scoreboard completo (todos os jogadores da partida). */
 export function normalizeMatchToScoreboard(match: HenrikDevMatchV4): MatchScoreboardRow[] {
+  const kastByPlayer = computeKastByPlayer(buildKastInputFromMatch(match));
   return match.players.map((player) => {
     const teamId = player.team_id ?? '';
     const roundsPlayed = resolveRoundsPlayed(match, teamId);
@@ -346,6 +351,7 @@ export function normalizeMatchToScoreboard(match: HenrikDevMatchV4): MatchScoreb
       ),
       damageDealt: player.stats.damage?.dealt ?? 0,
       damageReceived: player.stats.damage?.received ?? 0,
+      kastPercentage: kastByPlayer.get(player.puuid) ?? null,
       economy: normalizeEconomy(player.economy),
       abilityCasts: normalizeAbilityCasts(player.ability_casts),
     };
@@ -365,6 +371,7 @@ export function normalizeMatchToRounds(match: HenrikDevMatchV4): MatchRound[] {
       roundNumber: round.id + 1,
       winningTeamId,
       plantSite: round.plant?.site ?? null,
+      plantTeamId: round.plant?.player?.team ?? null,
       defused: round.defuse !== undefined && round.defuse !== null,
     });
   }
@@ -396,10 +403,41 @@ export function normalizeMatchToKills(match: HenrikDevMatchV4): KillEvent[] {
       victimPuuid: kill.victim?.puuid ?? '',
       victimName: displayName(kill.victim),
       assistantNames: (kill.assistants ?? []).map(displayName),
+      assistantPuuids: (kill.assistants ?? []).map((assistant) => assistant.puuid ?? ''),
       weapon: kill.weapon?.name ?? null,
     });
   }
   return kills;
+}
+
+/**
+ * Adapta o payload v4 bruto para a entrada neutra do cálculo de KAST: mapa
+ * PUUID→time, números de round (de `rounds[]`, com fallback nos abates) e
+ * eventos de abate com assistentes. Compartilhado entre o detalhe da partida
+ * e a amostra de combate (visão geral).
+ */
+export function buildKastInputFromMatch(match: HenrikDevMatchV4): KastInput {
+  const teamByPuuid = new Map<string, string>();
+  for (const player of match.players) {
+    if (player.puuid !== '' && player.team_id !== undefined && player.team_id !== '') {
+      teamByPuuid.set(player.puuid, player.team_id);
+    }
+  }
+
+  const kills = (match.kills ?? []).map((kill) => ({
+    roundNumber: kill.round + 1,
+    killerPuuid: kill.killer?.puuid ?? '',
+    victimPuuid: kill.victim?.puuid ?? '',
+    assistantPuuids: (kill.assistants ?? []).map((assistant) => assistant.puuid ?? ''),
+  }));
+
+  const declaredRounds = (match.rounds ?? []).map((round) => round.id + 1);
+  const roundNumbers =
+    declaredRounds.length > 0
+      ? declaredRounds
+      : [...new Set(kills.map((kill) => kill.roundNumber))].sort((a, b) => a - b);
+
+  return { roundNumbers, kills, teamByPuuid };
 }
 
 /** Detalhe completo de uma partida (scoreboard duplo + rounds + timeline). */

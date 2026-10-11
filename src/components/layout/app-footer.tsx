@@ -23,7 +23,7 @@ export function AppFooter({
       data-component="app-footer"
       className={cx('w-full border-t border-line bg-surface-raised py-3', className)}
     >
-      <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-2 px-4 font-hud text-label uppercase text-text-secondary md:flex-row">
+      <div className="flex w-full flex-col items-center justify-between gap-2 px-4 font-hud text-label uppercase text-text-secondary md:flex-row md:px-6 xl:px-8">
         <span>{protocolText}</span>
         <span className="flex flex-wrap items-center gap-4" data-footer-metrics>
           {(metrics ?? []).map((metric) => (

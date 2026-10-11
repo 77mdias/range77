@@ -67,8 +67,8 @@ describe('buildWinrateBars', () => {
 
 describe('buildRoundHeatmapCells', () => {
   const rounds: MatchRound[] = [
-    { roundNumber: 1, winningTeamId: 'Red', plantSite: 'A', defused: false },
-    { roundNumber: 2, winningTeamId: 'Blue', plantSite: null, defused: true },
+    { roundNumber: 1, winningTeamId: 'Red', plantSite: 'A', plantTeamId: 'Red', defused: false },
+    { roundNumber: 2, winningTeamId: 'Blue', plantSite: null, plantTeamId: null, defused: true },
   ];
 
   const kill = (roundNumber: number): KillEvent => ({
@@ -80,6 +80,7 @@ describe('buildRoundHeatmapCells', () => {
     victimPuuid: 'v',
     victimName: 'V',
     assistantNames: [],
+    assistantPuuids: [],
     weapon: null,
   });
 

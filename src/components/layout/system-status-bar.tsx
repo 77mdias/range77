@@ -26,7 +26,7 @@ export function SystemStatusBar({ message, statuses, className }: SystemStatusBa
       data-component="system-status-bar"
       className={cx('w-full border-b border-line bg-surface-raised py-1.5 px-4', className)}
     >
-      <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-2">
+      <div className="flex w-full flex-wrap items-center justify-between gap-2">
         <span className="flex min-w-0 items-center gap-2">
           <StatusDot variant="live" />
           <TagLabel className="truncate">{message}</TagLabel>

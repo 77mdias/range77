@@ -42,6 +42,8 @@ export interface MatchScoreboardRow {
   readonly hsPercentage: number | null;
   readonly damageDealt: number;
   readonly damageReceived: number;
+  /** KAST% computado dos eventos de abate (K/A/S/T por round); `null` sem timeline. */
+  readonly kastPercentage: number | null;
   readonly economy: EconomySummary | null;
   readonly abilityCasts: AbilityCastCounts | null;
 }
@@ -54,6 +56,8 @@ export interface RoundOutcome {
   readonly winningTeamId: string;
   readonly playerTeamId: string;
   readonly plantSite: string | null;
+  /** Time que plantou a spike (atacante do round); `null` sem plant. */
+  readonly plantTeamId: string | null;
   readonly defused: boolean;
 }
 
@@ -62,6 +66,8 @@ export interface MatchRound {
   readonly roundNumber: number;
   readonly winningTeamId: string;
   readonly plantSite: string | null;
+  /** Time que plantou a spike (logo, o atacante do round); `null` sem plant. */
+  readonly plantTeamId: string | null;
   readonly defused: boolean;
 }
 
@@ -96,6 +102,8 @@ export interface KillEvent {
   readonly victimPuuid: string;
   readonly victimName: string;
   readonly assistantNames: readonly string[];
+  /** PUUIDs dos assistentes (para o cálculo de KAST por jogador). */
+  readonly assistantPuuids: readonly string[];
   readonly weapon: string | null;
 }
 

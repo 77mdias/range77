@@ -47,7 +47,7 @@ export function ConsoleView() {
   }
 
   return (
-    <div data-component="console-view" className="mx-auto w-full max-w-7xl px-4 py-10">
+    <div data-component="console-view" className="w-full px-4 py-10 md:px-6 xl:px-8">
       {/* ── Header SYS.CONSOLE ──────────────────────────────────────── */}
       <header className="border-b border-line pb-5">
         <p className="font-hud text-label uppercase tracking-wider text-text-secondary">

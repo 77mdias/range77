@@ -40,7 +40,7 @@ export function TopNav({
         className,
       )}
     >
-      <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-4 px-4">
+      <div className="flex h-14 w-full items-center justify-between gap-4 px-4 md:px-6 xl:px-8">
         <div className="flex shrink-0 items-center gap-4">
           <Link href="/" className="flex items-center gap-2" aria-label="ValCoach — início">
             <span aria-hidden="true" className="inline-block size-3.5 bg-accent" />

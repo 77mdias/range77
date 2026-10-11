@@ -283,6 +283,48 @@ by `1px solid #000` hairlines.
 **`ai-coach-callout`** — fill `#ffffff`, border `1px solid #000`, left accent `4px solid #f5f841`,
 radius 3px, padding `8px 10px`, eyebrow `label-xs` (`// PROTOCOL ADVICE: ROUND N`), body `body-sm`.
 
+## Métricas derivadas
+
+A HenrikDev/Riot não expõem todas as métricas exibidas. As ausentes que têm
+fonte derivável são computadas em `src/services/analytics/**` (cobertura 100%)
+e ficam documentadas aqui — o resto vira `—`, nunca número inventado.
+
+### KAST%
+
+`KAST% = (rounds com K, A, S ou T / total de rounds jogados) × 100`
+
+- **K**ill: o jogador matou alguém no round.
+- **A**ssist: o jogador assistiu um abate no round.
+- **S**urvived: o jogador não morreu no round.
+- **T**raded: o jogador morreu e um companheiro de time matou o assassino ainda
+  no **mesmo round**.
+
+Derivado de `rounds[]` + `kills[]` (killer/victim/assistants por PUUID). Sem
+timeline de abates não há base → fica `null` (a view mostra `—`).
+
+### Rating ValCoach
+
+Métrica **composta** (não oficial) normalizada por referências de jogador médio
+— na média de todas as dimensões o rating é exatamente **1.00**:
+
+| Dimensão | Cálculo | Referência | Peso |
+| --- | --- | --- | --- |
+| Kill | KPR / ref | 0.70 | 0.35 |
+| Assist | APR / ref | 0.25 | 0.10 |
+| Survival | (1 − DPR) / ref | 0.50 | 0.20 |
+| KAST | (KAST%/100) / ref | 0.70 | 0.20 |
+| Entry | FKPR / ref | 0.13 | 0.15 |
+
+As dimensões sem dado são omitidas e os pesos renormalizados entre as
+restantes; sem rounds → `null`. Formulação em `src/services/analytics/rating.ts`.
+
+### Metades por lado (DEF/ATK)
+
+O payload v4 não traz o lado inicial. O time atacante de cada half é **inferido
+dos plants** (só o atacante planta) e o outro half assume a troca de lados.
+Sem plant em nenhum half, ou em partidas com overtime (>24 rounds), o rótulo é
+omitido. Em `computeMatchHalves`.
+
 ## Do's and Don'ts
 
 ### Do

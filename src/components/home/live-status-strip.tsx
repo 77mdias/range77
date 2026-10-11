@@ -27,7 +27,7 @@ export function LiveStatusStrip({ items, actions, className }: LiveStatusStripPr
       data-component="live-status-strip"
       className={cx('w-full border-t border-line bg-surface-raised px-4 py-4', className)}
     >
-      <div className="mx-auto flex w-full max-w-7xl flex-col items-start justify-between gap-3 md:flex-row md:items-center">
+      <div className="flex w-full flex-col items-start justify-between gap-3 md:flex-row md:items-center">
         <dl className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4" data-live-items>
           {items.map((item) => (
             <div key={item.label} className="border border-line bg-surface p-2">

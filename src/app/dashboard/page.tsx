@@ -21,7 +21,7 @@ export const instant = false;
 
 function DashboardSkeleton() {
   return (
-    <div data-dashboard-loading className="mx-auto w-full max-w-6xl px-4 py-10">
+    <div data-dashboard-loading className="w-full px-4 py-10 md:px-6 xl:px-8">
       <Skeleton height={72} />
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Skeleton height={140} />
@@ -42,7 +42,7 @@ export async function DashboardContent() {
   const players = await getTrackedPlayersStore().listByUser(session.user.id);
 
   return (
-    <div data-dashboard-page className="mx-auto w-full max-w-6xl px-4 py-10">
+    <div data-dashboard-page className="w-full px-4 py-10 md:px-6 xl:px-8">
       <header className="mb-8 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
         <div>
           <p className="text-label uppercase text-text-secondary">Dashboard</p>
