@@ -118,8 +118,12 @@ describe('PlayerProfileView', () => {
     expect(html).toContain('#BR1');
     expect(html).toContain('data-component="kpi-tile"');
     expect(html).toContain('K/D');
+    expect(html).toContain('Win Rate');
+    expect(html).toContain('1V 0D');
     expect(html).toContain('HS%');
     expect(html).toContain('KAST');
+    expect(html).toContain('First Blood / R');
+    expect(html).toContain('0.08');
     expect(html).toContain('▲ +50 ACS');
     expect(html).toContain('Mira: Excelente');
     expect(html).toContain('Impacto: Equilibrado');
@@ -172,6 +176,14 @@ describe('MatchesTab', () => {
     expect(html).toContain('Ascent');
     expect(html).toContain('/matches/m-1?region=br');
     expect(html).toContain('20/10/5');
+  });
+
+  it('preenche o ΔRR quando o MMR history casa por matchId', () => {
+    const deltas = new Map([['m-1', 15]]);
+    const html = renderToStaticMarkup(
+      <MatchesTab matches={overview.matches} region="br" rrDeltas={deltas} />,
+    );
+    expect(html).toContain('+15');
   });
 
   it('estado vazio sem partidas', () => {

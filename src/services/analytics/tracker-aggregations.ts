@@ -42,6 +42,14 @@ export function computeKda(kills: number, assists: number, deaths: number): numb
   return deaths === 0 ? numerator : roundTo(numerator / deaths, 2);
 }
 
+/** First bloods por round (0 quando não houve round — nunca Infinity/NaN). */
+export function computeFirstBloodRate(firstBloods: number, rounds: number): number {
+  if (rounds <= 0) {
+    return 0;
+  }
+  return roundTo(firstBloods / rounds, 2);
+}
+
 /** Ordena cronologicamente (mais antigas primeiro); empate por matchId. */
 function chronological(matches: readonly MatchSummary[]): MatchSummary[] {
   return [...matches].sort((a, b) => {

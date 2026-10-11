@@ -4,6 +4,7 @@ import {
   average,
   buildTrackerAggregations,
   computeAcsTrend,
+  computeFirstBloodRate,
   computeKda,
   computeStreaks,
   computeWinrate,
@@ -53,6 +54,12 @@ describe('helpers', () => {
   it('computeKda evita divisão por zero', () => {
     expect(computeKda(10, 5, 0)).toBe(15);
     expect(computeKda(10, 5, 5)).toBe(3);
+  });
+
+  it('computeFirstBloodRate evita divisão por zero', () => {
+    expect(computeFirstBloodRate(3, 40)).toBe(0.08);
+    expect(computeFirstBloodRate(5, 0)).toBe(0);
+    expect(computeFirstBloodRate(0, 20)).toBe(0);
   });
 });
 

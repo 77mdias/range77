@@ -67,3 +67,17 @@ export function computeRrNet(points: readonly RrHistoryPoint[]): number {
     2,
   );
 }
+
+/**
+ * Índice `matchId → ΔRR` para casar a trajetória de RR com o histórico de
+ * partidas (o v4 matches não traz RR; o mmr-history traz o match_id).
+ */
+export function indexRrDeltaByMatchId(
+  points: readonly RrHistoryPoint[],
+): ReadonlyMap<string, number> {
+  const lookup = new Map<string, number>();
+  for (const point of points) {
+    lookup.set(point.matchId, point.delta);
+  }
+  return lookup;
+}

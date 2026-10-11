@@ -23,7 +23,8 @@ import {
   type AgentTier,
   type MapPoolStatus,
 } from '@/services/analytics/agent-map-profiles';
-import { computeRrNet } from '@/services/analytics/rr-trend';
+import { computeFirstBloodRate, computeWinrate } from '@/services/analytics/tracker-aggregations';
+import { computeRrNet, indexRrDeltaByMatchId } from '@/services/analytics/rr-trend';
 import type { AgentStat, GroupedStat, MapStat, MatchSummary } from '@/contracts/tracker';
 import type { PlayerOverview } from '@/services/tracker/player-overview';
 
@@ -53,6 +54,11 @@ export function OverviewTab({ overview }: { readonly overview: PlayerOverview })
       ? 'Sem sequência'
       : `${current.length} ${current.result === 'win' ? 'vitórias' : 'derrotas'} seguidas`;
 
+  const wins = overview.matches.filter((match) => match.result === 'win').length;
+  const losses = overview.matches.length - wins;
+  const winRate = computeWinrate(wins, overview.matches.length);
+  const firstBloodRate = computeFirstBloodRate(metrics.firstBloods ?? 0, metrics.rounds);
+
   const trendUp = overview.trend.direction === 'up';
   const trendDown = overview.trend.direction === 'down';
   const trendAccent = trendUp
@@ -68,8 +74,9 @@ export function OverviewTab({ overview }: { readonly overview: PlayerOverview })
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4" data-kpi-strip>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6" data-kpi-strip>
         <KpiTile label="K/D" value={metrics.kdr} trailing={`${metrics.matches} partidas`} />
+        <KpiTile label="Win Rate" value={`${winRate}%`} trailing={`${wins}V ${losses}D`} />
         <KpiTile label="HS%" value={formatPct(metrics.hsPercentage)} />
         <KpiTile
           label="ACS"
@@ -78,6 +85,7 @@ export function OverviewTab({ overview }: { readonly overview: PlayerOverview })
           accentTone={trendUp ? 'positive' : trendDown ? 'negative' : 'neutral'}
         />
         <KpiTile label="KAST" value={formatPct(metrics.kast)} trailing={`${metrics.rounds} rounds`} />
+        <KpiTile label="First Blood / R" value={firstBloodRate} />
       </div>
 
       <Card
@@ -148,9 +156,12 @@ export function OverviewTab({ overview }: { readonly overview: PlayerOverview })
 export function MatchesTab({
   matches,
   region,
+  rrDeltas,
 }: {
   readonly matches: readonly MatchSummary[];
   readonly region: string;
+  /** Índice `matchId → ΔRR` (mmr-history) para a coluna RR. */
+  readonly rrDeltas?: ReadonlyMap<string, number>;
 }) {
   if (matches.length === 0) {
     return (
@@ -176,6 +187,7 @@ export function MatchesTab({
         kd: displayKd(match.kills, match.deaths),
         acs: match.acs,
         hsPercentage: match.hsPercentage,
+        rrDelta: rrDeltas?.get(match.matchId),
         href: `/matches/${match.matchId}?region=${region}`,
       }))}
     />
@@ -357,13 +369,16 @@ export interface PlayerProfileViewProps {
 
 export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewProps) {
   const { player } = overview;
+  const rrDeltas = indexRrDeltaByMatchId(overview.rrHistory);
 
   const items: TabItem[] = [
     { id: 'overview', label: 'Visão Geral', content: <OverviewTab overview={overview} /> },
     {
       id: 'matches',
       label: 'Partidas',
-      content: <MatchesTab matches={overview.matches} region={player.region} />,
+      content: (
+        <MatchesTab matches={overview.matches} region={player.region} rrDeltas={rrDeltas} />
+      ),
     },
     {
       id: 'agents',

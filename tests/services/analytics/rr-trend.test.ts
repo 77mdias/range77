@@ -4,6 +4,7 @@ import {
   buildRrHistory,
   classifyRrDelta,
   computeRrNet,
+  indexRrDeltaByMatchId,
 } from '@/services/analytics/rr-trend';
 
 /**
@@ -113,5 +114,23 @@ describe('computeRrNet', () => {
 
   it('lista vazia → 0', () => {
     expect(computeRrNet([])).toBe(0);
+  });
+});
+
+describe('indexRrDeltaByMatchId', () => {
+  it('indexa o ΔRR por matchId (para casar com o histórico de partidas)', () => {
+    const points = buildRrHistory([
+      entry({ match_id: 'm-1', last_change: 18 }),
+      entry({ match_id: 'm-2', last_change: -20 }),
+    ]);
+
+    const lookup = indexRrDeltaByMatchId(points);
+    expect(lookup.get('m-1')).toBe(18);
+    expect(lookup.get('m-2')).toBe(-20);
+    expect(lookup.get('m-ausente')).toBeUndefined();
+  });
+
+  it('índice vazio quando não há pontos', () => {
+    expect(indexRrDeltaByMatchId([]).size).toBe(0);
   });
 });
