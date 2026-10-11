@@ -7,7 +7,7 @@ import { cx } from '@/lib/cx';
  * SearchConsole — wrapper estilo terminal do hero de busca: header com
  * título + chip de status, corpo (SearchBar via children) e rodapé helper.
  * A sombra dura (4px, tinta) é opt-in (`hardShadow`) — assinatura do
- * console na tela Stitch.
+ * console na tela Stitch (utilitário `shadow-hard-4`).
  */
 
 export interface SearchConsoleProps {
@@ -34,7 +34,7 @@ export function SearchConsole({
       data-component="search-console"
       className={cx(
         'w-full max-w-3xl rounded-md border border-line bg-surface p-3 text-left',
-        hardShadow && 'shadow-[4px_4px_0px_0px_var(--color-ink)]',
+        hardShadow && 'shadow-hard-4',
         className,
       )}
     >

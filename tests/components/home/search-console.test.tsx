@@ -31,13 +31,13 @@ describe('SearchConsole', () => {
           <span>X</span>
         </SearchConsole>,
       ),
-    ).toContain('shadow-[4px_4px_0px_0px_var(--color-ink)]');
+    ).toContain('shadow-hard-4');
     expect(
       renderToStaticMarkup(
         <SearchConsole>
           <span>X</span>
         </SearchConsole>,
       ),
-    ).not.toContain('shadow-[4px');
+    ).not.toContain('shadow-hard');
   });
 });

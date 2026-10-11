@@ -1,13 +1,36 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { Geist, JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 import { AppShell } from '@/components/layout/app-shell';
 import './globals.css';
 
 /**
- * Direção visual v2 (DESIGN.md): fonte = system stack, definida em
- * `globals.css` (`--font-display`/`--font-hud`/`--font-body`). Sem next/font —
- * a marca não usa fontes custom.
+ * Protocol Precision: três famílias carregadas via `next/font/google` e
+ * expostas como variáveis CSS consumidas por `globals.css`
+ * (`--font-space-grotesk` → `--font-display`, `--font-jetbrains-mono` →
+ * `--font-hud`, `--font-geist` → `--font-body`).
  */
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  variable: '--font-space-grotesk',
+  display: 'swap',
+});
+
+const jetBrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-jetbrains-mono',
+  display: 'swap',
+});
+
+const geist = Geist({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-geist',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'ValCoach — Tracker & Coach de Valorant',
@@ -17,7 +40,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html
+      lang="pt-BR"
+      className={`${spaceGrotesk.variable} ${jetBrainsMono.variable} ${geist.variable}`}
+    >
       <body className="font-body">
         <AppShell>{children}</AppShell>
       </body>

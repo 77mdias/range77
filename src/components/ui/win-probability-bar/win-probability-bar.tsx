@@ -37,7 +37,7 @@ export function WinProbabilityBar({
           {afterLabel}: {afterPercent}%
         </span>
       </div>
-      <div className="relative h-2 w-full bg-line">
+      <div className="relative h-2 w-full border border-line bg-surface-highest">
         <span
           aria-hidden="true"
           data-testid="probability-before"

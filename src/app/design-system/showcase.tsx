@@ -82,12 +82,16 @@ import { Tabs } from '@/components/ui/tabs';
 const PRIMITIVE_SWATCHES: readonly { readonly name: string; readonly varName: string }[] = [
   { name: 'canvas', varName: '--color-canvas' },
   { name: 'canvas-soft', varName: '--color-canvas-soft' },
+  { name: 'surface-lowest', varName: '--color-surface-lowest' },
+  { name: 'surface-low', varName: '--color-surface-low' },
+  { name: 'surface-high', varName: '--color-surface-high' },
   { name: 'hairline', varName: '--color-hairline' },
+  { name: 'line-soft', varName: '--color-line-soft' },
   { name: 'ink', varName: '--color-ink' },
   { name: 'ink-soft', varName: '--color-ink-soft' },
   { name: 'ink-mute', varName: '--color-ink-mute' },
   { name: 'primary', varName: '--color-primary' },
-  { name: 'primary-hover', varName: '--color-primary-hover' },
+  { name: 'primary-ink', varName: '--color-primary-ink' },
   { name: 'win', varName: '--color-win' },
   { name: 'loss', varName: '--color-loss' },
 ];
@@ -95,11 +99,13 @@ const PRIMITIVE_SWATCHES: readonly { readonly name: string; readonly varName: st
 const SEMANTIC_SWATCHES: readonly { readonly name: string; readonly className: string }[] = [
   { name: 'surface', className: 'bg-surface' },
   { name: 'surface-raised', className: 'bg-surface-raised' },
+  { name: 'surface-recessed', className: 'bg-surface-recessed' },
   { name: 'surface-hover', className: 'bg-surface-hover' },
   { name: 'line', className: 'bg-line' },
   { name: 'text-primary', className: 'bg-text-primary' },
   { name: 'text-secondary', className: 'bg-text-secondary' },
   { name: 'accent', className: 'bg-accent' },
+  { name: 'accent-ink', className: 'bg-accent-ink' },
   { name: 'accent-hover', className: 'bg-accent-hover' },
   { name: 'win', className: 'bg-win' },
   { name: 'loss', className: 'bg-loss' },
@@ -108,22 +114,35 @@ const SEMANTIC_SWATCHES: readonly { readonly name: string; readonly className: s
 const TYPE_SCALE: readonly { readonly label: string; readonly className: string; readonly font: string }[] =
   [
     { label: 'display-xl', className: 'text-display-xl', font: 'font-display' },
+    { label: 'display-xl-mobile', className: 'text-display-xl-mobile', font: 'font-display' },
     { label: 'display-lg', className: 'text-display-lg', font: 'font-display' },
-    { label: 'display-md', className: 'text-display-md', font: 'font-display' },
-    { label: 'heading-lg', className: 'text-heading-lg', font: 'font-display' },
+    { label: 'headline-lg', className: 'text-headline-lg', font: 'font-display' },
+    { label: 'headline-md', className: 'text-headline-md', font: 'font-display' },
     { label: 'heading-sm', className: 'text-heading-sm', font: 'font-display' },
     { label: 'body-lg', className: 'text-body-lg', font: 'font-body' },
-    { label: 'body', className: 'text-body', font: 'font-body' },
-    { label: 'label', className: 'text-label uppercase tracking-wide', font: 'font-hud' },
+    { label: 'body-md', className: 'text-body-md', font: 'font-body' },
+    { label: 'body-sm', className: 'text-body-sm', font: 'font-body' },
+    { label: 'label-md', className: 'text-label-md uppercase', font: 'font-hud' },
+    { label: 'label-sm', className: 'text-label-sm uppercase', font: 'font-hud' },
+    { label: 'label-xs', className: 'text-label-xs uppercase', font: 'font-hud' },
   ];
 
 const RADIUS_SCALE: readonly { readonly token: string; readonly className: string }[] = [
+  { token: 'rounded-xs', className: 'rounded-xs' },
   { token: 'rounded-sm', className: 'rounded-sm' },
   { token: 'rounded-md', className: 'rounded-md' },
   { token: 'rounded-lg', className: 'rounded-lg' },
   { token: 'rounded-xl', className: 'rounded-xl' },
   { token: 'rounded-2xl', className: 'rounded-2xl' },
   { token: 'rounded-full', className: 'rounded-full' },
+];
+
+const SHADOW_SCALE: readonly { readonly token: string; readonly className: string }[] = [
+  { token: 'shadow-hard-1', className: 'shadow-hard-1' },
+  { token: 'shadow-hard-2', className: 'shadow-hard-2' },
+  { token: 'shadow-hard-3', className: 'shadow-hard-3' },
+  { token: 'shadow-hard-4', className: 'shadow-hard-4' },
+  { token: 'shadow-hard-6', className: 'shadow-hard-6' },
 ];
 
 const SCOREBOARD: readonly {
@@ -331,6 +350,19 @@ export function DesignSystemShowcase() {
             <div key={radius.token} className="space-y-2">
               <div className={`h-20 w-28 border border-line bg-surface-raised ${radius.className}`} />
               <p className="font-hud text-label uppercase text-text-secondary">{radius.token}</p>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Elevação · sombra dura">
+        <div className="flex flex-wrap items-end gap-5">
+          {SHADOW_SCALE.map((shadow) => (
+            <div key={shadow.token} className="space-y-2">
+              <div
+                className={`h-16 w-24 border border-line bg-surface ${shadow.className}`}
+              />
+              <p className="font-hud text-label uppercase text-text-secondary">{shadow.token}</p>
             </div>
           ))}
         </div>

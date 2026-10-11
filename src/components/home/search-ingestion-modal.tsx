@@ -80,7 +80,7 @@ export function SearchIngestionModal({
         className,
       )}
     >
-      <div className="w-full max-w-lg rounded-md border border-line bg-surface p-5 shadow-[6px_6px_0px_0px_var(--color-ink)]">
+      <div className="w-full max-w-lg rounded-md border border-line bg-surface p-5 shadow-hard-6">
         <header className="flex items-center justify-between gap-2 border-b border-line pb-2">
           <span className="flex items-center gap-2 font-hud text-label font-bold uppercase text-text-primary">
             <StatusDot variant="live" />
