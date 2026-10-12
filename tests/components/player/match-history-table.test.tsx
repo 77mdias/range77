@@ -48,6 +48,27 @@ describe('MatchHistoryTable', () => {
     expect(html).toContain('31');
   });
 
+  it('alinha Placar e K/D/A à esquerda (demais colunas numéricas seguem à direita)', () => {
+    const html = renderToStaticMarkup(<MatchHistoryTable matches={MATCHES} />);
+
+    const placarHeader = /<th[^>]*>Placar<\/th>/.exec(html)?.[0] ?? '';
+    const kdaHeader = /<th[^>]*>K\/D\/A<\/th>/.exec(html)?.[0] ?? '';
+    expect(placarHeader).toContain('Placar');
+    expect(placarHeader).not.toContain('text-right');
+    expect(kdaHeader).toContain('K/D/A');
+    expect(kdaHeader).not.toContain('text-right');
+
+    const placarCell = /<td[^>]*>13–9<\/td>/.exec(html)?.[0] ?? '';
+    const kdaCell = /<td[^>]*>24\/14\/6<\/td>/.exec(html)?.[0] ?? '';
+    expect(placarCell).toContain('font-hud');
+    expect(placarCell).not.toContain('text-right');
+    expect(kdaCell).toContain('font-hud');
+    expect(kdaCell).not.toContain('text-right');
+
+    // ACS (única coluna checada) permanece alinhada à direita
+    expect(/<td[^>]*>287<\/td>/.exec(html)?.[0] ?? '').toContain('text-right');
+  });
+
   it('emite HTML de tabela válido (link dentro de <td>, nunca filho de <tr>)', () => {
     const html = renderToStaticMarkup(<MatchHistoryTable matches={MATCHES} />);
     expect(html).toContain('data-match-history-link');

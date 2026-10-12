@@ -12,7 +12,7 @@ import { cx } from '@/lib/cx';
 import type { MatchResult } from '@/components/ui/match-row';
 
 /**
- * MatchHistoryTable — histórico recente em tabela compacta (overview
+ * MatchHistoryTable — últimas partidas jogadas em tabela compacta (overview
  * Stitch): status, agente, mapa, placar, K/D/A, K/D, ACS, HS% e RR delta.
  * Linhas viram link quando `href` presente.
  */
@@ -51,7 +51,7 @@ function formatKd(kd: number): string {
 
 export function MatchHistoryTable({
   matches,
-  ariaLabel = 'Histórico recente de partidas',
+  ariaLabel = 'Últimas partidas jogadas',
   className,
 }: MatchHistoryTableProps) {
   if (matches.length === 0) {
@@ -71,8 +71,8 @@ export function MatchHistoryTable({
             <TableHeaderCell>Status</TableHeaderCell>
             <TableHeaderCell>Agente</TableHeaderCell>
             <TableHeaderCell>Mapa</TableHeaderCell>
-            <TableHeaderCell numeric>Placar</TableHeaderCell>
-            <TableHeaderCell numeric>K/D/A</TableHeaderCell>
+            <TableHeaderCell>Placar</TableHeaderCell>
+            <TableHeaderCell>K/D/A</TableHeaderCell>
             <TableHeaderCell numeric>K/D</TableHeaderCell>
             <TableHeaderCell numeric>ACS</TableHeaderCell>
             <TableHeaderCell numeric>HS%</TableHeaderCell>
@@ -121,10 +121,10 @@ export function MatchHistoryTable({
                   </span>
                 </TableCell>
                 <TableCell className="font-hud text-label">{match.map}</TableCell>
-                <TableCell numeric className="font-hud font-semibold">
+                <TableCell className="font-hud font-semibold">
                   {match.scoreTeam}–{match.scoreEnemy}
                 </TableCell>
-                <TableCell numeric className="font-hud text-label">
+                <TableCell className="font-hud text-label">
                   {match.kills}/{match.deaths}/{match.assists}
                 </TableCell>
                 <TableCell
