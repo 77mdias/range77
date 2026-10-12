@@ -143,7 +143,7 @@ export function MatchesTab({
     return (
       <EmptyState
         title="Sem partidas"
-        description="Nenhuma partida competitiva concluída recente foi encontrada."
+        description="Nenhuma partida competitiva concluída foi encontrada."
       />
     );
   }
@@ -305,7 +305,7 @@ export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewP
           </Card>
 
           <Card
-            label="Histórico Recente (últimos 5 jogos)"
+            label="Últimas 5 partidas jogadas"
             action={
               <span className="font-hud text-label uppercase text-text-secondary">
                 Camada 2 parsed

@@ -30,17 +30,43 @@ describe('MapCard', () => {
     expect(html).toContain('Pior mapa');
   });
 
-  it('exibe barras ATK/DEF', () => {
-    const html = renderToStaticMarkup(
-      <MapCard {...BASE} status="stable" statusLabel="Estável" />,
+  it('chips intermediários usam badge claro com tinta preta/cinza', () => {
+    const good = renderToStaticMarkup(<MapCard {...BASE} status="good" statusLabel="Positivo" />);
+    expect(good).toContain('bg-surface text-text-primary');
+    expect(good).not.toContain('bg-win/15');
+
+    const neutral = renderToStaticMarkup(<MapCard {...BASE} status="neutral" statusLabel="Neutro" />);
+    expect(neutral).toContain('bg-surface text-text-secondary');
+
+    const unfavorable = renderToStaticMarkup(
+      <MapCard {...BASE} status="unfavorable" statusLabel="Desfavorável" />,
     );
-    expect(html).toContain('ATK 64%');
-    expect(html).toContain('DEF 80%');
-    expect(html).toContain('width:64%');
-    expect(html).toContain('width:80%');
+    expect(unfavorable).toContain('bg-surface-highest text-text-secondary');
+    expect(unfavorable).not.toContain('bg-loss/10');
   });
 
-  it('sem split ATK/DEF usa a barra única de win rate', () => {
+  it('MELHOR/PIOR mantêm os acentos (amarelo/vermelho)', () => {
+    expect(
+      renderToStaticMarkup(<MapCard {...BASE} status="best" statusLabel="Melhor mapa" />),
+    ).toContain('bg-accent text-text-primary');
+    expect(
+      renderToStaticMarkup(<MapCard {...BASE} status="worst" statusLabel="Pior mapa" />),
+    ).toContain('bg-loss text-surface');
+  });
+
+  it('mostra WR real de DEF (esquerda) e ATK (direita) sob a barra de WR geral', () => {
+    const html = renderToStaticMarkup(
+      <MapCard {...BASE} winPercent={72} status="best" statusLabel="Melhor mapa" />,
+    );
+    expect(html).toContain('DEF');
+    expect(html).toContain('80%');
+    expect(html).toContain('ATK');
+    expect(html).toContain('64%');
+    expect(html).toContain('width:72%');
+    expect(html.indexOf('DEF')).toBeLessThan(html.indexOf('ATK'));
+  });
+
+  it('sem split DEF/ATK mostra travessão no lugar do percentual', () => {
     const html = renderToStaticMarkup(
       <MapCard
         {...BASE}
@@ -51,28 +77,11 @@ describe('MapCard', () => {
         statusLabel="Melhor mapa"
       />,
     );
-    expect(html).not.toContain('ATK 64%');
-    expect(html).toContain('WR 72%');
+    expect(html).not.toContain('80%');
+    expect(html).not.toContain('64%');
     expect(html).toContain('width:72%');
-  });
-
-  it('sem nenhuma métrica de barra renderiza só o rodapé de partidas', () => {
-    const html = renderToStaticMarkup(
-      <MapCard
-        {...BASE}
-        attackPercent={undefined}
-        defensePercent={undefined}
-        status="neutral"
-        statusLabel="Neutro"
-      />,
-    );
-    expect(html).not.toContain('role="meter"');
-  });
-
-  it('sem imagem mostra sigla do mapa', () => {
-    const html = renderToStaticMarkup(
-      <MapCard {...BASE} status="neutral" statusLabel="Neutro" />,
-    );
-    expect(html).toContain('As');
+    expect(html).toContain('DEF');
+    expect(html).toContain('ATK');
+    expect(html).toContain('—');
   });
 });

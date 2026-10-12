@@ -1,5 +1,6 @@
 import {
   COMPETITIVE_QUEUE_ID,
+  type HenrikDevKillV4,
   type HenrikDevMatchV4,
   type HenrikDevPlayerV4,
   type HenrikDevRoundPlayerRef,
@@ -20,6 +21,7 @@ import type {
   HenrikDevMmrV2,
 } from '@/contracts/henrikdev';
 import { roundTo } from '@/services/analytics/combat';
+import { computeMatchHalves } from '@/services/analytics/match-breakdown';
 import {
   computeKastByPlayer,
   type KastInput,
@@ -191,6 +193,41 @@ function displayName(ref: HenrikDevRoundPlayerRef | undefined): string {
   return ref.name;
 }
 
+/**
+ * FB/FD a partir da timeline: para cada round, o abate com MENOR
+ * `time_in_match_in_ms` define o first blood (killer) e o first death (victim).
+ * Retorna `null` quando a partida não traz timeline. Compartilhado entre o
+ * histórico (MatchSummary) e a amostra de combate (MatchCombatStats).
+ */
+export function computeEntryDuels(
+  kills: readonly HenrikDevKillV4[] | undefined,
+  puuid: string,
+): { readonly firstBloods: number; readonly firstDeaths: number } | null {
+  if (kills === undefined) {
+    return null;
+  }
+
+  const firstKillByRound = new Map<number, HenrikDevKillV4>();
+  for (const kill of kills) {
+    const current = firstKillByRound.get(kill.round);
+    if (current === undefined || kill.time_in_match_in_ms < current.time_in_match_in_ms) {
+      firstKillByRound.set(kill.round, kill);
+    }
+  }
+
+  let firstBloods = 0;
+  let firstDeaths = 0;
+  for (const kill of firstKillByRound.values()) {
+    if (kill.killer?.puuid === puuid) {
+      firstBloods += 1;
+    }
+    if (kill.victim?.puuid === puuid) {
+      firstDeaths += 1;
+    }
+  }
+  return { firstBloods, firstDeaths };
+}
+
 /** Converte um bruto numa linha do histórico. `null` = não normalizável. */
 export function normalizeMatchToSummary(
   match: HenrikDevMatchV4,
@@ -219,6 +256,9 @@ export function normalizeMatchToSummary(
     return null;
   }
 
+  const entry = computeEntryDuels(match.kills, player.puuid);
+  const halves = computeMatchHalves(normalizeMatchToRounds(match), teamId);
+
   return {
     matchId: match.metadata.match_id,
     region: region.toLowerCase(),
@@ -240,6 +280,10 @@ export function normalizeMatchToSummary(
       player.stats.bodyshots,
       player.stats.legshots,
     ),
+    ...(entry !== null
+      ? { firstBloods: entry.firstBloods, firstDeaths: entry.firstDeaths }
+      : {}),
+    ...(halves !== null ? { halves } : {}),
     roundsPlayed,
   };
 }

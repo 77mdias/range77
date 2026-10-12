@@ -7,6 +7,7 @@ import {
   FilterLabel,
   FilterSelect,
 } from '@/components/ui/filter-bar';
+import { SectionHeader } from '@/components/ui/section-header';
 import { summarizeByAgent, summarizeByMap } from '@/services/analytics/tracker-aggregations';
 import {
   FILTER_ALL,
@@ -16,6 +17,9 @@ import {
   seasonOptions,
 } from '@/services/analytics/agent-map-filters';
 import { MIN_SAMPLE } from '@/services/analytics/agent-map-profiles';
+import { buildAgentSignatures } from '@/services/analytics/agent-signatures';
+import { buildBenchmarkComparison } from '@/services/analytics/benchmark';
+import { buildMapSideStats } from '@/services/analytics/map-sides';
 import type { MatchSummary } from '@/contracts/tracker';
 import { AgentsTab, MapsTab } from './agents-maps-sections';
 
@@ -44,6 +48,9 @@ export function AgentsMapsExplorer({ matches, eloBase }: AgentsMapsExplorerProps
   });
   const agents = filterByMinMatches(summarizeByAgent(filtered), minMatches ? MIN_SAMPLE : null);
   const maps = filterByMinMatches(summarizeByMap(filtered), minMatches ? MIN_SAMPLE : null);
+  const signatures = buildAgentSignatures(filtered);
+  const benchmark = buildBenchmarkComparison(filtered);
+  const mapSides = buildMapSideStats(filtered);
 
   return (
     <div className="flex flex-col gap-4" data-agents-maps-explorer>
@@ -86,11 +93,27 @@ export function AgentsMapsExplorer({ matches, eloBase }: AgentsMapsExplorerProps
         </span>
       </FilterBar>
 
-      <div data-filtered-agents>
-        <AgentsTab agents={agents} />
+      <div data-filtered-agents className="flex flex-col gap-4">
+        <SectionHeader
+          title="Matriz de Performance por Agente"
+          annotation="AGENT_TELEMETRY_PIPELINE"
+          marker="accent"
+          meta="SORT: ACS DECRESCENTE"
+        />
+        <AgentsTab
+          agents={agents}
+          signatures={signatures}
+          benchmark={benchmark}
+          eloBase={eloBase}
+        />
       </div>
-      <div data-filtered-maps>
-        <MapsTab maps={maps} />
+      <div data-filtered-maps className="flex flex-col gap-4">
+        <SectionHeader
+          title="Performance por Mapa (Map Pool Analytics)"
+          annotation="MAP_VECTOR_BREAKDOWN"
+          meta={`${maps.length} mapas na amostra`}
+        />
+        <MapsTab maps={maps} sides={mapSides} />
       </div>
     </div>
   );

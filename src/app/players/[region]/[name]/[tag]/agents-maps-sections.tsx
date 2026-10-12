@@ -1,7 +1,14 @@
-import { AgentCard, MapCard, type AgentCardProps } from '@/components/agents';
+import {
+  AgentCard,
+  BenchmarkBar,
+  MapCard,
+  type AgentCardProps,
+  type AgentProgress,
+} from '@/components/agents';
 import { AgentRadar } from '@/components/charts';
 import { CoachingTip } from '@/components/ui/coaching-tip';
 import { EmptyState } from '@/components/ui/states';
+import { TagLabel } from '@/components/ui/tag-label';
 import {
   Table,
   TableBody,
@@ -10,7 +17,8 @@ import {
   TableHeaderCell,
   TableRow,
 } from '@/components/ui/table';
-import { agentArtSrc, mapSplashSrc } from '@/lib/valorant-assets';
+import { agentRole } from '@/lib/agent-roles';
+import { agentIconSrc, mapSplashSrc } from '@/lib/valorant-assets';
 import {
   MAIN_WINRATE_THRESHOLD,
   buildAgentCardProfiles,
@@ -20,6 +28,9 @@ import {
   type AgentTier,
   type MapPoolStatus,
 } from '@/services/analytics/agent-map-profiles';
+import type { AgentSignature } from '@/services/analytics/agent-signatures';
+import type { BenchmarkMetric } from '@/services/analytics/benchmark';
+import type { MapSideStat } from '@/services/analytics/map-sides';
 import type { GroupedStat } from '@/contracts/tracker';
 
 /**
@@ -81,7 +92,10 @@ const TIER_LABELS: Record<AgentTier, string> = {
   bottleneck: 'Bottleneck',
 };
 
-function toAgentCardProps(profile: AgentCardProfile): AgentCardProps {
+function toAgentCardProps(
+  profile: AgentCardProfile,
+  signature: AgentSignature | undefined,
+): AgentCardProps {
   const tacticalNote: AgentCardProps['tacticalNote'] =
     profile.tier === 'bottleneck'
       ? {
@@ -101,35 +115,107 @@ function toAgentCardProps(profile: AgentCardProfile): AgentCardProps {
             description: `${profile.name} segura como opção no pool (${profile.winRatePercent}% WR).`,
           };
 
+  // Assinatura tática por papel: no máximo uma barra; ausente quando o dado
+  // real não é computável (nada é fabricado).
+  const progresses: readonly AgentProgress[] =
+    signature === undefined
+      ? []
+      : [
+          {
+            label: signature.label,
+            percent: signature.percent,
+            displayValue: signature.displayValue,
+          },
+        ];
+
   return {
     name: profile.name,
+    role: agentRole(profile.name) ?? undefined,
     matches: profile.matches,
     winRate: `${profile.winRatePercent}%`,
     tier: profile.tier,
     tierLabel: TIER_LABELS[profile.tier],
-    portraitSrc: agentArtSrc(profile.name) ?? undefined,
+    portraitSrc: agentIconSrc(profile.name) ?? undefined,
     stats: [
-      { label: 'ACS', value: String(profile.avgAcs) },
-      { label: 'K/D', value: profile.kdRatio.toFixed(2) },
-      { label: 'HS%', value: profile.hsPercent === null ? '—' : `${profile.hsPercent}%` },
+      { label: 'K/D Ratio', value: profile.kdRatio.toFixed(2), delta: profile.kdDelta },
+      { label: 'Avg ACS', value: String(profile.avgAcs), delta: profile.acsDelta },
+      { label: 'Headshot %', value: profile.hsPercent === null ? '—' : `${profile.hsPercent}%` },
     ],
-    progresses: [
-      {
-        label: 'Win rate',
-        percent: profile.winRatePercent,
-        displayValue: `${profile.winRatePercent}%`,
-      },
-      {
-        label: 'Headshot',
-        percent: profile.hsPercent ?? 0,
-        displayValue: profile.hsPercent === null ? '—' : `${profile.hsPercent}%`,
-      },
-    ],
+    progresses,
     tacticalNote,
   };
 }
 
-export function AgentsTab({ agents }: { readonly agents: readonly GroupedStat[] }) {
+/**
+ * Bloco "Benchmark Calibration" (Stitch): compara as métricas reais do
+ * jogador com a referência do elo em barras duplas. Oculto sem amostra.
+ */
+function BenchmarkCalibration({
+  metrics,
+  eloLabel,
+}: {
+  readonly metrics: readonly BenchmarkMetric[];
+  readonly eloLabel?: string;
+}) {
+  if (metrics.length === 0) {
+    return null;
+  }
+
+  const eloName = eloLabel ?? 'do elo';
+
+  return (
+    <section
+      data-component="benchmark-calibration"
+      className="flex flex-col gap-3 rounded-md border border-line bg-surface p-4"
+    >
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3">
+        <div className="min-w-0">
+          <TagLabel withPrefix={false}>Benchmark calibration</TagLabel>
+          <h3 className="font-display text-heading-sm font-bold uppercase tracking-tight text-text-primary">
+            Comparativo direto: player vs média {eloName}
+          </h3>
+        </div>
+        <div className="flex items-center gap-3 font-hud text-label uppercase text-text-secondary">
+          <span className="flex items-center gap-1.5">
+            <span aria-hidden="true" className="inline-block size-3 rounded-sm bg-accent" />
+            <span className="font-bold text-text-primary">Player</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span aria-hidden="true" className="inline-block size-3 rounded-sm bg-surface-highest" />
+            <span>Média elo</span>
+          </span>
+        </div>
+      </header>
+      <div className="grid gap-3 md:grid-cols-2">
+        {metrics.map((metric) => (
+          <BenchmarkBar
+            key={metric.key}
+            label={metric.label}
+            playerValue={metric.playerValue}
+            eloValue={metric.eloValue}
+            playerPercent={metric.playerPercent}
+            eloPercent={metric.eloPercent}
+            above={metric.above}
+            scale={metric.scale}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function AgentsTab({
+  agents,
+  signatures,
+  benchmark,
+  eloBase,
+}: {
+  readonly agents: readonly GroupedStat[];
+  readonly signatures?: ReadonlyMap<string, AgentSignature>;
+  readonly benchmark?: readonly BenchmarkMetric[];
+  /** Elo de referência (nome exibido) usado no título do benchmark. */
+  readonly eloBase?: string;
+}) {
   const profiles = buildAgentCardProfiles(agents);
 
   if (profiles.length === 0) {
@@ -145,9 +231,13 @@ export function AgentsTab({ agents }: { readonly agents: readonly GroupedStat[] 
     <div className="flex flex-col gap-4">
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3" data-agent-cards>
         {profiles.map((profile) => (
-          <AgentCard key={profile.name} {...toAgentCardProps(profile)} />
+          <AgentCard
+            key={profile.name}
+            {...toAgentCardProps(profile, signatures?.get(profile.name))}
+          />
         ))}
       </div>
+      <BenchmarkCalibration metrics={benchmark ?? []} eloLabel={eloBase} />
       <AgentRadar agents={agents} />
       <GroupedStatTable rows={agents} keyLabel="Agente" />
     </div>
@@ -156,12 +246,21 @@ export function AgentsTab({ agents }: { readonly agents: readonly GroupedStat[] 
 
 const STATUS_LABELS: Record<MapPoolStatus, string> = {
   best: 'Melhor mapa',
+  good: 'Positivo',
   stable: 'Estável',
   neutral: 'Neutro',
+  unfavorable: 'Desfavorável',
   worst: 'Pior mapa',
 };
 
-export function MapsTab({ maps }: { readonly maps: readonly GroupedStat[] }) {
+export function MapsTab({
+  maps,
+  sides,
+}: {
+  readonly maps: readonly GroupedStat[];
+  /** Splits DEF/ATK reais por mapa (`buildMapSideStats`); ausente → sem split. */
+  readonly sides?: ReadonlyMap<string, MapSideStat>;
+}) {
   const profiles = buildMapCardProfiles(maps);
   const advice = buildMapPoolAdvice(maps);
 
@@ -176,20 +275,30 @@ export function MapsTab({ maps }: { readonly maps: readonly GroupedStat[] }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-map-cards>
-        {profiles.map((profile) => (
-          <MapCard
-            key={profile.name}
-            map={profile.name}
-            status={profile.status}
-            statusLabel={STATUS_LABELS[profile.status]}
-            winRate={`${profile.winRatePercent}%`}
-            matches={profile.matches}
-            record={{ wins: profile.wins, losses: profile.losses }}
-            winPercent={profile.winRatePercent}
-            imageSrc={mapSplashSrc(profile.name) ?? undefined}
-          />
-        ))}
+      <div className="min-w-0 overflow-x-auto pb-2" data-map-cards-scroll>
+        <div
+          className="grid grid-flow-col grid-rows-1 gap-3 [grid-auto-columns:calc((100%_-_0.75rem)/2)] md:[grid-auto-columns:calc((100%_-_1.5rem)/3)] lg:[grid-auto-columns:calc((100%_-_3.75rem)/6)]"
+          data-map-cards
+        >
+          {profiles.map((profile) => {
+            const side = sides?.get(profile.name);
+            return (
+              <MapCard
+                key={profile.name}
+                map={profile.name}
+                status={profile.status}
+                statusLabel={STATUS_LABELS[profile.status]}
+                winRate={`${profile.winRatePercent}%`}
+                matches={profile.matches}
+                record={{ wins: profile.wins, losses: profile.losses }}
+                winPercent={profile.winRatePercent}
+                attackPercent={side?.attackPercent ?? undefined}
+                defensePercent={side?.defensePercent ?? undefined}
+                imageSrc={mapSplashSrc(profile.name) ?? undefined}
+              />
+            );
+          })}
+        </div>
       </div>
       {advice !== null ? (
         <CoachingTip
@@ -197,8 +306,8 @@ export function MapsTab({ maps }: { readonly maps: readonly GroupedStat[] }) {
           priority={advice.worstWinRate < 45 ? 'critica' : 'alta'}
           impact={
             <span>
-              Referência de benchmark: {MAIN_WINRATE_THRESHOLD}% WR · split ATK/DEF chega com o
-              endpoint de detalhe por mapa
+              Referência de benchmark: {MAIN_WINRATE_THRESHOLD}% WR · status do pool por faixa de
+              win rate real
             </span>
           }
         >

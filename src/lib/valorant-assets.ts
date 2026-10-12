@@ -111,8 +111,9 @@ const MAP_MINIMAP: Readonly<Record<string, string>> = {
  * Normaliza o nome vindo da HenrikDev para a chave da tabela:
  * minúsculas, sem acentos e com separadores não-alfanuméricos viram hífen
  * ("KAY/O" → "kay-o"). Desconhecidos voltam como a própria chave minúscula.
+ * Exportado para reuso em outras tabelas estáticas de agente (papéis).
  */
-function normalizeName(name: string): string {
+export function normalizeValorantName(name: string): string {
   return name
     .trim()
     .toLowerCase()
@@ -122,7 +123,7 @@ function normalizeName(name: string): string {
 }
 
 function lookup(table: Readonly<Record<string, string>>, name: string): string | null {
-  const key = normalizeName(name);
+  const key = normalizeValorantName(name);
   return table[key] ?? null;
 }
 

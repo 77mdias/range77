@@ -7,6 +7,7 @@ import {
   buildMapPoolAdvice,
   buildMapCardProfiles,
   classifyAgentTier,
+  classifyMapStatus,
   kdRatio,
 } from '@/services/analytics/agent-map-profiles';
 import type { GroupedStat } from '@/contracts/tracker';
@@ -95,6 +96,8 @@ describe('buildAgentCardProfiles', () => {
       avgAcs: 265,
       kdRatio: expect.closeTo(18 / 11),
       hsPercent: 32,
+      kdDelta: expect.closeTo(0.59),
+      acsDelta: 50,
       tier: 'main',
     });
     expect(profiles[1]).toMatchObject({
@@ -102,6 +105,23 @@ describe('buildAgentCardProfiles', () => {
       tier: 'bottleneck',
       hsPercent: null,
     });
+  });
+
+  it('ordena por ACS decrescente com desempate alfabético', () => {
+    const profiles = buildAgentCardProfiles([
+      stat('Zephyr', { avgAcs: 200 }),
+      stat('Ascent', { avgAcs: 260 }),
+      stat('Brim', { avgAcs: 200 }),
+    ]);
+    expect(profiles.map((profile) => profile.name)).toEqual(['Ascent', 'Brim', 'Zephyr']);
+  });
+
+  it('delta do benchmark fica zero quando o K/D e o ACS batem com a referência', () => {
+    const profiles = buildAgentCardProfiles([
+      stat('Jett', { avgKills: 21, avgDeaths: 20, avgAcs: 215 }),
+    ]);
+    expect(profiles[0]?.kdDelta).toBe(0);
+    expect(profiles[0]?.acsDelta).toBe(0);
   });
 
   it('agente com amostra baixa nunca vira main (mesmo com WR alto)', () => {
@@ -115,47 +135,61 @@ describe('buildAgentCardProfiles', () => {
   });
 });
 
+describe('classifyMapStatus', () => {
+  it('mapeia cada faixa de WR (melhor ≥60, positivo ≥55, estável ≥50, neutro ≥45, desfavorável ≥30, pior <30)', () => {
+    expect(classifyMapStatus(100)).toBe('best');
+    expect(classifyMapStatus(60)).toBe('best');
+    expect(classifyMapStatus(59.9)).toBe('good');
+    expect(classifyMapStatus(55)).toBe('good');
+    expect(classifyMapStatus(50)).toBe('stable');
+    expect(classifyMapStatus(45)).toBe('neutral');
+    expect(classifyMapStatus(33.3)).toBe('unfavorable');
+    expect(classifyMapStatus(30)).toBe('unfavorable');
+    expect(classifyMapStatus(29.9)).toBe('worst');
+    expect(classifyMapStatus(0)).toBe('worst');
+  });
+});
+
 describe('buildMapCardProfiles', () => {
   it('lista vazia → perfil vazio', () => {
     expect(buildMapCardProfiles([])).toEqual([]);
   });
 
-  it('melhor/pior distintos e estável/neutro no meio do pool', () => {
+  it('classifica cada mapa só pela faixa de WR real (sem extremos relativos)', () => {
     const profiles = buildMapCardProfiles([
-      stat('Ascent', { winrate: 72, matches: 18 }),
+      stat('Ascent', { winrate: 72, matches: 18, wins: 6, losses: 4 }),
       stat('Breeze', { winrate: 31, matches: 8 }),
       stat('Haven', { winrate: 55, matches: 10 }),
       stat('Split', { winrate: 48, matches: 10 }),
+      stat('Icebox', { winrate: 33 }),
     ]);
     expect(profiles.map((profile) => profile.status)).toEqual([
       'best',
-      'worst',
-      'stable',
+      'unfavorable',
+      'good',
       'neutral',
+      'unfavorable',
     ]);
     expect(profiles[0]).toMatchObject({ name: 'Ascent', wins: 6, losses: 4, winRatePercent: 72 });
   });
 
-  it('mapa único elegível não recebe extremo (best == worst)', () => {
-    expect(buildMapCardProfiles([stat('Ascent', { winrate: 72 })])[0]?.status).toBe('stable');
-    expect(buildMapCardProfiles([stat('Icebox', { winrate: 40 })])[0]?.status).toBe('neutral');
+  it('mapa com amostra baixa recebe status pela faixa (a amostra segue visível)', () => {
+    expect(buildMapCardProfiles([stat('Pearl', { matches: 1, winrate: 100 })])[0]?.status).toBe(
+      'best',
+    );
   });
 
-  it('empate total entre elegíveis não elege extremos', () => {
+  it('WR exatamente na borda entra na faixa superior', () => {
+    expect(buildMapCardProfiles([stat('Lotus', { winrate: 50 })])[0]?.status).toBe('stable');
+    expect(buildMapCardProfiles([stat('Sunset', { winrate: 45 })])[0]?.status).toBe('neutral');
+  });
+
+  it('empate total entre mapas não muda a classificação por faixa', () => {
     const profiles = buildMapCardProfiles([
       stat('Ascent', { winrate: 60 }),
       stat('Haven', { winrate: 60 }),
     ]);
-    expect(profiles.map((profile) => profile.status)).toEqual(['stable', 'stable']);
-  });
-
-  it('mapa fora da amostra mínima fica neutro (mesmo com WR alto)', () => {
-    const profiles = buildMapCardProfiles([
-      stat('Ascent', { winrate: 70 }),
-      stat('Pearl', { matches: 1, winrate: 100 }),
-    ]);
-    expect(profiles[0]?.status).toBe('stable');
-    expect(profiles[1]?.status).toBe('neutral');
+    expect(profiles.map((profile) => profile.status)).toEqual(['best', 'best']);
   });
 });
 

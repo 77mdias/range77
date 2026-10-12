@@ -159,8 +159,8 @@ describe('PlayerProfileView', () => {
     expect(html).toContain('NET: +10 RR');
     expect(html).toContain('Atual: 55 RR (Diamond 1)');
     expect(html).toContain('data-chart="rr-trend"');
-    // Histórico recente embutido no overview (Stitch)
-    expect(html).toContain('Histórico Recente (últimos 5 jogos)');
+    // Últimas partidas jogadas embutidas no overview (Stitch)
+    expect(html).toContain('Últimas 5 partidas jogadas');
     expect(html).toContain('data-component="match-history-table"');
     // Sandbox de IA rotulado como demo (reuso do console)
     expect(html).toContain('data-profile-ai-sandbox');
@@ -346,7 +346,7 @@ describe('AgentsTab', () => {
 });
 
 describe('MapsTab', () => {
-  it('classifica o map pool e usa barra única de WR', () => {
+  it('classifica o map pool por faixa de WR e renderiza a barra de WR geral', () => {
     const maps = [
       groupStat('Ascent', { winrate: 72, matches: 18, wins: 13, losses: 5 }),
       groupStat('Breeze', { winrate: 31, matches: 8, wins: 2, losses: 6 }),
@@ -356,11 +356,20 @@ describe('MapsTab', () => {
     const html = renderToStaticMarkup(<MapsTab maps={maps} />);
     expect(html).toContain('data-map-cards');
     expect(html).toContain('Melhor mapa');
-    expect(html).toContain('Pior mapa');
-    expect(html).toContain('Estável');
+    expect(html).toContain('Positivo');
     expect(html).toContain('Neutro');
-    expect(html).toContain('WR 72%');
+    expect(html).toContain('Desfavorável');
     expect(html).toContain('13V');
+  });
+
+  it('usa os splits DEF/ATK reais quando fornecidos', () => {
+    const maps = [groupStat('Ascent', { winrate: 72, matches: 18 })];
+    const sides = new Map([['Ascent', { attackPercent: 64, defensePercent: 80 }]]);
+    const html = renderToStaticMarkup(<MapsTab maps={maps} sides={sides} />);
+    expect(html).toContain('DEF');
+    expect(html).toContain('80%');
+    expect(html).toContain('ATK');
+    expect(html).toContain('64%');
   });
 
   it('estado vazio sem agregações de mapa', () => {

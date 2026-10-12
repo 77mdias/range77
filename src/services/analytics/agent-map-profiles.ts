@@ -6,11 +6,19 @@
  */
 
 import type { AgentStat, GroupedStat, MapStat } from '@/contracts/tracker';
+import { BENCHMARK_REFERENCE } from './benchmark';
+import { roundTo } from './combat';
 
 export type AgentTier = 'main' | 'solid' | 'bottleneck';
 
 /** Espelha os status do card de mapa do design system. */
-export type MapPoolStatus = 'best' | 'stable' | 'neutral' | 'worst';
+export type MapPoolStatus =
+  | 'best'
+  | 'good'
+  | 'stable'
+  | 'neutral'
+  | 'unfavorable'
+  | 'worst';
 
 /** WR mínimo (com melhor WR da amostra elegível) para virar "main". */
 export const MAIN_WINRATE_THRESHOLD = 50;
@@ -21,6 +29,37 @@ export const BOTTLENECK_WINRATE_THRESHOLD = 45;
 /** Amostra mínima (partidas) para elegibilidade de destaque. */
 export const MIN_SAMPLE = 3;
 
+interface MapWinrateBand {
+  readonly minimum: number;
+  readonly status: MapPoolStatus;
+}
+
+/**
+ * Faixas de WR do status do mapa (calibráveis, verificadas por teste).
+ * Ancoradas na paridade (50%) e reutilizando os cortes de gargalo (45) e main
+ * (50): cada mapa recebe um rótulo derivado APENAS do win rate real.
+ */
+export const MAP_WINRATE_BANDS: readonly MapWinrateBand[] = [
+  { minimum: 60, status: 'best' },
+  { minimum: 55, status: 'good' },
+  { minimum: 50, status: 'stable' },
+  { minimum: 45, status: 'neutral' },
+  { minimum: 30, status: 'unfavorable' },
+  { minimum: 0, status: 'worst' },
+];
+
+/** Faixa de WR → status (`MAP_WINRATE_BANDS`); nunca fabrica amostra. */
+export function classifyMapStatus(winrate: number): MapPoolStatus {
+  let status: MapPoolStatus = 'worst';
+  for (const band of MAP_WINRATE_BANDS) {
+    if (winrate >= band.minimum) {
+      status = band.status;
+      break;
+    }
+  }
+  return status;
+}
+
 export interface AgentCardProfile {
   readonly name: string;
   readonly matches: number;
@@ -30,6 +69,10 @@ export interface AgentCardProfile {
   /** avgKills/avgDeaths (deaths=0 → avgKills, mesma convenção do KDA). */
   readonly kdRatio: number;
   readonly hsPercent: number | null;
+  /** Δ do K/D sobre a referência de elo (negativo = abaixo). */
+  readonly kdDelta: number;
+  /** Δ do ACS sobre a referência de elo (negativo = abaixo). */
+  readonly acsDelta: number;
   readonly tier: AgentTier;
 }
 
@@ -100,54 +143,51 @@ function extremeStat<T extends GroupedStat>(
   return extreme;
 }
 
-/** Perfis de agente ordenados como recebidos (cronológico do contrato). */
+/**
+ * Perfis de agente ordenados por ACS DECRESCENTE (desempate alfabético) —
+ * assinatura visual da seção ("SORT: ACS DECRESCENTE" no Stitch). O tier é
+ * classificado antes da ordenação (depende do WR, não da posição).
+ */
 export function buildAgentCardProfiles(
   agents: readonly AgentStat[],
 ): readonly AgentCardProfile[] {
   const best = extremeStat(agents, (candidate, current) => candidate > current);
 
-  return agents.map((agent) => ({
-    name: agent.key,
-    matches: agent.matches,
-    winRatePercent: agent.winrate,
-    avgAcs: agent.avgAcs,
-    kdRatio: kdRatio(agent.avgKills, agent.avgDeaths),
-    hsPercent: agent.avgHsPercentage,
-    tier: classifyAgentTier(agent.winrate, agent.matches, agent === best),
-  }));
+  const profiles = agents.map((agent): AgentCardProfile => {
+    const ratio = kdRatio(agent.avgKills, agent.avgDeaths);
+    return {
+      name: agent.key,
+      matches: agent.matches,
+      winRatePercent: agent.winrate,
+      avgAcs: agent.avgAcs,
+      kdRatio: ratio,
+      hsPercent: agent.avgHsPercentage,
+      kdDelta: roundTo(ratio - BENCHMARK_REFERENCE.kdr.value, 2),
+      acsDelta: agent.avgAcs - BENCHMARK_REFERENCE.acs.value,
+      tier: classifyAgentTier(agent.winrate, agent.matches, agent === best),
+    };
+  });
+
+  return profiles.sort((a, b) =>
+    a.avgAcs === b.avgAcs ? a.name.localeCompare(b.name) : b.avgAcs - a.avgAcs,
+  );
 }
 
 /**
- * Status no map pool: melhor/pior apenas entre mapas elegíveis e quando
- * distintos (single map ou empate total → sem extremos). Fora disso:
- * estável (WR ≥ 50, amostra elegível) ou neutro.
+ * Status no map pool por faixa de WR real (`MAP_WINRATE_BANDS`): melhor →
+ * positivo → estável → neutro → desfavorável → pior. O rótulo reflete só o
+ * win rate observado (a amostra segue visível em "Partidas"), sem depender de
+ * extremos relativos ou de amostra mínima.
  */
 export function buildMapCardProfiles(maps: readonly MapStat[]): readonly MapCardProfile[] {
-  const best = extremeStat(maps, (candidate, current) => candidate > current);
-  const worst = extremeStat(maps, (candidate, current) => candidate < current);
-  const hasExtremes = best !== null && worst !== null && best !== worst;
-
-  return maps.map((map) => {
-    let status: MapPoolStatus;
-    if (hasExtremes && map === best) {
-      status = 'best';
-    } else if (hasExtremes && map === worst) {
-      status = 'worst';
-    } else if (map.matches >= MIN_SAMPLE && map.winrate >= MAIN_WINRATE_THRESHOLD) {
-      status = 'stable';
-    } else {
-      status = 'neutral';
-    }
-
-    return {
-      name: map.key,
-      matches: map.matches,
-      wins: map.wins,
-      losses: map.losses,
-      winRatePercent: map.winrate,
-      status,
-    };
-  });
+  return maps.map((map) => ({
+    name: map.key,
+    matches: map.matches,
+    wins: map.wins,
+    losses: map.losses,
+    winRatePercent: map.winrate,
+    status: classifyMapStatus(map.winrate),
+  }));
 }
 
 /**

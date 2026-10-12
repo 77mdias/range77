@@ -1,4 +1,4 @@
-import type { KillEvent, MatchRound, MatchScoreboardRow } from '@/contracts/tracker';
+import type { KillEvent, MatchHalves, MatchRound, MatchScoreboardRow } from '@/contracts/tracker';
 import { formatRankChip } from '@/lib/format/rank';
 import { roundTo } from './combat';
 
@@ -222,11 +222,8 @@ function roundSide(
   return attacking === teamId ? 'attack' : 'defense';
 }
 
-/** Vitórias/derrotas do time por lado (DEF/ATK), derivadas dos plants. */
-export interface MatchHalves {
-  readonly defense: { readonly won: number; readonly lost: number };
-  readonly attack: { readonly won: number; readonly lost: number };
-}
+/** Reexport do contrato: mantém a superfície pública histórica de `analytics`. */
+export type { MatchHalves };
 
 /**
  * Divide os rounds regulamentares (≤24) por LADO do time pedido, na

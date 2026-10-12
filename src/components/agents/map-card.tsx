@@ -3,10 +3,17 @@ import { cx } from '@/lib/cx';
 
 /**
  * MapCard — desempenho por mapa: imagem com scrim, chip de status, nome +
- * winrate sobre a imagem e rodapé com partidas, V-D e barras ATK/DEF.
+ * winrate sobre a imagem e rodapé com partidas, V-D, barra de WR geral e os
+ * win rates reais de DEF (esquerda) e ATK (direita).
  */
 
-export type MapCardStatus = 'best' | 'stable' | 'neutral' | 'worst';
+export type MapCardStatus =
+  | 'best'
+  | 'good'
+  | 'stable'
+  | 'neutral'
+  | 'unfavorable'
+  | 'worst';
 
 export interface MapCardProps {
   readonly map: string;
@@ -15,9 +22,11 @@ export interface MapCardProps {
   readonly winRate: string;
   readonly matches: number;
   readonly record: { readonly wins: number; readonly losses: number };
-  /** Sem dado de lado na partida: use `winPercent` (barra única de WR). */
+  /** WR do lado atacante (0–100); `undefined` sem split realmente computável. */
   readonly attackPercent?: number;
+  /** WR do lado defensor (0–100); `undefined` sem split realmente computável. */
   readonly defensePercent?: number;
+  /** WR geral (0–100) para a barra do card. */
   readonly winPercent?: number;
   readonly imageSrc?: string;
   readonly className?: string;
@@ -25,17 +34,25 @@ export interface MapCardProps {
 
 const STATUS_CHIP: Record<MapCardStatus, string> = {
   best: 'bg-accent text-text-primary',
+  good: 'bg-surface text-text-primary',
   stable: 'bg-surface text-text-primary',
   neutral: 'bg-surface text-text-secondary',
+  unfavorable: 'bg-surface-highest text-text-secondary',
   worst: 'bg-loss text-surface',
 };
 
 const BAR_TONE: Record<MapCardStatus, ProgressBarTone> = {
   best: 'accent',
+  good: 'accent',
   stable: 'ink',
   neutral: 'mute',
+  unfavorable: 'loss',
   worst: 'loss',
 };
+
+function formatSide(percent: number | undefined): string {
+  return percent === undefined ? '—' : `${percent}%`;
+}
 
 export function MapCard({
   map,
@@ -50,7 +67,6 @@ export function MapCard({
   imageSrc,
   className,
 }: MapCardProps) {
-  const hasSides = attackPercent !== undefined && defensePercent !== undefined;
   return (
     <article
       data-component="map-card"
@@ -61,7 +77,7 @@ export function MapCard({
         className,
       )}
     >
-      <div className="relative h-28 w-full overflow-hidden bg-surface-hover">
+      <div className="relative h-36 w-full overflow-hidden bg-surface-hover">
         {imageSrc !== undefined ? (
           // eslint-disable-next-line @next/next/no-img-element -- splash remoto do mapa
           <img
@@ -97,7 +113,8 @@ export function MapCard({
             className={cx(
               'font-hud text-heading-sm font-bold',
               status === 'best' && 'text-accent',
-              status === 'worst' && 'text-loss',
+              status === 'good' && 'text-win',
+              (status === 'unfavorable' || status === 'worst') && 'text-loss',
               (status === 'stable' || status === 'neutral') && 'text-white',
             )}
           >
@@ -113,21 +130,19 @@ export function MapCard({
             <span className="text-text-primary">{record.wins}V</span> — {record.losses}D
           </span>
         </div>
-        {hasSides ? (
-          <>
-            <ProgressBar value={attackPercent} tone={BAR_TONE[status]} ariaLabel={`Ataque em ${map}`} />
-            <div className="flex items-center justify-between font-hud text-label uppercase text-text-secondary">
-              <span>ATK {attackPercent}%</span>
-              <span>DEF {defensePercent}%</span>
-            </div>
-            <ProgressBar value={defensePercent} tone={BAR_TONE[status]} ariaLabel={`Defesa em ${map}`} />
-          </>
-        ) : winPercent !== undefined ? (
-          <>
-            <ProgressBar value={winPercent} tone={BAR_TONE[status]} ariaLabel={`Win rate em ${map}`} />
-            <p className="font-hud text-label uppercase text-text-secondary">WR {winPercent}%</p>
-          </>
+        {winPercent !== undefined ? (
+          <ProgressBar value={winPercent} tone={BAR_TONE[status]} ariaLabel={`Win rate em ${map}`} />
         ) : null}
+        <div className="flex items-center justify-between font-hud text-label uppercase">
+          <span className="text-text-secondary">
+            DEF{' '}
+            <span className="font-semibold text-text-primary">{formatSide(defensePercent)}</span>
+          </span>
+          <span className="text-text-secondary">
+            ATK{' '}
+            <span className="font-semibold text-text-primary">{formatSide(attackPercent)}</span>
+          </span>
+        </div>
       </div>
     </article>
   );

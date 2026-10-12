@@ -7,8 +7,8 @@ import { MatchesTab } from './profile-view';
 /**
  * BreakdownView — tela PARTIDAS & BREAKDOWN do jogador (Stitch
  * "partidas-breakdown"): strip de filtros reais + seção "Agentes & Mapas"
- * (matriz de performance, map pool e advice) + histórico completo de
- * partidas. Apresentação PURA — dados prontos do overview.
+ * (matriz de performance, map pool e advice) + últimas partidas jogadas.
+ * Apresentação PURA — dados prontos do overview.
  */
 export function BreakdownView({ overview }: { readonly overview: PlayerOverview }) {
   const rrDeltas = indexRrDeltaByMatchId(overview.rrHistory);
@@ -38,11 +38,11 @@ export function BreakdownView({ overview }: { readonly overview: PlayerOverview 
 
       <section id="partidas" data-breakdown-section="partidas" className="flex flex-col gap-4 scroll-mt-24">
         <SectionHeader
-          title="Partidas"
-          annotation="HISTÓRICO COMPLETO"
+          title="Últimas partidas jogadas"
+          annotation="AMOSTRA POR ATO"
           meta={
             <span className="font-hud text-label uppercase text-text-secondary">
-              {overview.matches.length} na janela • ΔRR quando disponível
+              {overview.matches.length} partidas • ΔRR quando disponível
             </span>
           }
         />

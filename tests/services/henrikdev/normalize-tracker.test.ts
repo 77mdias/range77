@@ -165,7 +165,36 @@ describe('normalizeMatchToSummary', () => {
       assists: 6,
       acs: 300,
       hsPercentage: 30,
+      firstBloods: 1,
+      firstDeaths: 1,
       roundsPlayed: 20,
+    });
+  });
+
+  it('extrai splits DEF/ATK do jogador quando os plants permitem inferir os lados', () => {
+    const withPlants: HenrikDevMatchV4 = {
+      ...SAMPLE_MATCH,
+      rounds: [
+        {
+          id: 0,
+          winning_team: 'Red',
+          plant: { round_time_in_ms: 30000, site: 'A', player: { puuid: 'p1', team: 'Red' } },
+          defuse: null,
+        },
+        {
+          id: 12,
+          winning_team: 'Blue',
+          plant: { round_time_in_ms: 30000, site: 'B', player: { puuid: 'p2', team: 'Blue' } },
+          defuse: null,
+        },
+      ],
+    };
+
+    const summary = normalizeMatchToSummary(withPlants, 'br', 'TenZ', 'BR1');
+    // Red é o time do jogador: 1º half ataca (plant Red), 2º half defende.
+    expect(summary?.halves).toEqual({
+      defense: { won: 0, lost: 1 },
+      attack: { won: 1, lost: 0 },
     });
   });
 

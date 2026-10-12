@@ -71,6 +71,16 @@ export interface MatchRound {
   readonly defused: boolean;
 }
 
+/**
+ * Vitórias/derrotas do time de um jogador por LADO (DEF/ATK), derivadas dos
+ * plants (só o atacante planta). Forma compartilhada entre o detalhe da
+ * partida e o resumo do histórico.
+ */
+export interface MatchHalves {
+  readonly defense: { readonly won: number; readonly lost: number };
+  readonly attack: { readonly won: number; readonly lost: number };
+}
+
 /** Linha do histórico de partidas do jogador. */
 export interface MatchSummary {
   readonly matchId: string;
@@ -89,6 +99,20 @@ export interface MatchSummary {
   readonly assists: number;
   readonly acs: number;
   readonly hsPercentage: number | null;
+  /**
+   * First bloods do jogador analisado na partida (derivados da timeline de
+   * abates). Ausente/`null` quando o payload não trouxe a timeline — nunca
+   * inferido de outro campo.
+   */
+  readonly firstBloods?: number | null;
+  /** First deaths do jogador analisado na partida. Mesma convenção de `firstBloods`. */
+  readonly firstDeaths?: number | null;
+  /**
+   * Splits DEF/ATK do jogador analisado (perspectiva dele), derivados dos
+   * plants. Ausente/`null` quando o payload não permite inferir os lados
+   * (sem plant, overtime > 24 rounds) — nunca chutado.
+   */
+  readonly halves?: MatchHalves | null;
   readonly roundsPlayed: number;
 }
 

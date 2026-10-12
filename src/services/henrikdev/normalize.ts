@@ -1,12 +1,11 @@
 import {
   COMPETITIVE_QUEUE_ID,
-  type HenrikDevKillV4,
   type HenrikDevMatchV4,
   type HenrikDevPlayerV4,
 } from '@/contracts/henrikdev';
 import type { MatchCombatStats } from '@/contracts/henrikdev';
 import { computePlayerKast } from '@/services/analytics/kast';
-import { buildKastInputFromMatch } from './normalize-tracker';
+import { buildKastInputFromMatch, computeEntryDuels } from './normalize-tracker';
 
 /**
  * PASSO 3 — IMPLEMENTAÇÃO: normalizador HenrikDev v4 → MatchCombatStats.
@@ -49,38 +48,10 @@ function computeRoundsPlayed(match: HenrikDevMatchV4): number | null {
 }
 
 /**
- * FB/FD a partir da timeline: para cada round, o abate com MENOR
- * `time_in_match_in_ms` define o first blood (killer) e o first death (victim).
- * Retorna `null` quando a partida não traz timeline.
+ * FB/FD a partir da timeline são computados por `computeEntryDuels`
+ * (compartilhado com o histórico em `normalize-tracker`) — mantidos aqui no
+ * fluxo de combate via `entry`.
  */
-function computeEntryDuels(
-  kills: readonly HenrikDevKillV4[] | undefined,
-  puuid: string,
-): { firstBloods: number; firstDeaths: number } | null {
-  if (kills === undefined) {
-    return null;
-  }
-
-  const firstKillByRound = new Map<number, HenrikDevKillV4>();
-  for (const kill of kills) {
-    const current = firstKillByRound.get(kill.round);
-    if (current === undefined || kill.time_in_match_in_ms < current.time_in_match_in_ms) {
-      firstKillByRound.set(kill.round, kill);
-    }
-  }
-
-  let firstBloods = 0;
-  let firstDeaths = 0;
-  for (const kill of firstKillByRound.values()) {
-    if (kill.killer?.puuid === puuid) {
-      firstBloods += 1;
-    }
-    if (kill.victim?.puuid === puuid) {
-      firstDeaths += 1;
-    }
-  }
-  return { firstBloods, firstDeaths };
-}
 
 /**
  * Converte o histórico bruto da HenrikDev na amostra canônica de combate.
