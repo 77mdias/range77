@@ -72,7 +72,8 @@ a `src/services/analytics/**`.
 ## `agents/`
 
 `agent-card.tsx` (tier main/solid/bottleneck), `map-card.tsx`
-(best/stable/neutral/worst), `benchmark-bar.tsx` (jogador × elo).
+(best/good/stable/neutral/unfavorable/worst + splits DEF/ATK), `benchmark-bar.tsx`
+(jogador × elo).
 
 ## `ai/`
 

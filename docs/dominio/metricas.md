@@ -116,6 +116,16 @@ current = metade mais recente (com 2 snapshots degenera em comparação direta).
   `matches` desc; streaks (atual/maior vitória/maior derrota) e tendência de
   ACS (direção `up/down/flat`).
 
+## Status do map pool e splits por lado
+
+- `buildMapCardProfiles` classifica cada mapa por faixa de WR real
+  (`MAP_WINRATE_BANDS`): melhor ≥60 · positivo ≥55 · estável ≥50 · neutro ≥45 ·
+  desfavorável ≥30 · pior <30. A amostra segue visível no card ("Partidas").
+- `buildMapSideStats` agrega os `halves` (DEF/ATK) de cada partida por mapa,
+  ponderando por **rounds**; lado sem rounds computáveis → `null`. Os splits
+  nascem do `MatchSummary.halves` (ver
+  [partida e rounds](./partida-e-rounds.md)).
+
 ## Breakout da partida — `match-breakdown.ts`
 
 - **First bloods/deaths** (`computeFirstBloods`) — primeiro abate de cada round

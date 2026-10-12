@@ -14,7 +14,7 @@ aparece nas rotas com `params`/`searchParams` assíncronos ou conteúdo dinâmic
 | `/design-system` | `src/app/design-system/page.tsx` | styleguide (404 em prod) |
 | `/matches/[matchId]` | `src/app/matches/[matchId]/page.tsx` + `match-view.tsx` | detalhe de partida (`?region=`, `?player=`) |
 | `/players/[region]/[name]/[tag]` | `.../page.tsx` + `profile-view.tsx` | Visão Geral do jogador |
-| `/players/[region]/[name]/[tag]/breakdown` | `.../breakdown/page.tsx` + `breakdown-view.tsx` | Partidas & Breakdown (amostra 20) |
+| `/players/[region]/[name]/[tag]/breakdown` | `.../breakdown/page.tsx` + `breakdown-view.tsx` | Partidas & Breakdown (amostra por ato, até 30) |
 
 ## Detalhes por rota
 
@@ -47,8 +47,9 @@ Server/pura e compõe scoreboard, timeline, halves, arsenal e MVP.
 `params: Promise<{ region, name, tag }>`, `instant = false`, `<Suspense>`
 (`ProfileSkeleton`). Views: `profile-view.tsx` (overview + AI sandbox),
 `agents-maps-explorer.tsx` (client, filtros reais), `agents-maps-sections.tsx`
-(seções puras), `follow-button.tsx` (Server Actions). `breakdown/` usa amostra
-20 (a Visão Geral usa 5).
+(seções puras), `follow-button.tsx` (Server Actions). `breakdown/` usa a amostra
+**por ato** (até 30; fallback 15 do ato anterior) — a Visão Geral usa 5. Ver
+[serviços](../dominio/servicos.md).
 
 ### `/console` e `/design-system`
 

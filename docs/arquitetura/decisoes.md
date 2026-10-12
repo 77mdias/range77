@@ -37,7 +37,13 @@ acidental.
 ## Cache e persistência
 
 - **Cache Components** (`'use cache'` + `cacheLife` + `cacheTag`) compartilhado
-  entre API e páginas; chave separada por `size` de amostra.
+  entre API e páginas; chave separada por `size` de amostra (a tela Breakdown
+  usa entrada própria `player-breakdown:*`, com amostra por ato).
+- **TTL de 25 min nos dados de jogador** (`revalidate: 1500`): uma partida
+  ranqueada dura ~30–50 min, então a janela não muda entre navegações; conta/
+  cartão (mudam raramente) ficam em 1 h. Além disso, cada **recurso** da
+  HenrikDev tem cache próprio (`cached-client.ts`, tags `henrikdev:*`), para
+  Perfil e Breakdown compartilharem conta/MMR/histórico em vez de rebuscar.
 - **Cache durável `match_cache` (24h)** para partidas imutáveis.
 - **Write-through best-effort**: falha de persistência não derruba a resposta.
 - **Snapshot de combate** (`player_combat_snapshots`) alimenta o endpoint de
@@ -55,8 +61,9 @@ acidental.
 - **Visão Geral aponta para o jogador buscado** — não é um dashboard do usuário
   logado. Fora do contexto de jogador, a nav global tem apenas **Busca** e
   **Console** (nunca inventar "player conectado").
-- **Partidas & Breakdown é tela separada** (`/breakdown`, amostra 20); a Visão
-  Geral usa amostra 5.
+- **Partidas & Breakdown é tela separada** (`/breakdown`); a amostra é
+  **dinâmica por ato** (nº de partidas do ato via MMR v3 `seasonal[].games`,
+  teto 30, fallback 15) e a Visão Geral usa amostra 5.
 - **Direção visual Protocol Precision** (Stitch): canvas `#f9f9f9`, card
   `#ffffff`/`#f9fafb`, hairline preta, acento `#f5f841`, `tertiary #2c676b`,
   micro-raio, sombra dura sem blur, fontes Space Grotesk / Geist / JetBrains

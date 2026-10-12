@@ -30,6 +30,12 @@ A página recebe o Riot ID via `?player=Nome%23Tag`. O time do jogador é o
 "aliado": daí saem DEF/ATK, W/L e a linha **"VOCÊ"** no scoreboard. Sem
 `player`, a partida é **neutra** (nem DEF/ATK, nem W/L).
 
+### No histórico (`MatchSummary.halves`)
+
+O normalizador do histórico persiste o mesmo split em `MatchSummary.halves`
+(ausente quando indeterminável). A aba "Agentes & Mapas" usa esses halves em
+`buildMapSideStats` para exibir os splits DEF/ATK agregados por mapa.
+
 ## Timeline de rounds — `computeRoundTimeline`
 
 Classifica cada round **na perspectiva do time do jogador** e monta a fita.

@@ -65,5 +65,5 @@ Termos de domínio (Valorant + analytics do app) e termos técnicos.
 | **Best-effort** | operação opcional cujo erro não derruba a resposta |
 | **Protocol Precision** | design system (Stitch) adotado pelo app |
 | **font-display/hud/body** | papéis de fonte (Space Grotesk / JetBrains Mono / Geist) |
-| **Breakdown** | tela `/players/.../breakdown` (amostra 20) |
+| **Breakdown** | tela `/players/.../breakdown` (amostra por ato, até 30) |
 | **Snapshot** | registro de combate persistido (`player_combat_snapshots`) |

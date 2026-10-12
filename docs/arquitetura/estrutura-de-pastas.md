@@ -38,7 +38,7 @@ src/
 │   ├── players/[region]/[name]/[tag]/
 │   │   ├── page.tsx              Visão Geral
 │   │   ├── profile-view.tsx      apresentação do overview
-│   │   ├── breakdown/            Partidas & Breakdown (amostra 20)
+│   │   ├── breakdown/            Partidas & Breakdown (amostra por ato, até 30)
 │   │   ├── agents-maps-*.tsx     filtros + seções Agentes/Mapas
 │   │   ├── ai-sandbox.tsx        sandbox IA (demo rotulado)
 │   │   └── follow-button.tsx     seguir/deixar de seguir
@@ -72,7 +72,7 @@ src/
 │   └── valorant-assets.ts        resolução de ícones de agente/mapa
 ├── proxy.ts                      proteção de /dashboard (sucessor do middleware)
 └── services/
-    ├── henrikdev/                client HTTP + normalizadores
+    ├── henrikdev/                client HTTP + cached-client + normalizadores
     ├── tracker/                  orquestração + persistência
     ├── analytics/                cálculo puro (cobertura 100%)
     └── coaching/                 envelope de 3 camadas

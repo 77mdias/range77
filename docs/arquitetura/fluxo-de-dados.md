@@ -37,6 +37,7 @@ Páginas / Route Handlers  ──►  componentes React (render-only)
 | `fetchMmrHistory` | `GET /valorant/v2/mmr-history/{affinity}/{platform}/{name}/{tag}` |
 | `fetchAccount` | `GET /valorant/v1/account/{name}/{tag}` |
 | `fetchMmr` | `GET /valorant/v2/mmr/{affinity}/{platform}/{name}/{tag}` |
+| `fetchMmrV3` | `GET /valorant/v3/mmr/{affinity}/{platform}/{name}/{tag}` |
 
 - Autenticação: header `Authorization: <apiKey>` (sem `Bearer`).
 - Timeout de 15s via `AbortSignal.timeout` no mesmo `fetch` que consome o body.
@@ -64,9 +65,10 @@ Ver [contratos](../dominio/contratos.md).
 
 ### 4. Orquestração — `src/services/tracker/**`
 
-- `buildPlayerOverview` — um único `fetchPlayerMatches` alimenta overview,
+- `buildPlayerOverview` — um `fetchPlayerMatches` alimenta overview,
   agregações (agente/mapa/streak/tendência), snapshot de combate, histórico de
-  RR, card e rank (estes três best-effort).
+  RR, card e rank (estes três best-effort). No modo **por ato** (Breakdown)
+  pagina em blocos de 10 até a contagem do ato obtida via `fetchMmrV3`.
 - `getMatchDetail` — cache durável Neon (TTL 24h) → miss: HenrikDev → grava e
   normaliza. Um hit **não** exige `HENRIKDEV_API_KEY`.
 - `getPlayerCard` — best-effort (`null` quando indisponível).
