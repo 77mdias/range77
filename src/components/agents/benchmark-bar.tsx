@@ -53,7 +53,7 @@ export function BenchmarkBar({
         </span>
       </div>
 
-      <div className="relative h-3 w-full overflow-hidden rounded-full bg-line">
+      <div className="relative h-3 w-full overflow-hidden rounded-full bg-surface-highest">
         {eloPercent >= 0 && eloPercent <= 100 ? (
           <span
             aria-hidden="true"
@@ -62,7 +62,7 @@ export function BenchmarkBar({
             style={{ left: `${Math.min(100, Math.max(0, eloPercent))}%` }}
           />
         ) : null}
-        <span
+        <div
           aria-hidden="true"
           data-testid="benchmark-player"
           className={cx('h-full transition-all duration-[var(--duration-slow)]', above ? 'bg-accent' : 'bg-text-primary')}

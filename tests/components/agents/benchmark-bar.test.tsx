@@ -17,11 +17,16 @@ describe('BenchmarkBar', () => {
     );
     expect(html).toContain('data-component="benchmark-bar"');
     expect(html).toContain('data-testid="benchmark-player"');
+    // O fill precisa ser bloco (div), senão inline ignora width/height e some.
+    expect(html).toMatch(/<div[^>]*data-testid="benchmark-player"/);
     expect(html).toContain('width:67%');
     expect(html).toContain('left:52.5%');
     expect(html).toContain('bg-accent');
     expect(html).toContain('1.34 player');
     expect(html).toContain('2.00');
+    // Track neutro (cinza do Stitch `secondary-fixed`) — o fill preto/amarelo precisa contrastar.
+    expect(html).toContain('bg-surface-highest');
+    expect(html).not.toContain('bg-line');
   });
 
   it('abaixo da referência usa fill tinta e chip vermelho', () => {
