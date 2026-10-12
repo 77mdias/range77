@@ -54,7 +54,7 @@ export async function GET(
         404,
         'NO_VALID_MATCHES',
         error.message,
-        'O jogador existe, mas não há partidas competitivas concluídas recentes.',
+        'O jogador existe, mas não há partidas competitivas concluídas.',
       );
     }
     return mapUpstreamError(

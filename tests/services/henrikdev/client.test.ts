@@ -330,3 +330,43 @@ describe('fetchAccount / fetchMmr', () => {
     });
   });
 });
+
+describe('fetchMmrV3', () => {
+  it('busca o MMR v3 (seasonal) com URL codificada e header Authorization', async () => {
+    const mmr = {
+      account: { name: 'Player One', tag: 'BR1' },
+      current: { tier: { id: 18, name: 'Diamond 1' }, rr: 38 },
+      seasonal: [{ season: { id: 's1', short: 'V25A3' }, games: 42, wins: 22 }],
+    };
+    fetchMock.mockResolvedValueOnce(jsonResponse({ status: 200, data: mmr }));
+
+    const result = await makeClient().fetchMmrV3({
+      affinity: 'br',
+      platform: 'pc',
+      name: 'Player One',
+      tag: 'BR1',
+    });
+
+    expect(result).toEqual(mmr);
+    const [url, init] = fetchMock.mock.calls[0] as [URL | Request, RequestInit];
+    expect(String(url)).toBe('https://api.henrikdev.xyz/valorant/v3/mmr/br/pc/Player%20One/BR1');
+    expect(new Headers(init.headers).get('authorization')).toBe('HDEV-test-key');
+  });
+
+  it('payload sem "data" vira erro 502 MALFORMED_RESPONSE', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ status: 200 }));
+    await expect(
+      makeClient().fetchMmrV3({ affinity: 'br', platform: 'pc', name: 'A', tag: 'B' }),
+    ).rejects.toMatchObject({
+      name: 'HenrikDevApiError:502',
+      code: 'MALFORMED_RESPONSE',
+    });
+  });
+
+  it('rejeita "data" que não é objeto (array)', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ status: 200, data: [] }));
+    await expect(
+      makeClient().fetchMmrV3({ affinity: 'br', platform: 'pc', name: 'A', tag: 'B' }),
+    ).rejects.toMatchObject({ name: 'HenrikDevApiError:502' });
+  });
+});

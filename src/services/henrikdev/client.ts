@@ -8,6 +8,8 @@ import type {
   HenrikDevMmrHistoryResponseV2,
   HenrikDevMmrResponseV2,
   HenrikDevMmrV2,
+  HenrikDevMmrV3,
+  HenrikDevMmrV3Response,
 } from '@/contracts/henrikdev';
 
 /**
@@ -120,6 +122,12 @@ export interface HenrikDevClient {
   fetchAccount(params: FetchAccountParams): Promise<HenrikDevAccountV1>;
   /** Ranque atual (v2 mmr): tier, RR dentro do tier e imagens do elo. */
   fetchMmr(params: FetchMmrParams): Promise<HenrikDevMmrV2>;
+  /**
+   * Ranque + histórico POR TEMPORADA (v3 mmr): o `seasonal[]` diz quantas
+   * partidas o jogador tem em cada ato — usado pela amostra dinâmica do
+   * Breakdown. Não substitui o v2 (que ainda fornece as imagens do elo).
+   */
+  fetchMmrV3(params: FetchMmrParams): Promise<HenrikDevMmrV3>;
 }
 
 const DEFAULT_BASE_URL = 'https://api.henrikdev.xyz';
@@ -282,6 +290,25 @@ export function createHenrikDevClient(options: HenrikDevClientOptions): HenrikDe
         throw new HenrikDevApiError(
           502,
           'Resposta malformada da HenrikDev: MMR ausente em "data"',
+          'MALFORMED_RESPONSE',
+        );
+      }
+      return mmr;
+    },
+
+    async fetchMmrV3(params) {
+      const url = new URL(
+        `${baseUrl}/valorant/v3/mmr/${params.affinity}/${params.platform}` +
+          `/${encodeURIComponent(params.name)}/${encodeURIComponent(params.tag)}`,
+      );
+
+      const parsed = await requestJson(url);
+      const body = parsed as HenrikDevMmrV3Response;
+      const mmr = body?.data;
+      if (mmr === null || typeof mmr !== 'object' || Array.isArray(mmr)) {
+        throw new HenrikDevApiError(
+          502,
+          'Resposta malformada da HenrikDev: MMR v3 ausente em "data"',
           'MALFORMED_RESPONSE',
         );
       }

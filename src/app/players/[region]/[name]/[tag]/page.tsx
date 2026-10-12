@@ -106,7 +106,7 @@ async function PlayerProfileData({
             error: {
               code: 'NO_VALID_MATCHES',
               message: error.message,
-              hint: 'O jogador existe, mas não há partidas competitivas concluídas recentes.',
+              hint: 'O jogador existe, mas não há partidas competitivas concluídas.',
             },
           }}
         />

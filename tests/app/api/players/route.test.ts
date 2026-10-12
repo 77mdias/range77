@@ -58,12 +58,14 @@ describe('GET /api/players/[region]/[name]/[tag]', () => {
 
     expect(response.status).toBe(200);
     expect(body.player.region).toBe('br');
-    expect(vi.mocked(buildPlayerCombatInsight)).toHaveBeenCalledWith({
-      region: 'br',
-      name: 'Player One',
-      tag: 'BR1',
-      size: 5,
-    });
+    expect(vi.mocked(buildPlayerCombatInsight)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        region: 'br',
+        name: 'Player One',
+        tag: 'BR1',
+        size: 5,
+      }),
+    );
   });
 
   it('respeita ?size= válido (1–10) e repassa ao serviço', async () => {

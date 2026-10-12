@@ -8,6 +8,10 @@ import type {
   StreakSummary,
   TrendSummary,
 } from '@/contracts/tracker';
+import {
+  type ActSampleOptions,
+  resolveActMatchSample,
+} from '@/services/analytics/act-window';
 import { buildRrHistory } from '@/services/analytics/rr-trend';
 import { buildTrackerAggregations } from '@/services/analytics/tracker-aggregations';
 import {
@@ -33,9 +37,10 @@ import {
 } from '@/lib/db/combat-snapshot-store';
 
 /**
- * PASSO 3 — IMPLEMENTAÇÃO: visão geral do jogador em UM fetch.
+ * PASSO 3 — IMPLEMENTAÇÃO: visão geral do jogador em UM fetch (ou, no modo
+ * "por ato" do Breakdown, em páginas de 10).
  *
- * Busca a amostra de partidas uma única vez e deriva, do MESMO payload:
+ * Busca a amostra de partidas e deriva, do MESMO payload:
  *   - o envelope de coaching existente (3 camadas + avaliação);
  *   - o histórico normalizado (MatchSummary[]);
  *   - agregações por agente/mapa, streaks e tendência de ACS.
@@ -72,10 +77,20 @@ export interface BuildPlayerOverviewParams {
   readonly name: string;
   readonly tag: string;
   readonly size?: number;
+  /**
+   * Amostra dinâmica por ATO (tela Breakdown): resolve quantas partidas buscar
+   * a partir do MMR v3 (`seasonal[].games` do ato da partida mais recente),
+   * com teto e fallback. Tem precedência sobre `size` e pagina a HenrikDev
+   * (máx. 10 por chamada).
+   */
+  readonly actSample?: ActSampleOptions;
   /** Client injetado (testes). Sem ele, cria um com HENRIKDEV_API_KEY do env. */
   readonly client?: HenrikDevClient;
   readonly snapshotStore?: CombatSnapshotStore | null;
 }
+
+/** Tamanho de página da HenrikDev v4: o endpoint devolve no máx. 10 por chamada. */
+export const MATCHES_PAGE_SIZE = 10;
 
 /**
  * Busca best-effort do histórico de MMR (v2 mmr-history). É COMPLEMENTAR:
@@ -130,6 +145,76 @@ async function loadRank(
   }
 }
 
+/** Temporadas do MMR v3 (`seasonal`) — best-effort: falha → `null`. */
+async function loadSeasonalMmr(
+  client: HenrikDevClient,
+  region: string,
+  name: string,
+  tag: string,
+) {
+  try {
+    const mmr = await client.fetchMmrV3({
+      affinity: region.toLowerCase(),
+      platform: 'pc',
+      name,
+      tag,
+    });
+    return mmr.seasonal ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Amostra "por ato" do Breakdown. Busca a 1ª página, deriva o ATO da partida
+ * mais recente e quantas partidas o jogador tem nele (MMR v3 `seasonal`) e
+ * pagina o restante — a HenrikDev v4 devolve no máximo 10 por chamada. Sem
+ * contagem confiável, cai no fallback (ex.: 15 partidas mais recentes).
+ */
+async function loadActSampleMatches(
+  client: HenrikDevClient,
+  region: string,
+  name: string,
+  tag: string,
+  options: ActSampleOptions,
+): Promise<readonly HenrikDevMatchV4[]> {
+  const base = {
+    affinity: region.toLowerCase(),
+    platform: 'pc',
+    name,
+    tag,
+    mode: COMPETITIVE_QUEUE_ID,
+  };
+
+  const firstPage = await client.fetchPlayerMatches({
+    ...base,
+    size: MATCHES_PAGE_SIZE,
+    start: 0,
+  });
+  if (firstPage.length === 0) {
+    return firstPage;
+  }
+
+  const seasonal = await loadSeasonalMmr(client, region, name, tag);
+  const seasonId = firstPage[0]?.metadata?.season?.id ?? null;
+  const target = resolveActMatchSample(seasonId, seasonal, options);
+
+  const collected: HenrikDevMatchV4[] = [...firstPage];
+  let lastPageLength = firstPage.length;
+  while (collected.length < target && lastPageLength === MATCHES_PAGE_SIZE) {
+    const remaining = target - collected.length;
+    const page = await client.fetchPlayerMatches({
+      ...base,
+      size: Math.min(MATCHES_PAGE_SIZE, remaining),
+      start: collected.length,
+    });
+    collected.push(...page);
+    lastPageLength = page.length;
+  }
+
+  return collected.slice(0, target);
+}
+
 export async function buildPlayerOverview(
   params: BuildPlayerOverviewParams,
 ): Promise<PlayerOverview> {
@@ -144,23 +229,36 @@ export async function buildPlayerOverview(
     params.client ??
     createHenrikDevClient({ apiKey: requireEnv(loadAppEnv(), 'HENRIKDEV_API_KEY') });
 
-  const rawMatches: readonly HenrikDevMatchV4[] = await client.fetchPlayerMatches({
-    affinity: region.toLowerCase(),
-    platform: 'pc',
-    name,
-    tag,
-    mode: COMPETITIVE_QUEUE_ID,
-    size,
-  });
+  const rawMatches: readonly HenrikDevMatchV4[] =
+    params.actSample !== undefined
+      ? await loadActSampleMatches(client, region, name, tag, params.actSample)
+      : await client.fetchPlayerMatches({
+          affinity: region.toLowerCase(),
+          platform: 'pc',
+          name,
+          tag,
+          mode: COMPETITIVE_QUEUE_ID,
+          size,
+        });
+
+  // O envelope de combate/snapshot fica na janela padrão (5) mesmo no modo por
+  // ato: a tela Breakdown exibe só as PARTIDAS (janela maior), e manter o
+  // snapshot consistente com o perfil evita "ruído" na evolução (`/history`).
+  // No modo fixo preserva o `size` pedido (comportamento histórico).
+  const combatMatches =
+    params.actSample !== undefined
+      ? rawMatches.slice(0, DEFAULT_MATCH_SAMPLE_SIZE)
+      : rawMatches;
+  const combatSampleSize = params.actSample !== undefined ? combatMatches.length : size;
 
   // Combate (com write-through de snapshot), MMR history, cartão da conta e
   // ranque atual são independentes entre si — rodam em paralelo.
   const [combat, rrHistory, cardSrc, rank] = await Promise.all([
-    buildCombatInsightFromMatches(rawMatches, {
+    buildCombatInsightFromMatches(combatMatches, {
       region,
       name,
       tag,
-      size,
+      size: combatSampleSize,
       snapshotStore: store,
     }),
     loadRrHistory(client, region, name, tag),

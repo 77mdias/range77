@@ -57,12 +57,14 @@ describe('GET /api/players/[region]/[name]/[tag]/overview', () => {
 
     expect(response.status).toBe(200);
     expect(body.player.region).toBe('br');
-    expect(vi.mocked(buildPlayerOverview)).toHaveBeenCalledWith({
-      region: 'br',
-      name: 'Player One',
-      tag: 'BR1',
-      size: 5,
-    });
+    expect(vi.mocked(buildPlayerOverview)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        region: 'br',
+        name: 'Player One',
+        tag: 'BR1',
+        size: 5,
+      }),
+    );
   });
 
   it('respeita ?size= válido', async () => {

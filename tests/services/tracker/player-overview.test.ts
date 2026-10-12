@@ -83,6 +83,7 @@ const makeClient = (
     images: { small: 'https://media/rank-small.png' },
     ranking_in_tier: 84,
   },
+  mmrV3: unknown | Error = { seasonal: [{ season: { id: 's1', short: 'V25A3' }, games: 8 }] },
 ) => ({
   fetchPlayerMatches: vi.fn(async () => {
     if (result instanceof Error) {
@@ -108,6 +109,36 @@ const makeClient = (
       throw currentMmr;
     }
     return currentMmr;
+  }),
+  fetchMmrV3: vi.fn(async () => {
+    if (mmrV3 instanceof Error) {
+      throw mmrV3;
+    }
+    return mmrV3;
+  }),
+});
+
+/**
+ * Client paginado: respeita `start`/`size` como a HenrikDev v4 (páginas de
+ * até 10). Usado para validar o modo "por ato".
+ */
+const makePagedClient = (all: readonly HenrikDevMatchV4[], mmrV3: unknown | Error) => ({
+  fetchPlayerMatches: vi.fn(async (params: { readonly start?: number; readonly size?: number }) => {
+    const start = params.start ?? 0;
+    const size = params.size ?? 10;
+    return all.slice(start, start + size);
+  }),
+  fetchMatchById: vi.fn(),
+  fetchMmrHistory: vi.fn(async () => []),
+  fetchAccount: vi.fn(async () => null),
+  fetchMmr: vi.fn(async () => {
+    throw new Error('fetchMmr não usado neste fluxo');
+  }),
+  fetchMmrV3: vi.fn(async () => {
+    if (mmrV3 instanceof Error) {
+      throw mmrV3;
+    }
+    return mmrV3;
   }),
 });
 
@@ -229,5 +260,216 @@ describe('buildPlayerOverview', () => {
         snapshotStore: null,
       }),
     ).rejects.toBeInstanceOf(PlayerNoMatchesError);
+  });
+});
+
+describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
+  const ACT_OPTS = { cap: 30, fallback: 15 };
+
+  /** N partidas competitivas válidas (ids/timestamps únicos, todas no ato s1). */
+  const makeRun = (count: number): HenrikDevMatchV4[] =>
+    Array.from({ length: count }, (_, index) =>
+      makeMatch({
+        id: `m-${String(index).padStart(2, '0')}`,
+        map: 'Ascent',
+        agent: 'Jett',
+        startedAt: new Date(1_800_000_000_000 - index * 60_000).toISOString(),
+        result: index % 2 === 0 ? 'win' : 'loss',
+        score: 4000,
+      }),
+    );
+
+  const seasonal = (games: number, id = 's1') => ({
+    seasonal: [{ season: { id, short: 'V25A3' }, games }],
+  });
+
+  it('pagina em blocos de 10 até a contagem de partidas do ato (mmr v3)', async () => {
+    const client = makePagedClient(makeRun(25), seasonal(25));
+
+    const overview = await buildPlayerOverview({
+      region: 'BR',
+      name: 'Player',
+      tag: 'BR1',
+      actSample: ACT_OPTS,
+      client: client as never,
+      snapshotStore: null,
+    });
+
+    expect(overview.matches).toHaveLength(25);
+    expect(client.fetchPlayerMatches).toHaveBeenCalledTimes(3);
+    expect(client.fetchPlayerMatches).toHaveBeenNthCalledWith(1, {
+      affinity: 'br',
+      platform: 'pc',
+      name: 'Player',
+      tag: 'BR1',
+      mode: 'competitive',
+      size: 10,
+      start: 0,
+    });
+    expect(client.fetchPlayerMatches).toHaveBeenNthCalledWith(2, {
+      affinity: 'br',
+      platform: 'pc',
+      name: 'Player',
+      tag: 'BR1',
+      mode: 'competitive',
+      size: 10,
+      start: 10,
+    });
+    expect(client.fetchPlayerMatches).toHaveBeenNthCalledWith(3, {
+      affinity: 'br',
+      platform: 'pc',
+      name: 'Player',
+      tag: 'BR1',
+      mode: 'competitive',
+      size: 5,
+      start: 20,
+    });
+    expect(client.fetchMmrV3).toHaveBeenCalledWith({
+      affinity: 'br',
+      platform: 'pc',
+      name: 'Player',
+      tag: 'BR1',
+    });
+  });
+
+  it('aplica o teto de 30 mesmo com mais partidas no ato', async () => {
+    const client = makePagedClient(makeRun(40), seasonal(40));
+
+    const overview = await buildPlayerOverview({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      actSample: ACT_OPTS,
+      client: client as never,
+      snapshotStore: null,
+    });
+
+    expect(overview.matches).toHaveLength(30);
+    expect(client.fetchPlayerMatches).toHaveBeenCalledTimes(3);
+    expect(client.fetchPlayerMatches).toHaveBeenNthCalledWith(3, {
+      affinity: 'br',
+      platform: 'pc',
+      name: 'Player',
+      tag: 'BR1',
+      mode: 'competitive',
+      size: 10,
+      start: 20,
+    });
+  });
+
+  it('ato com poucas partidas: só a 1ª página, cortada para a contagem', async () => {
+    const client = makePagedClient(makeRun(20), seasonal(6));
+
+    const overview = await buildPlayerOverview({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      actSample: ACT_OPTS,
+      client: client as never,
+      snapshotStore: null,
+    });
+
+    expect(overview.matches).toHaveLength(6);
+    expect(client.fetchPlayerMatches).toHaveBeenCalledTimes(1);
+    expect(client.fetchPlayerMatches).toHaveBeenCalledWith({
+      affinity: 'br',
+      platform: 'pc',
+      name: 'Player',
+      tag: 'BR1',
+      mode: 'competitive',
+      size: 10,
+      start: 0,
+    });
+  });
+
+  it('mmr v3 indisponível → fallback de 15 partidas recentes', async () => {
+    const client = makePagedClient(makeRun(20), new Error('mmr v3 off'));
+
+    const overview = await buildPlayerOverview({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      actSample: ACT_OPTS,
+      client: client as never,
+      snapshotStore: null,
+    });
+
+    expect(overview.matches).toHaveLength(15);
+    expect(client.fetchPlayerMatches).toHaveBeenCalledTimes(2);
+    expect(client.fetchPlayerMatches).toHaveBeenNthCalledWith(2, {
+      affinity: 'br',
+      platform: 'pc',
+      name: 'Player',
+      tag: 'BR1',
+      mode: 'competitive',
+      size: 5,
+      start: 10,
+    });
+  });
+
+  it('ato mais recente sem jogos → fallback de 15', async () => {
+    const client = makePagedClient(makeRun(20), seasonal(0));
+
+    const overview = await buildPlayerOverview({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      actSample: ACT_OPTS,
+      client: client as never,
+      snapshotStore: null,
+    });
+
+    expect(overview.matches).toHaveLength(15);
+  });
+
+  it('mmr v3 sem "seasonal" e ato sem entrada casada → fallback de 15', async () => {
+    const noSeasonal = makePagedClient(makeRun(20), {});
+    const otherAct = makePagedClient(makeRun(20), seasonal(40, 'sX'));
+
+    for (const client of [noSeasonal, otherAct]) {
+      const overview = await buildPlayerOverview({
+        region: 'br',
+        name: 'Player',
+        tag: 'BR1',
+        actSample: ACT_OPTS,
+        client: client as never,
+        snapshotStore: null,
+      });
+      expect(overview.matches).toHaveLength(15);
+    }
+  });
+
+  it('sem partidas no ato → PlayerNoMatchesError sem consultar o mmr v3', async () => {
+    const client = makePagedClient([], seasonal(25));
+
+    await expect(
+      buildPlayerOverview({
+        region: 'br',
+        name: 'Player',
+        tag: 'BR1',
+        actSample: ACT_OPTS,
+        client: client as never,
+        snapshotStore: null,
+      }),
+    ).rejects.toBeInstanceOf(PlayerNoMatchesError);
+    expect(client.fetchMmrV3).not.toHaveBeenCalled();
+  });
+
+  it('mantém o snapshot de combate na janela padrão (5) mesmo com amostra maior', async () => {
+    const client = makePagedClient(makeRun(25), seasonal(25));
+    const store = makeStore();
+
+    const overview = await buildPlayerOverview({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      actSample: ACT_OPTS,
+      client: client as never,
+      snapshotStore: store as CombatSnapshotStore,
+    });
+
+    expect(overview.matches).toHaveLength(25);
+    expect(store.insertSnapshot).toHaveBeenCalledTimes(1);
+    expect(store.insertSnapshot).toHaveBeenCalledWith(expect.objectContaining({ sampleSize: 5 }));
   });
 });

@@ -34,7 +34,7 @@ import {
 
 export class PlayerNoMatchesError extends Error {
   constructor(
-    message = 'Nenhuma partida competitiva válida encontrada para este jogador no histórico recente.',
+    message = 'Nenhuma partida competitiva válida encontrada para este jogador.',
   ) {
     super(message);
     this.name = 'PlayerNoMatchesError';

@@ -4,6 +4,7 @@ import type { ApiErrorBody } from '@/contracts/coach';
 import { hasErrorName } from '@/lib/http/api-error';
 import { parsePlayerRouteParams } from '@/lib/validation/player-params';
 import { buildPlayerCombatInsight } from '@/services/coaching/player-combat';
+import { createCachedHenrikDevClient } from '@/services/henrikdev/cached-client';
 import { henrikDevErrorStatus } from '@/services/henrikdev/client';
 
 /**
@@ -11,8 +12,9 @@ import { henrikDevErrorStatus } from '@/services/henrikdev/client';
  *
  * Next 16 (App Router): `params` é uma Promise e DEVE ser aguardada.
  * Cache Components: o envelope é cacheado via helper `'use cache'` com
- * `cacheLife`/`cacheTag` (perfil stale 60s / revalidate 300s / expire 1h),
- * protegendo nossos limites da HenrikDev contra o tráfego do chatbot.
+ * `cacheLife`/`cacheTag` (stale 5min / revalidate 25min / expire 6h),
+ * protegendo nossos limites da HenrikDev contra o tráfego do chatbot. O client
+ * injetado adiciona o cache POR RECURSO (`henrikdev:*`).
  */
 
 const MIN_SAMPLE = 1;
@@ -31,9 +33,15 @@ async function getCachedInsight(
   size: number,
 ) {
   'use cache';
-  cacheLife({ stale: 60, revalidate: 300, expire: 3600 });
+  cacheLife({ stale: 300, revalidate: 1500, expire: 21600 });
   cacheTag(`player-combat:${region}:${name.toLowerCase()}:${tag.toLowerCase()}:${size}`);
-  return buildPlayerCombatInsight({ region, name, tag, size });
+  return buildPlayerCombatInsight({
+    region,
+    name,
+    tag,
+    size,
+    client: createCachedHenrikDevClient(),
+  });
 }
 
 function errorResponse(
@@ -113,7 +121,7 @@ function describeError(error: unknown): MappedErrorDescriptor {
       status: 404,
       code: 'NO_VALID_MATCHES',
       message: error.message,
-      hint: 'O jogador existe, mas não há partidas competitivas concluídas recentes.',
+      hint: 'O jogador existe, mas não há partidas competitivas concluídas.',
     };
   }
 

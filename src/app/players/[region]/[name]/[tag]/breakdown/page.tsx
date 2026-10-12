@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import type { ReactNode } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ui/states';
-import { getCachedPlayerOverview } from '@/lib/cache/tracker';
+import { getCachedBreakdownOverview } from '@/lib/cache/tracker';
 import {
   describeUpstreamError,
   hasErrorName,
@@ -15,12 +15,11 @@ import { BreakdownView } from '../breakdown-view';
  * PÁGINA: /players/[region]/[name]/[tag]/breakdown
  *
  * Tela "Partidas & Breakdown" do Stitch: filtros reais, matriz de agentes,
- * map pool e histórico completo. Usa a MESMA janela de dados do perfil,
- * porém com amostra maior (20 partidas) para as agregações por agente/mapa.
- * Cache Data + `<Suspense>` (regra do Cache Components). Next 16: `await`.
+ * map pool e histórico completo. Usa a MESMA janela de dados do perfil, porém
+ * com amostra dinâmica POR ATO (até 30 partidas, fallback 15 do ato anterior)
+ * para as agregações por agente/mapa e o histórico. Cache Data + `<Suspense>`
+ * (regra do Cache Components). Next 16: `await`.
  */
-
-const BREAKDOWN_SAMPLE_SIZE = 20;
 
 // Cache Components: `params` assíncrono → render bloqueante.
 export const instant = false;
@@ -58,7 +57,7 @@ async function BreakdownData({
   readonly tag: string;
 }) {
   try {
-    const overview = await getCachedPlayerOverview(region, name, tag, BREAKDOWN_SAMPLE_SIZE);
+    const overview = await getCachedBreakdownOverview(region, name, tag);
     return <BreakdownView overview={overview} />;
   } catch (error) {
     if (hasErrorName(error, 'PlayerNoMatchesError')) {
@@ -68,7 +67,7 @@ async function BreakdownData({
             error: {
               code: 'NO_VALID_MATCHES',
               message: error.message,
-              hint: 'O jogador existe, mas não há partidas competitivas concluídas recentes.',
+              hint: 'O jogador existe, mas não há partidas competitivas concluídas.',
             },
           }}
         />

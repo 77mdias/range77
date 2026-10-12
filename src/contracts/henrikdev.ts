@@ -297,3 +297,42 @@ export interface HenrikDevMmrResponseV2 {
   readonly status?: number;
   readonly data?: HenrikDevMmrV2;
 }
+
+/* ============================================================================
+ * RAW MMR v3 — espelho de `/valorant/v3/mmr/*`
+ * (fonte: docs.henrikdev.xyz, OpenAPI 4.6.0 — get-mmr-by-name-v3).
+ * Traz, além do ranque atual, a lista `seasonal`: jogos/vitórias do jogador
+ * POR ATO — base para a amostra do Breakdown ("quantas partidas no ato").
+ * ==========================================================================*/
+
+/** Uma temporada do MMR v3 (`games` = partidas do jogador no ato). */
+export interface HenrikDevMmrV3SeasonEntry {
+  readonly season?: HenrikDevSeasonV4;
+  readonly wins?: number;
+  readonly games?: number;
+  readonly end_tier?: HenrikDevTierV4;
+  readonly ranking_schema?: string;
+}
+
+/** Ranque atual no MMR v3 (tier + RR + elo). */
+export interface HenrikDevMmrV3Current {
+  readonly tier?: HenrikDevTierV4;
+  readonly rr?: number;
+  readonly last_change?: number;
+  readonly elo?: number;
+}
+
+export interface HenrikDevMmrV3 {
+  readonly account?: {
+    readonly name?: string;
+    readonly tag?: string;
+    readonly puuid?: string;
+  };
+  readonly current?: HenrikDevMmrV3Current;
+  readonly seasonal?: readonly HenrikDevMmrV3SeasonEntry[];
+}
+
+export interface HenrikDevMmrV3Response {
+  readonly status?: number;
+  readonly data?: HenrikDevMmrV3;
+}
