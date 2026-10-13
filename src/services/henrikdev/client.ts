@@ -278,8 +278,11 @@ export function createHenrikDevClient(options: HenrikDevClientOptions): HenrikDe
     },
 
     async fetchMmr(params) {
+      // v2/mmr NÃO aceita o segmento de plataforma (diferente de v3/mmr e de
+      // v2/mmr-history): com `/pc/` a HenrikDev responde 404 "Route not found",
+      // o que zerava o rank de todo perfil.
       const url = new URL(
-        `${baseUrl}/valorant/v2/mmr/${params.affinity}/${params.platform}` +
+        `${baseUrl}/valorant/v2/mmr/${params.affinity}` +
           `/${encodeURIComponent(params.name)}/${encodeURIComponent(params.tag)}`,
       );
 

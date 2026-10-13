@@ -284,7 +284,24 @@ export interface HenrikDevMmrImagesV2 {
   readonly triangle_down?: string;
 }
 
+/**
+ * Bloco `current_data` do v2/mmr — onde o ranque ATUAL realmente vive
+ * (`tier`, `ranking_in_tier` e as imagens do elo). Confirmado na resposta
+ * ao vivo da HenrikDev.
+ */
+export interface HenrikDevMmrCurrentDataV2 {
+  readonly currenttier?: number;
+  readonly currenttierpatched?: string;
+  readonly images?: HenrikDevMmrImagesV2;
+  readonly ranking_in_tier?: number;
+  readonly elo?: number;
+  readonly mmr_change_to_last_game?: number;
+}
+
 export interface HenrikDevMmrV2 {
+  /** Formato real do v2/mmr (resposta aninha o ranque em `current_data`). */
+  readonly current_data?: HenrikDevMmrCurrentDataV2;
+  // Campos no topo: tolerados por retrocompatibilidade com respostas antigas.
   readonly currenttier?: number;
   readonly currenttierpatched?: string;
   readonly images?: HenrikDevMmrImagesV2;

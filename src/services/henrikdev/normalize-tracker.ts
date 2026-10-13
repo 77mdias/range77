@@ -364,9 +364,12 @@ export function resolveRankSummary(mmr: HenrikDevMmrV2 | null | undefined): Play
   if (mmr === null || mmr === undefined) {
     return { tier: null, imageSrc: null, rrInTier: null };
   }
-  const tier = typeof mmr.currenttierpatched === 'string' ? mmr.currenttierpatched : null;
-  const imageSrc = mmr.images?.small ?? mmr.images?.large ?? mmr.images?.triangle_down ?? null;
-  const rrInTier = typeof mmr.ranking_in_tier === 'number' ? mmr.ranking_in_tier : null;
+  // O v2/mmr aninha o ranque atual em `current_data`; respostas achatadas
+  // (formato antigo) continuam aceitas como fallback.
+  const current = mmr.current_data ?? mmr;
+  const tier = typeof current.currenttierpatched === 'string' ? current.currenttierpatched : null;
+  const imageSrc = current.images?.small ?? current.images?.large ?? current.images?.triangle_down ?? null;
+  const rrInTier = typeof current.ranking_in_tier === 'number' ? current.ranking_in_tier : null;
   return { tier, imageSrc, rrInTier };
 }
 

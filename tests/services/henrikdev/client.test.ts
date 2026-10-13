@@ -291,12 +291,14 @@ describe('fetchAccount / fetchMmr', () => {
     expect((init.headers as Record<string, string>).Authorization).toBe('HDEV-test-key');
   });
 
-  it('busca o MMR atual (v2) com affinity/platform e valida "data"', async () => {
+  it('busca o MMR atual (v2) por região, sem plataforma, e valida "data"', async () => {
     const mmr = {
-      currenttier: 21,
-      currenttierpatched: 'Immortal 1',
-      images: { small: 'https://media/rank-small.png' },
-      ranking_in_tier: 84,
+      current_data: {
+        currenttier: 21,
+        currenttierpatched: 'Immortal 1',
+        images: { small: 'https://media/rank-small.png' },
+        ranking_in_tier: 84,
+      },
     };
     fetchMock.mockResolvedValueOnce(jsonResponse({ status: 200, data: mmr }));
 
@@ -304,7 +306,7 @@ describe('fetchAccount / fetchMmr', () => {
 
     expect(result).toEqual(mmr);
     const [url] = fetchMock.mock.calls[0] as [URL | Request, RequestInit];
-    expect(String(url)).toBe('https://api.henrikdev.xyz/valorant/v2/mmr/br/pc/Player%20One/BR1');
+    expect(String(url)).toBe('https://api.henrikdev.xyz/valorant/v2/mmr/br/Player%20One/BR1');
   });
 
   it('payload sem "data" vira erro 502 MALFORMED_RESPONSE', async () => {

@@ -79,9 +79,11 @@ const makeClient = (
   mmr: readonly unknown[] | Error = mmrHistory,
   account: unknown | Error = { card: { large: 'https://media/card-large.png' } },
   currentMmr: unknown | Error = {
-    currenttierpatched: 'Ascendant 3',
-    images: { small: 'https://media/rank-small.png' },
-    ranking_in_tier: 84,
+    current_data: {
+      currenttierpatched: 'Ascendant 3',
+      images: { small: 'https://media/rank-small.png' },
+      ranking_in_tier: 84,
+    },
   },
   mmrV3: unknown | Error = { seasonal: [{ season: { id: 's1', short: 'V25A3' }, games: 8 }] },
 ) => ({

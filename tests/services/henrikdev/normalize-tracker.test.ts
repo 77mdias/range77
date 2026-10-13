@@ -11,6 +11,7 @@ import {
   normalizeMatchToSummary,
   normalizeMatchesToSummaries,
   resolveAccountLevel,
+  resolveRankSummary,
   resolveWinningTeamId,
 } from '@/services/henrikdev/normalize-tracker';
 
@@ -463,5 +464,33 @@ describe('kills / detail', () => {
       gameLengthMs: 0,
       isCompleted: true,
     });
+  });
+});
+
+describe('resolveRankSummary (v2/mmr)', () => {
+  it('lê o ranque aninhado em `current_data` (formato real da API)', () => {
+    expect(
+      resolveRankSummary({
+        current_data: {
+          currenttierpatched: 'Ascendant 1',
+          images: { small: 'https://media/small.png' },
+          ranking_in_tier: 30,
+        },
+      }),
+    ).toEqual({ tier: 'Ascendant 1', imageSrc: 'https://media/small.png', rrInTier: 30 });
+  });
+
+  it('aceita o formato achatado (retrocompatibilidade)', () => {
+    expect(
+      resolveRankSummary({
+        currenttierpatched: 'Diamond 2',
+        images: { large: 'https://media/large.png' },
+        ranking_in_tier: 10,
+      }),
+    ).toEqual({ tier: 'Diamond 2', imageSrc: 'https://media/large.png', rrInTier: 10 });
+  });
+
+  it('sem MMR → campos nulos', () => {
+    expect(resolveRankSummary(undefined)).toEqual({ tier: null, imageSrc: null, rrInTier: null });
   });
 });
