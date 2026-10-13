@@ -104,6 +104,11 @@ describe('MatchView', () => {
     expect(html).toContain('Time adversário');
     // Metades do time do jogador: ATK 1-1 (rounds 1 e 2), DEF 0-0.
     expect(html).toContain('DEF: 0-0 • ATK: 1-1');
+    // Splits por metade (HALF-ONE 1–12 / HALF-TWO 13+): rounds 1 e 2.
+    expect(html).toContain('data-half-splits');
+    expect(html).toContain('Half-One');
+    expect(html).toContain('Half-Two');
+    expect(html).toContain('1-1');
     expect(html).toContain('/assets/images/cards/player-card.png');
   });
 

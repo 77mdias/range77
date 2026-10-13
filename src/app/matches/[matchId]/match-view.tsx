@@ -14,6 +14,7 @@ import {
   aggregateWeaponKills,
   computeAdr,
   computeFirstBloods,
+  computeHalfSplits,
   computeMatchHalves,
   computeRankRange,
   computeRoundTimeline,
@@ -31,8 +32,9 @@ import { formatRelativeTime } from '@/lib/format/relative-time';
  * informado), tabela telemétrica com faixa de MMR e FK/FD/KAST computados dos
  * eventos, timeline de rounds classificada (tipo de encerramento, lado,
  * pistolas e placar progressivo), MVP da partida (maior ACS) com Rating
- * ValCoach/card do jogador, metades DEF/ATK do time do jogador buscado e
- * eficiência de arsenal do jogador (ou da partida, sem perspectiva). A
+ * ValCoach/card do jogador, metades DEF/ATK e splits HALF-ONE/HALF-TWO do
+ * time do jogador buscado e eficiência de arsenal do jogador (ou da partida,
+ * sem perspectiva). A
  * HenrikDev v4 não fornece ECON rating nem dano por arma — esses campos ficam
  * `—`/omitidos, nunca inventados. Separada da página assíncrona para ser
  * testável com `renderToStaticMarkup`.
@@ -155,6 +157,13 @@ export function MatchView({ detail, viewer, mvpCardSrc }: MatchViewProps) {
       ? undefined
       : `DEF: ${halves.defense.won}-${halves.defense.lost} • ATK: ${halves.attack.won}-${halves.attack.lost}`;
 
+  // Rounds ganhos/perdidos por metade (HALF-ONE 1–12 / HALF-TWO 13+) do time do
+  // jogador buscado — sempre computável do roundNumber; sem perspectiva omitida.
+  const halfSplits =
+    hasPerspective && perspectiveTeamId !== undefined
+      ? computeHalfSplits(detail.rounds, perspectiveTeamId)
+      : null;
+
   const roundsTotal = detail.rounds.length;
   const firstBloods = computeFirstBloods(detail.kills);
   const mvp = selectMatchMvp(detail.scoreboard);
@@ -255,6 +264,7 @@ export function MatchView({ detail, viewer, mvpCardSrc }: MatchViewProps) {
               scoreEnemy={themScore}
               map={detail.map}
               halves={halvesLabel}
+              halfSplits={halfSplits}
               mapImageSrc={mapMinimapSrc(detail.map) ?? undefined}
             />
           </div>

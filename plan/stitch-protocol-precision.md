@@ -170,6 +170,16 @@ Componentes que **já existem** mas só aparecem no showcase: `MvpCallout`, `Rou
 
 **DoD Fase A:** `/matches/[matchId]` fiel ao layout do Stitch, com `—`/omissões nos dados ausentes; tsc + testes + cobertura analytics 100%.
 
+> **Atualização (detalhe de partida):** além do `DEF`/`ATK` já existente, o
+> `ScoreBanner` ganhou os splits **HALF-ONE** (rounds 1–12) e **HALF-TWO**
+> (rounds 13+, OT incluído), alinhados à direita — sempre computáveis do
+> `roundNumber` (`computeHalfSplits`, sem inferir lados; sem perspectiva →
+> omitidos). As colunas de stats da tabela telemétrica (**ACS, K/D/A, +/-, ADR,
+> HS%, KAST%, FK/FD, ECON**) passaram a ser **ordenáveis por clique**: 1º
+> melhores→piores, 2º piores→melhores, 3º automático (ordem original); linhas
+> sem dado sempre no fim. Lógica pura em `services/analytics/scoreboard-sort.ts`
+> (100% coberto).
+
 ---
 
 ## FASE B — Agentes & Mapas (seções do perfil)

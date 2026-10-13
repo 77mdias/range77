@@ -81,6 +81,17 @@ export interface MatchHalves {
   readonly attack: { readonly won: number; readonly lost: number };
 }
 
+/**
+ * Vitórias/derrotas do time por METADE regulamentar (HALF-ONE = rounds 1–12;
+ * HALF-TWO = rounds 13+). Derivável do `roundNumber`, sem inferir lados —
+ * por isso é diferente de `MatchHalves` (DEF/ATK). Rounds de overtime entram
+ * na segunda metade; nunca é chutado.
+ */
+export interface MatchHalfSplits {
+  readonly first: { readonly won: number; readonly lost: number };
+  readonly second: { readonly won: number; readonly lost: number };
+}
+
 /** Linha do histórico de partidas do jogador. */
 export interface MatchSummary {
   readonly matchId: string;

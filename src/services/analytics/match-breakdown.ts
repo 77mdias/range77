@@ -1,4 +1,10 @@
-import type { KillEvent, MatchHalves, MatchRound, MatchScoreboardRow } from '@/contracts/tracker';
+import type {
+  KillEvent,
+  MatchHalfSplits,
+  MatchHalves,
+  MatchRound,
+  MatchScoreboardRow,
+} from '@/contracts/tracker';
 import { formatRankChip } from '@/lib/format/rank';
 import { roundTo } from './combat';
 
@@ -255,6 +261,34 @@ export function computeMatchHalves(
   }
 
   return { defense, attack };
+}
+
+/**
+ * Divide os rounds em METADES por `roundNumber` na perspectiva do time pedido:
+ * HALF-ONE = rounds 1–12, HALF-TWO = rounds 13+ (overtime incluído na 2ª).
+ * Diferente de `computeMatchHalves`, não depende de inferir o lado atacante —
+ * é sempre computável a partir do placar de rounds. Lista vazia → `null`.
+ */
+export function computeHalfSplits(
+  rounds: readonly MatchRound[],
+  teamId: string,
+): MatchHalfSplits | null {
+  if (rounds.length === 0) {
+    return null;
+  }
+
+  const first = { won: 0, lost: 0 };
+  const second = { won: 0, lost: 0 };
+  for (const round of rounds) {
+    const half = round.roundNumber <= REGULATION_HALF_ROUNDS ? first : second;
+    if (round.winningTeamId === teamId) {
+      half.won += 1;
+    } else {
+      half.lost += 1;
+    }
+  }
+
+  return { first, second };
 }
 
 /**

@@ -175,4 +175,16 @@ describe('ScoreboardTable', () => {
     );
     expect(html).toContain('text-loss');
   });
+
+  it('cabeçalhos de stats são botões ordenáveis (modo automático por padrão)', () => {
+    const html = renderToStaticMarkup(<ScoreboardTable teams={TEAMS} />);
+    expect(html).toContain('data-sort-key="acs"');
+    expect(html).toContain('data-sort-key="adr"');
+    expect(html).toContain('data-sort-key="econ"');
+    expect(html).toContain('data-sort-mode="auto"');
+    expect(html).toContain('aria-sort="none"');
+    expect(html).toContain('Ordenar por ACS');
+    // Modo automático preserva a ordem original das linhas.
+    expect(html.indexOf('TenZ')).toBeLessThan(html.indexOf('Derke'));
+  });
 });

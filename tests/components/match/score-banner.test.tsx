@@ -28,4 +28,29 @@ describe('ScoreBanner', () => {
     expect(html).toContain('Asc');
     expect(html).toContain('Ascent');
   });
+
+  it('exibe os splits HALF-ONE/HALF-TWO à direita', () => {
+    const html = renderToStaticMarkup(
+      <ScoreBanner
+        result="win"
+        scoreTeam={13}
+        scoreEnemy={9}
+        map="Ascent"
+        halfSplits={{ first: { won: 7, lost: 5 }, second: { won: 6, lost: 4 } }}
+      />,
+    );
+    expect(html).toContain('data-half-splits');
+    expect(html).toContain('Half-One');
+    expect(html).toContain('Half-Two');
+    expect(html).toContain('7-5');
+    expect(html).toContain('6-4');
+  });
+
+  it('omite os splits quando não há metades computáveis', () => {
+    const html = renderToStaticMarkup(
+      <ScoreBanner result="win" scoreTeam={13} scoreEnemy={9} map="Ascent" halfSplits={null} />,
+    );
+    expect(html).not.toContain('data-half-splits');
+    expect(html).not.toContain('Half-One');
+  });
 });

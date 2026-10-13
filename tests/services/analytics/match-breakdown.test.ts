@@ -3,6 +3,7 @@ import {
   aggregateWeaponKills,
   computeAdr,
   computeFirstBloods,
+  computeHalfSplits,
   computeMatchHalves,
   computeRankRange,
   computeRoundTimeline,
@@ -268,6 +269,63 @@ describe('computeMatchHalves', () => {
       overtime.push(round(n, n % 2 === 0 ? 'Red' : 'Blue', n === 1 ? 'Red' : null));
     }
     expect(computeMatchHalves(overtime, 'Red')).toBeNull();
+  });
+});
+
+describe('computeHalfSplits', () => {
+  function round(roundNumber: number, winningTeamId: string): MatchRound {
+    return {
+      roundNumber,
+      winningTeamId,
+      plantSite: null,
+      plantTeamId: null,
+      defused: false,
+    };
+  }
+
+  /** Red vence 1–4 e 13–22; Blue vence o resto (24 rounds regulamentares). */
+  function regulationRounds(): MatchRound[] {
+    const rounds: MatchRound[] = [];
+    for (let n = 1; n <= 24; n += 1) {
+      const redWins = n <= 12 ? n <= 4 : n <= 22;
+      rounds.push(round(n, redWins ? 'Red' : 'Blue'));
+    }
+    return rounds;
+  }
+
+  it('divide os rounds em HALF-ONE (1–12) e HALF-TWO (13–24) na perspectiva do time', () => {
+    const rounds = regulationRounds();
+    expect(computeHalfSplits(rounds, 'Red')).toEqual({
+      first: { won: 4, lost: 8 },
+      second: { won: 10, lost: 2 },
+    });
+    expect(computeHalfSplits(rounds, 'Blue')).toEqual({
+      first: { won: 8, lost: 4 },
+      second: { won: 2, lost: 10 },
+    });
+  });
+
+  it('time que perde tudo devolve 0 vitórias no primeiro half', () => {
+    const rounds = [round(1, 'Blue'), round(2, 'Blue')];
+    expect(computeHalfSplits(rounds, 'Red')).toEqual({
+      first: { won: 0, lost: 2 },
+      second: { won: 0, lost: 0 },
+    });
+  });
+
+  it('inclui os rounds de overtime na segunda metade', () => {
+    const overtime: MatchRound[] = [];
+    for (let n = 1; n <= 25; n += 1) {
+      overtime.push(round(n, n === 13 ? 'Blue' : 'Red'));
+    }
+    expect(computeHalfSplits(overtime, 'Red')).toEqual({
+      first: { won: 12, lost: 0 },
+      second: { won: 12, lost: 1 },
+    });
+  });
+
+  it('lista vazia devolve null', () => {
+    expect(computeHalfSplits([], 'Red')).toBeNull();
   });
 });
 

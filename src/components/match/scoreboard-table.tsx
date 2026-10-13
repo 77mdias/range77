@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -8,6 +11,13 @@ import {
 } from '@/components/ui/table';
 import { formatRankChip } from '@/lib/format/rank';
 import { cx } from '@/lib/cx';
+import {
+  applySortClick,
+  sortScoreboardRows,
+  type ScoreboardSortKey,
+  type ScoreboardSortMode,
+  type ScoreboardSortState,
+} from '@/services/analytics/scoreboard-sort';
 
 /**
  * ScoreboardTable — "tabela telemétrica da partida" (Stitch/match): cabeçalho
@@ -16,6 +26,10 @@ import { cx } from '@/lib/cx';
  * reais. As colunas têm largura FIXA (colgroup + table-fixed) para que os dois
  * times fiquem perfeitamente alinhados entre si. A linha do jogador buscado
  * ganha o badge "VOCÊ" e realce de fundo, como no design.
+ *
+ * As colunas de stats são ORDENÁVEIS (ilha client): 1º clique = melhores→piores,
+ * 2º = piores→melhores, 3º = automático (ordem original). Linhas sem dado vão
+ * sempre ao fim; a derivação mora em `services/analytics/scoreboard-sort`.
  */
 
 export interface ScoreboardPlayer {
@@ -87,12 +101,75 @@ function playerKey(team: ScoreboardTeam, player: ScoreboardPlayer): string {
   return `${team.name}:${player.name}:${player.tag ?? ''}`;
 }
 
+/** Glifo do estado de ordenação (↓ melhores→piores, ↑ piores→melhores, ⇅ off). */
+const SORT_GLYPH: Record<ScoreboardSortMode, string> = {
+  best: '↓',
+  worst: '↑',
+  auto: '⇅',
+};
+
+/** Cabeçalho de coluna clicável: hover + indicador do ciclo de ordenação. */
+function SortableHeader({
+  label,
+  sortKey,
+  state,
+  onSort,
+  numeric = false,
+  center = false,
+}: {
+  readonly label: string;
+  readonly sortKey: ScoreboardSortKey;
+  readonly state: ScoreboardSortState | null;
+  readonly onSort: (key: ScoreboardSortKey) => void;
+  readonly numeric?: boolean;
+  readonly center?: boolean;
+}) {
+  const mode: ScoreboardSortMode =
+    state !== null && state.key === sortKey ? state.mode : 'auto';
+  const active = mode !== 'auto';
+
+  return (
+    <TableHeaderCell
+      numeric={numeric}
+      aria-sort={mode === 'best' ? 'descending' : mode === 'worst' ? 'ascending' : 'none'}
+      className={cx(center && 'text-center')}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        data-sort-key={sortKey}
+        data-sort-mode={mode}
+        aria-label={`Ordenar por ${label}`}
+        className={cx(
+          'inline-flex w-full cursor-pointer items-center gap-1 uppercase transition-colors duration-[var(--duration-fast)]',
+          numeric ? 'justify-end' : center ? 'justify-center' : 'justify-start',
+          'text-inherit hover:text-text-primary',
+          active && 'text-text-primary',
+        )}
+      >
+        <span>{label}</span>
+        <span
+          aria-hidden="true"
+          className={cx('font-hud', active ? 'text-accent-ink' : 'text-text-secondary')}
+        >
+          {SORT_GLYPH[mode]}
+        </span>
+      </button>
+    </TableHeaderCell>
+  );
+}
+
 export function ScoreboardTable({
   teams,
   rankRange,
   ariaLabel,
   className,
 }: ScoreboardTableProps) {
+  const [sort, setSort] = useState<ScoreboardSortState | null>(null);
+  const handleSort = (key: ScoreboardSortKey): void => {
+    setSort((current) => applySortClick(current, key));
+  };
+
   return (
     <div
       data-component="scoreboard-table"
@@ -128,6 +205,10 @@ export function ScoreboardTable({
             : team.won === undefined
               ? ` • ${team.roundsWon} ROUNDS`
               : ` • ${team.won ? 'VENCEDOR' : 'DERROTADO'}: ${team.roundsWon} ROUNDS`;
+        const players =
+          sort === null
+            ? team.players
+            : sortScoreboardRows(team.players, sort.key, sort.mode);
 
         return (
           <section key={team.name} className="mb-4 last:mb-0" data-scoreboard-team={team.name}>
@@ -181,18 +262,42 @@ export function ScoreboardTable({
                 <TableRow>
                   <TableHeaderCell>Jogador &amp; Ranque</TableHeaderCell>
                   <TableHeaderCell>Agente</TableHeaderCell>
-                  <TableHeaderCell numeric>ACS</TableHeaderCell>
-                  <TableHeaderCell className="text-center font-hud">K / D / A</TableHeaderCell>
-                  <TableHeaderCell numeric>+/-</TableHeaderCell>
-                  <TableHeaderCell numeric>ADR</TableHeaderCell>
-                  <TableHeaderCell numeric>HS %</TableHeaderCell>
-                  <TableHeaderCell numeric>KAST %</TableHeaderCell>
-                  <TableHeaderCell numeric>FK / FD</TableHeaderCell>
-                  <TableHeaderCell numeric>ECON</TableHeaderCell>
+                  <SortableHeader label="ACS" sortKey="acs" state={sort} onSort={handleSort} numeric />
+                  <SortableHeader
+                    label="K / D / A"
+                    sortKey="kda"
+                    state={sort}
+                    onSort={handleSort}
+                    center
+                  />
+                  <SortableHeader label="+/-" sortKey="diff" state={sort} onSort={handleSort} numeric />
+                  <SortableHeader label="ADR" sortKey="adr" state={sort} onSort={handleSort} numeric />
+                  <SortableHeader label="HS %" sortKey="hs" state={sort} onSort={handleSort} numeric />
+                  <SortableHeader
+                    label="KAST %"
+                    sortKey="kast"
+                    state={sort}
+                    onSort={handleSort}
+                    numeric
+                  />
+                  <SortableHeader
+                    label="FK / FD"
+                    sortKey="fkfd"
+                    state={sort}
+                    onSort={handleSort}
+                    numeric
+                  />
+                  <SortableHeader
+                    label="ECON"
+                    sortKey="econ"
+                    state={sort}
+                    onSort={handleSort}
+                    numeric
+                  />
                 </TableRow>
               </TableHead>
               <TableBody>
-                {team.players.map((player) => (
+                {players.map((player) => (
                   <TableRow
                     key={playerKey(team, player)}
                     data-scoreboard-player={player.name}
