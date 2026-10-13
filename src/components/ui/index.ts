@@ -35,7 +35,16 @@ export { Skeleton, type SkeletonProps } from './skeleton';
 export { Sparkline, type SparklineProps, type SparklineTrend } from './sparkline';
 export { StatCard, type StatCardProps } from './stat-card';
 export { StatusDot, type StatusDotProps, type StatusDotVariant } from './status-dot';
-export { EmptyState, type EmptyStateProps, ErrorState, type ErrorStateProps } from './states';
+export {
+  EmptyState,
+  type EmptyStateProps,
+  ErrorState,
+  type ErrorStateProps,
+  RateLimitWait,
+  type RateLimitWaitProps,
+  UpstreamErrorState,
+  type UpstreamErrorStateProps,
+} from './states';
 export { TagLabel, type TagLabelProps, type TagLabelTone } from './tag-label';
 export {
   Table,

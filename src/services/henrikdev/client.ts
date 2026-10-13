@@ -32,13 +32,22 @@ export class HenrikDevApiError extends Error {
     message: string,
     /** Código interno da HenrikDev ou rótulo nosso (NETWORK_ERROR etc.). */
     readonly code?: number | string,
+    /**
+     * Segundos até a cota reabrir (header `x-ratelimit-reset`), presente
+     * sobretudo no 429. Alimenta a tela de espera (`RateLimitWait`).
+     */
+    readonly retryAfterSeconds?: number,
   ) {
     super(message);
     // A fronteira `'use cache'` do Next serializa o erro ao propagar e preserva
     // apenas `name`/`message` (protótipo e props próprias — `status`/`code` —
-    // somem, invalidando `instanceof`). Embutir o status no `name` mantém o
-    // mapeamento HTTP funcionando DEPOIS do cache. Ver `henrikDevErrorStatus`.
-    this.name = `${HENRIKDEV_ERROR_NAME}:${status}`;
+    // somem, invalidando `instanceof`). Embutir status e reset no `name` mantém
+    // o mapeamento HTTP e a espera funcionando DEPOIS do cache.
+    // Ver `henrikDevErrorStatus` / `henrikDevRetryAfterSeconds`.
+    this.name =
+      retryAfterSeconds !== undefined
+        ? `${HENRIKDEV_ERROR_NAME}:${status}:${retryAfterSeconds}`
+        : `${HENRIKDEV_ERROR_NAME}:${status}`;
   }
 }
 
@@ -61,6 +70,41 @@ export function henrikDevErrorStatus(error: unknown): number | null {
     }
   }
   return null;
+}
+
+/**
+ * Segundos até a cota reabrir, robusto à serialização da fronteira
+ * `'use cache'` (mesma estratégia do status): lê a prop viva ou o segmento
+ * codificado no `name` (`HenrikDevApiError:429:12`).
+ */
+export function henrikDevRetryAfterSeconds(error: unknown): number | null {
+  if (error instanceof HenrikDevApiError) {
+    return error.retryAfterSeconds ?? null;
+  }
+  if (error instanceof Error) {
+    const prefix = `${HENRIKDEV_ERROR_NAME}:`;
+    if (error.name.startsWith(prefix)) {
+      const [, retry] = error.name.slice(prefix.length).split(':');
+      if (retry !== undefined) {
+        const parsed = Number.parseInt(retry, 10);
+        if (Number.isInteger(parsed)) {
+          return parsed;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/** Lê o reset do 429: prefere `x-ratelimit-reset`; aceita `retry-after`. */
+function readRetryAfterSeconds(response: Response): number | undefined {
+  const raw =
+    response.headers.get('x-ratelimit-reset') ?? response.headers.get('retry-after');
+  if (raw === null) {
+    return undefined;
+  }
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined;
 }
 
 export interface HenrikDevClientOptions {
@@ -171,7 +215,9 @@ export function createHenrikDevClient(options: HenrikDevClientOptions): HenrikDe
         } catch {
           // corpo não-JSON — mantém a mensagem fallback com o status
         }
-        throw new HenrikDevApiError(response.status, message, code);
+        const retryAfterSeconds =
+          response.status === 429 ? readRetryAfterSeconds(response) : undefined;
+        throw new HenrikDevApiError(response.status, message, code, retryAfterSeconds);
       }
 
       return await response.json();

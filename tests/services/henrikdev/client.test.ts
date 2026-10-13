@@ -3,6 +3,7 @@ import type { HenrikDevMatchV4 } from '@/contracts/henrikdev';
 import {
   createHenrikDevClient,
   henrikDevErrorStatus,
+  henrikDevRetryAfterSeconds,
   HenrikDevApiError,
 } from '@/services/henrikdev/client';
 
@@ -370,5 +371,71 @@ describe('fetchMmrV3', () => {
     await expect(
       makeClient().fetchMmrV3({ affinity: 'br', platform: 'pc', name: 'A', tag: 'B' }),
     ).rejects.toMatchObject({ name: 'HenrikDevApiError:502' });
+  });
+});
+
+const errorResponse = (status: number, headers: Record<string, string>): Response =>
+  new Response(JSON.stringify({ errors: [{ code: 68, message: 'rate limited' }] }), {
+    status,
+    headers: { 'content-type': 'application/json', ...headers },
+  });
+
+const capture = (promise: Promise<unknown>): Promise<unknown> =>
+  promise.catch((error: unknown) => error);
+
+describe('rate limit (429) — leitura do reset no header', () => {
+  it('captura x-ratelimit-reset no name e em retryAfterSeconds', async () => {
+    fetchMock.mockResolvedValueOnce(errorResponse(429, { 'x-ratelimit-reset': '12' }));
+
+    const error = await capture(makeClient().fetchAccount({ name: 'A', tag: 'B' }));
+
+    expect(error).toMatchObject({ name: 'HenrikDevApiError:429:12' });
+    // O status continua legível mesmo com o segmento extra no `name`.
+    expect(henrikDevErrorStatus(error)).toBe(429);
+    expect(henrikDevRetryAfterSeconds(error)).toBe(12);
+  });
+
+  it('usa o header retry-after quando não há x-ratelimit-reset', async () => {
+    fetchMock.mockResolvedValueOnce(errorResponse(429, { 'retry-after': '30' }));
+
+    const error = await capture(makeClient().fetchAccount({ name: 'A', tag: 'B' }));
+
+    expect(error).toMatchObject({ name: 'HenrikDevApiError:429:30' });
+    expect(henrikDevRetryAfterSeconds(error)).toBe(30);
+  });
+
+  it('sem header de reset: name fica só com o status e o parser retorna null', async () => {
+    fetchMock.mockResolvedValueOnce(errorResponse(429, {}));
+
+    const error = await capture(makeClient().fetchAccount({ name: 'A', tag: 'B' }));
+
+    expect(error).toMatchObject({ name: 'HenrikDevApiError:429' });
+    expect(henrikDevRetryAfterSeconds(error)).toBeNull();
+  });
+});
+
+describe('henrikDevRetryAfterSeconds', () => {
+  it('lê de uma instância viva do erro', () => {
+    expect(henrikDevRetryAfterSeconds(new HenrikDevApiError(429, 'x', undefined, 7))).toBe(7);
+    expect(henrikDevRetryAfterSeconds(new HenrikDevApiError(429, 'x'))).toBeNull();
+  });
+
+  it('recupera de um erro SERIALIZADO pela fronteira `use cache`', () => {
+    expect(
+      henrikDevRetryAfterSeconds(
+        Object.assign(new Error('rate'), { name: 'HenrikDevApiError:429:25' }),
+      ),
+    ).toBe(25);
+    expect(
+      henrikDevRetryAfterSeconds(Object.assign(new Error('rate'), { name: 'HenrikDevApiError:429' })),
+    ).toBeNull();
+  });
+
+  it('retorna null para erros alheios ou valores não numéricos', () => {
+    expect(henrikDevRetryAfterSeconds(new Error('boom'))).toBeNull();
+    expect(henrikDevRetryAfterSeconds('string')).toBeNull();
+    expect(
+      henrikDevRetryAfterSeconds(Object.assign(new Error('x'), { name: 'HenrikDevApiError:429:x' })),
+    ).toBeNull();
   });
 });

@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ErrorState } from '@/components/ui/states';
+import { ErrorState, UpstreamErrorState } from '@/components/ui/states';
 import { getCachedPlayerOverview } from '@/lib/cache/tracker';
 import { getTrackedPlayersStore } from '@/lib/db/tracked-players-store';
 import {
@@ -85,7 +85,7 @@ async function FollowSection({
   return <FollowButton region={region} name={name} tag={tag} initialFollowing={isTracked} />;
 }
 
-async function PlayerProfileData({
+export async function PlayerProfileData({
   region,
   name,
   tag,
@@ -123,7 +123,12 @@ async function PlayerProfileData({
       `[players/[region]/[name]/[tag]] ${mapped.code} → HTTP ${mapped.status}` +
         (mapped.detail !== undefined ? ` | causa: ${mapped.detail}` : ''),
     );
-    return <ErrorState error={mappedToApiErrorBody(mapped)} />;
+    return (
+      <UpstreamErrorState
+        error={mappedToApiErrorBody(mapped)}
+        retryAfterSeconds={mapped.retryAfterSeconds}
+      />
+    );
   }
 }
 

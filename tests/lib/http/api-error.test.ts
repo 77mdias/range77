@@ -43,6 +43,21 @@ describe('describeUpstreamError', () => {
     });
   });
 
+  it('mapeia 429 preservando o retryAfterSeconds do header', () => {
+    expect(
+      describeUpstreamError(new HenrikDevApiError(429, 'rate limited', undefined, 12), labels),
+    ).toMatchObject({
+      status: 503,
+      code: 'UPSTREAM_RATE_LIMITED',
+      retryAfterSeconds: 12,
+    });
+  });
+
+  it('429 sem header de reset não define retryAfterSeconds', () => {
+    const mapped = describeUpstreamError(new HenrikDevApiError(429, 'rate limited'), labels);
+    expect(mapped.retryAfterSeconds).toBeUndefined();
+  });
+
   it('mapeia env inválido → CONFIG_ERROR', () => {
     expect(describeUpstreamError(new EnvironmentValidationError('faltou DATABASE_URL'), labels)).toMatchObject({
       status: 500,

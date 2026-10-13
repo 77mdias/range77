@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import type { ReactNode } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ErrorState } from '@/components/ui/states';
+import { ErrorState, UpstreamErrorState } from '@/components/ui/states';
 import { getCachedMatchDetail, getCachedPlayerCard } from '@/lib/cache/tracker';
 import { describeUpstreamError, mappedToApiErrorBody } from '@/lib/http/api-error';
 import { parseMatchRouteParams } from '@/lib/validation/match-params';
@@ -44,7 +44,7 @@ function MatchSkeleton() {
   );
 }
 
-async function MatchDetailData({
+export async function MatchDetailData({
   region,
   matchId,
   viewer,
@@ -60,15 +60,15 @@ async function MatchDetailData({
       mvp === null || mvp.tag === '' ? null : await getCachedPlayerCard(mvp.name, mvp.tag);
     return <MatchView detail={detail} viewer={viewer} mvpCardSrc={mvpCardSrc} />;
   } catch (error) {
+    const mapped = describeUpstreamError(error, {
+      notFoundCode: 'MATCH_NOT_FOUND',
+      notFoundMessage: 'Partida não encontrada na HenrikDev.',
+      notFoundHint: 'Confira o match ID e a região da partida.',
+    });
     return (
-      <ErrorState
-        error={mappedToApiErrorBody(
-          describeUpstreamError(error, {
-            notFoundCode: 'MATCH_NOT_FOUND',
-            notFoundMessage: 'Partida não encontrada na HenrikDev.',
-            notFoundHint: 'Confira o match ID e a região da partida.',
-          }),
-        )}
+      <UpstreamErrorState
+        error={mappedToApiErrorBody(mapped)}
+        retryAfterSeconds={mapped.retryAfterSeconds}
       />
     );
   }

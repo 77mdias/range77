@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { ApiErrorBody } from '@/contracts/coach';
-import { henrikDevErrorStatus } from '@/services/henrikdev/client';
+import { henrikDevErrorStatus, henrikDevRetryAfterSeconds } from '@/services/henrikdev/client';
 
 /**
  * Mapeamento HTTP compartilhado (Route Handlers) — traduz erros das camadas
@@ -36,6 +36,8 @@ export interface MappedErrorDescriptor {
   readonly message: string;
   readonly hint?: string;
   readonly detail?: string;
+  /** Segundos até a cota da HenrikDev reabrir (só no 429). */
+  readonly retryAfterSeconds?: number;
 }
 
 /** Rótulos do 404 especificamente do recurso da rota (jogador vs. partida). */
@@ -76,11 +78,13 @@ export function describeUpstreamError(
       };
     }
     if (upstreamStatus === 429) {
+      const retryAfterSeconds = henrikDevRetryAfterSeconds(error);
       return {
         status: 503,
         code: 'UPSTREAM_RATE_LIMITED',
         message: 'Limite de requisições da HenrikDev atingido.',
         hint: 'Aguarde alguns segundos e tente novamente.',
+        ...(retryAfterSeconds !== null ? { retryAfterSeconds } : {}),
         detail,
       };
     }

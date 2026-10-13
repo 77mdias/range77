@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import type { ReactNode } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ErrorState } from '@/components/ui/states';
+import { ErrorState, UpstreamErrorState } from '@/components/ui/states';
 import { getCachedBreakdownOverview } from '@/lib/cache/tracker';
 import {
   describeUpstreamError,
@@ -47,7 +47,7 @@ function BreakdownSkeleton() {
   );
 }
 
-async function BreakdownData({
+export async function BreakdownData({
   region,
   name,
   tag,
@@ -83,7 +83,12 @@ async function BreakdownData({
       `[players/[region]/[name]/[tag]/breakdown] ${mapped.code} → HTTP ${mapped.status}` +
         (mapped.detail !== undefined ? ` | causa: ${mapped.detail}` : ''),
     );
-    return <ErrorState error={mappedToApiErrorBody(mapped)} />;
+    return (
+      <UpstreamErrorState
+        error={mappedToApiErrorBody(mapped)}
+        retryAfterSeconds={mapped.retryAfterSeconds}
+      />
+    );
   }
 }
 
