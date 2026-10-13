@@ -50,3 +50,40 @@ export function parsePlayerRouteParams(params: PlayerRouteParamsInput): PlayerPa
 
   return { ok: true, region, name, tag: params.tag };
 }
+
+/**
+ * Os `params` de PÁGINA do App Router chegam AINDA percent-encoded (a
+ * segmentação é preservada crua), ao contrário dos Route Handlers, que já
+ * entregam o valor decodificado. Sem decodificar no limite da página, o Riot
+ * ID com espaço/acento é re-codificado ao montar a URL da HenrikDev
+ * (`next%20to%20nothing` vira `next%2520to%2520nothing`) e o upstream responde
+ * "Account not found" — mesmo o jogador existindo.
+ *
+ * Tolerante a sequências malformadas (um `%` solto, por exemplo): devolve o
+ * valor original em vez de lançar. Aplicar SOMENTE em páginas — nos Route
+ * Handlers o valor já vem decodificado e decodificar de novo corromperia
+ * nomes que contenham `%` literal.
+ */
+export function decodeRouteParam(value: unknown): unknown {
+  if (typeof value !== 'string') {
+    return value;
+  }
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+/**
+ * Variante de `parsePlayerRouteParams` para PÁGINAS: decodifica os params crus
+ * antes de validar. Use nos `page.tsx`; nos Route Handlers prefira
+ * `parsePlayerRouteParams` direto (os params já chegam decodificados).
+ */
+export function parsePlayerPageParams(params: PlayerRouteParamsInput): PlayerParamsResult {
+  return parsePlayerRouteParams({
+    region: decodeRouteParam(params.region),
+    name: decodeRouteParam(params.name),
+    tag: decodeRouteParam(params.tag),
+  });
+}

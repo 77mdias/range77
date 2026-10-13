@@ -11,7 +11,7 @@ import {
   mappedToApiErrorBody,
 } from '@/lib/http/api-error';
 import { getSession } from '@/lib/session';
-import { parsePlayerRouteParams } from '@/lib/validation/player-params';
+import { parsePlayerPageParams } from '@/lib/validation/player-params';
 import { FollowButton } from './follow-button';
 import { PlayerProfileView } from './profile-view';
 
@@ -130,7 +130,9 @@ async function PlayerProfileData({
 export default async function PlayerPage({ params }: PageProps) {
   const { region, name, tag } = await params;
 
-  const parsed = parsePlayerRouteParams({ region, name, tag });
+  // `params` de página vêm AINDA codificados no App Router — decodifica antes
+  // de validar (ver `parsePlayerPageParams`).
+  const parsed = parsePlayerPageParams({ region, name, tag });
   if (!parsed.ok) {
     return (
       <PageFrame>

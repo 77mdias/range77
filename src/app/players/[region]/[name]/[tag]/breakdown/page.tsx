@@ -8,7 +8,7 @@ import {
   hasErrorName,
   mappedToApiErrorBody,
 } from '@/lib/http/api-error';
-import { parsePlayerRouteParams } from '@/lib/validation/player-params';
+import { parsePlayerPageParams } from '@/lib/validation/player-params';
 import { BreakdownView } from '../breakdown-view';
 
 /**
@@ -90,7 +90,8 @@ async function BreakdownData({
 export default async function BreakdownPage({ params }: PageProps) {
   const { region, name, tag } = await params;
 
-  const parsed = parsePlayerRouteParams({ region, name, tag });
+  // Decodifica os params crus do App Router antes de validar.
+  const parsed = parsePlayerPageParams({ region, name, tag });
   if (!parsed.ok) {
     return (
       <PageFrame>
