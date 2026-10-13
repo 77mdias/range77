@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getUserRiotStore } from '@/lib/db/user-riot-store';
+import { getUserRiotStore, type UserRiotAccountRow } from '@/lib/db/user-riot-store';
 import { getSession } from '@/lib/session';
 
 /**
@@ -10,6 +10,11 @@ import { getSession } from '@/lib/session';
  *
  * Dinâmico por natureza (auth + DB): sempre dentro de <Suspense> no layout
  * (regra do Cache Components — `headers()` lança o sinal antes do DB).
+ *
+ * FAIL-SOFT: a leitura do vínculo é "best-effort". Uma falha de
+ * infraestrutura (ex.: Neon indisponível) NÃO pode derrubar o shell global —
+ * sem este catch o erro vira exceção não capturada no <Suspense> do layout
+ * raiz e, em dev, dispara full-reload em loop (RuntimeErrorHandler).
  */
 export async function NavUser() {
   const session = await getSession();
@@ -25,7 +30,22 @@ export async function NavUser() {
     );
   }
 
-  const linked = await getUserRiotStore().get(session.user.id);
+  let linked: UserRiotAccountRow | null;
+  try {
+    linked = await getUserRiotStore().get(session.user.id);
+  } catch (error) {
+    // Diagnóstico no servidor; o cliente só vê o chip neutro de indisponível.
+    console.error('[NavUser] falha ao ler o Riot ID vinculado', error);
+    return (
+      <span
+        data-nav-unavailable
+        className="rounded-md border border-line bg-surface-raised px-3 py-1.5 font-hud text-label uppercase text-text-secondary"
+      >
+        Conta indisponível
+      </span>
+    );
+  }
+
   if (linked === null) {
     return (
       <Link
