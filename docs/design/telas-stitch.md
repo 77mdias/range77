@@ -9,13 +9,18 @@ Mapeamento entre as telas de referência do Google Stitch (projeto
 | --- | --- | --- | --- | --- |
 | 1 | Busca de Jogador & Apresentação do Ecossistema | `27e682689ef64c95971120332c86960c` | `/` | `src/app/home-landing.tsx` |
 | 2 | Visão Geral do Jogador & AI Coaching Hub | `0afd6f3231cc4b2499b4336e9e12b049` | `/players/[region]/[name]/[tag]` | `.../profile-view.tsx` |
-| 3 | Desempenho por Agente & Mapa | `0d982740f8b547b7bf8e8a811a6730ae` | seções `#agentes` / `#mapas` | `.../agents-maps-sections.tsx` |
+| 3 | Desempenho por Agente & Mapa | `0d982740f8b547b7bf8e8a811a6730ae` | `/players/[region]/[name]/[tag]/breakdown` (aba 1) | `.../agents-maps-explorer.tsx` |
+| 3b | Histórico de Partidas & Breakdown Detalhado | `6d1b02cf02274378bfab2c30c26f0544` | `/players/[region]/[name]/[tag]/breakdown` (aba 2) | `.../match-history-tab.tsx` |
 | 4 | Histórico & Análise Profunda de Partida | `5d74c25c05b247e5a9be99ff50b76def` | `/matches/[matchId]` | `.../match-view.tsx` |
 | 5 | Console API & IA Coaching Assistant | `7d1c0b3db8e14fbfa48e49556314ab86` | `/console` | `src/app/console/console-view.tsx` |
 | — | DESIGN.md (referência de tokens) | `667638550059620293` | [`DESIGN.md`](../../DESIGN.md) / `/design-system` | — |
 
 `design-stitch/` guarda os HTML de referência:
-`player-search.html`, `partidas-breakdown.html`, `match.html`.
+`player-search.html`, `agents-maps.html` (aba 1 — Agentes & Mapas),
+`match-breakdown.html` (aba 2 — Partidas & Histórico Completo) e `match.html`.
+As telas 3 e 3b são dois estados da MESMA rota (`/breakdown`): a barra de abas
+do Stitch (`agentes-mapas.html`) alterna `Desempenho por agente & mapa` e
+`Partidas & histórico completo`.
 
 ## Como reobter as referências
 

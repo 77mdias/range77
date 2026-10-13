@@ -23,7 +23,9 @@ export type IconName =
   | 'arrow-right'
   | 'filter'
   | 'chevron-down'
-  | 'target';
+  | 'target'
+  | 'grid'
+  | 'history';
 
 const PATHS: Record<IconName, React.ReactNode> = {
   search: (
@@ -79,6 +81,21 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <circle cx={8} cy={8} r={6} />
       <circle cx={8} cy={8} r={2.5} />
+    </>
+  ),
+  grid: (
+    <>
+      <rect x={2.5} y={2.5} width={4.5} height={4.5} rx={0.5} />
+      <rect x={9} y={2.5} width={4.5} height={4.5} rx={0.5} />
+      <rect x={2.5} y={9} width={4.5} height={4.5} rx={0.5} />
+      <rect x={9} y={9} width={4.5} height={4.5} rx={0.5} />
+    </>
+  ),
+  history: (
+    <>
+      <path d="M8 4.5V8l2.5 1.5" />
+      <path d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9" />
+      <path d="M2.5 2.5V6H6" />
     </>
   ),
 };

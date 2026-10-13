@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="web_standard" name="shell-type"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style>
+<script src="https://cdn.tailwindcss.com">
+</script>
+<script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"secondary":"#5e5e5e","tertiary":"#2c676b","on-primary-container":"#6f7100","secondary-fixed":"#e2e2e2","surface-container-high":"#e8e8e8","secondary-fixed-dim":"#c6c6c6","error":"#ba1a1a","surface-bright":"#f9f9f9","on-primary-fixed":"#1c1d00","inverse-primary":"#cbce04","on-background":"#1a1c1c","border-hairline":"#000000","on-primary-fixed-variant":"#484a00","outline":"#797861","on-secondary":"#ffffff","on-tertiary":"#ffffff","surface-container-low":"#f3f3f4","on-tertiary-fixed":"#002022","primary-fixed":"#e7ea33","inverse-surface":"#2f3131","on-error":"#ffffff","background":"#f9f9f9","canvas-soft":"#f9fafb","on-surface-variant":"#484833","on-secondary-container":"#646464","on-primary":"#ffffff","on-error-container":"#93000a","primary":"#616200","tertiary-container":"#c0faff","primary-fixed-dim":"#cbce04","tertiary-fixed":"#b2edf2","secondary-container":"#e2e2e2","primary-container":"#f5f841","surface-container-lowest":"#ffffff","surface":"#f9f9f9","on-tertiary-fixed-variant":"#0a4f53","on-surface":"#1a1c1c","surface-container":"#eeeeee","on-tertiary-container":"#3b757a","tertiary-fixed-dim":"#97d0d5","error-container":"#ffdad6","surface-variant":"#e2e2e2","inverse-on-surface":"#f0f1f1","on-secondary-fixed":"#1b1b1b","surface-dim":"#dadada","outline-variant":"#cac8ad","surface-container-highest":"#e2e2e2","on-secondary-fixed-variant":"#474747","surface-tint":"#616200"},borderRadius:{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},spacing:{"gutter":"0.75rem","margin-mobile":"0.75rem","margin":"1rem","space-md":"0.375rem","space-xs":"0.1875rem","space-xl":"0.625rem","space-lg":"0.5rem","gutter-mobile":"0.5rem","space-sm":"0.25rem"},fontFamily:{"display-xl":["Space Grotesk"],"label-xs":["JetBrains Mono"],"body-md":["Geist"],"headline-md":["Space Grotesk"],"display-xl-mobile":["Space Grotesk"],"body-lg":["Geist"],"label-sm":["JetBrains Mono"],"body-sm":["Geist"],"headline-lg":["Space Grotesk"],"label-md":["JetBrains Mono"]},fontSize:{"display-xl":["32px",{lineHeight:"36px",letterSpacing:"-0.03em",fontWeight:"700"}],"label-xs":["9px",{lineHeight:"11px",letterSpacing:"0.08em",fontWeight:"700"}],"body-md":["13px",{lineHeight:"17px",fontWeight:"400"}],"headline-md":["16px",{lineHeight:"20px",letterSpacing:"-0.01em",fontWeight:"600"}],"display-xl-mobile":["24px",{lineHeight:"28px",letterSpacing:"-0.02em",fontWeight:"700"}],"body-lg":["14px",{lineHeight:"18px",fontWeight:"500"}],"label-sm":["10px",{lineHeight:"12px",letterSpacing:"0.06em",fontWeight:"500"}],"body-sm":["12px",{lineHeight:"16px",fontWeight:"400"}],"headline-lg":["20px",{lineHeight:"24px",letterSpacing:"-0.02em",fontWeight:"600"}],"label-md":["11px",{lineHeight:"14px",letterSpacing:"0.04em",fontWeight:"600"}]}}}}</script>
+</head>
+<body class="bg-surface-container-lowest font-body-md text-on-surface antialiased">
+<header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest border-b border-border-hairline">
+<div class="h-14 w-full px-margin flex items-center justify-between gap-space-lg">
+<div class="flex items-center gap-space-lg shrink-0">
+<img alt="Valorant Coach Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1U360_ctaTjqMO7KcyC_wix6I24yGiIuIq9yAOfSl7VD4OMSKnPqljERT0wkI-fFanjbevJ6X4ZaiYDdVQGC9jN2JcjfDGs5ixDvnXqYjRi7k2FiWyCkwKlXQgEoebaJDJJkG_l6hObiXe1Sb2KpWbd6ZquR_sYCyAp-TQxf2cKp3K3BPGKoNoBqu6nH1LqeCxtnAjn9LdDFXDmoKmIiysLnPqcylrEWKTvpFLn708J_QZpEYD3P2aZDOQ"/>
+<span class="font-headline-md text-headline-md tracking-tight uppercase text-on-surface hidden sm:inline-block">VALORANT.COACH</span>
+<div class="flex items-center gap-space-xs px-space-md py-space-xs bg-canvas-soft border border-border-hairline rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container border border-border-hairline animate-pulse">
+</span>
+<span class="font-label-xs text-label-xs uppercase text-on-surface">API Pipeline: Active (3-Layer Mode)</span>
+</div>
+</div>
+<nav class="hidden xl:flex items-center h-full" data-active-classes="bg-primary-container text-on-surface font-label-md border-b-2 border-border-hairline">
+<a class="h-full px-space-lg inline-flex items-center font-label-md text-label-md uppercase text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors border-r border-border-hairline" data-path="visao-geral" href="#">Visão Geral</a>
+<a class="h-full px-space-lg inline-flex items-center font-label-md text-label-md uppercase text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors border-r border-border-hairline" data-path="partidas-breakdown" href="#">Partidas &amp; Breakdown</a>
+<a class="h-full px-space-lg inline-flex items-center font-label-md text-label-md uppercase text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors border-r border-border-hairline" data-path="agentes-mapas" href="#">Agentes &amp; Mapas</a>
+<a class="h-full px-space-lg inline-flex items-center font-label-md text-label-md uppercase text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors border-r border-border-hairline" data-path="console-api-ia" href="#">Console API &amp; IA</a>
+</nav>
+<div class="flex items-center gap-space-md shrink-0">
+<div class="hidden md:flex items-center bg-canvas-soft border border-border-hairline rounded px-space-md py-space-xs">
+<span class="material-symbols-outlined text-secondary text-sm mr-space-xs">search</span>
+<input class="bg-transparent font-body-sm text-body-sm text-on-surface focus:outline-none w-44" placeholder="Player#Tag (ex: Tenz#0001)" type="text"/>
+<span class="font-label-xs text-label-xs px-space-xs bg-surface-container-highest border border-border-hairline text-on-surface uppercase rounded">BR/LATAM</span>
+</div>
+<button aria-label="Notificações" class="w-8 h-8 flex items-center justify-center bg-canvas-soft border border-border-hairline rounded hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-on-surface text-base">notifications</span>
+</button>
+<div class="flex items-center gap-space-sm pl-space-sm border-l border-border-hairline">
+<div class="text-right hidden sm:block">
+<div class="font-label-md text-label-md uppercase text-on-surface leading-none">NEXUS#BR1</div>
+<div class="font-label-xs text-label-xs text-secondary leading-tight mt-space-xs flex items-center justify-end gap-space-xs">
+<span class="w-1.5 h-1.5 bg-primary-container rounded-full border border-border-hairline">
+</span>Ascendant 3</div>
+</div>
+<img alt="Profile" class="w-8 h-8 rounded-full object-cover border border-border-hairline" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFPq6p-GS0Wj5qkWQjFKsQLZufHLDQAvkrm5OpdcwbEDgeeDDGxvjFSTYQDaOdNqn3XvmiPcSJL2-XxlYqdrVaCO8pMHxx90nzNONqpD-CK28tbl9LXmB3Z05UUsSbgrU-vX_372DDUQ8-BOcStolWNIuqlX8o2v2rW8c9bOusBOjUiJO0biC8ljvhxf_3QAt33l9COh9vWodDydVZMnI7YftE4G4G68Y-0_fzIcL6Y5v2HdYZ300vQw"/>
+</div>
+</div>
+</div>
+</header>
+<main class="w-full pt-14 bg-surface-container-lowest min-h-screen">
+<div class="flex flex-col w-full">
+<!-- SUB-HEADER / TAB SWITCHER & TELEMETRY CONTROLS -->
+<section class="w-full bg-surface-container-lowest border-b border-border-hairline px-margin py-space-md">
+<div class="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-space-md">
+<!-- Sub-tabs -->
+<div class="flex items-center gap-space-xs shrink-0 overflow-x-auto pb-space-xs xl:pb-0">
+<a class="px-space-md py-space-sm bg-surface-container-lowest border border-border-hairline rounded text-on-surface font-label-md text-label-md uppercase hover:bg-surface-container-low transition-colors whitespace-nowrap flex items-center gap-space-xs" href="#">
+<span class="material-symbols-outlined text-sm">dashboard</span>
+          DESEMPENHO POR AGENTE &amp; MAPA
+        </a>
+<div class="px-space-md py-space-sm bg-primary-container border border-border-hairline rounded text-on-surface font-label-md text-label-md uppercase font-bold flex items-center gap-space-xs shadow-[2px_2px_0px_#000000] whitespace-nowrap">
+<span class="w-2 h-2 rounded-full bg-border-hairline">
+</span>
+          HISTÓRICO COMPLETO &amp; BREAKDOWN DE PARTIDAS (69 PARTIDAS)
+          <span class="px-space-xs py-0.5 bg-surface-container-lowest border border-border-hairline rounded text-[8px] tracking-wider leading-none">REGISTRO ATIVO</span>
+</div>
+</div>
+<!-- Live Sync Tag & Telemetry Pipeline Info -->
+<div class="flex items-center gap-space-sm flex-wrap xl:justify-end">
+<div class="flex items-center gap-space-xs px-space-md py-space-xs bg-canvas-soft border border-border-hairline rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container border border-border-hairline animate-ping">
+</span>
+<span class="font-label-xs text-label-xs uppercase text-on-surface font-bold">SYNC: RIOT API v9.11 // 12ms LATÊNCIA</span>
+</div>
+<div class="flex items-center gap-space-xs px-space-md py-space-xs bg-canvas-soft border border-border-hairline rounded">
+<span class="font-label-xs text-label-xs text-secondary uppercase">PLAYER TIER:</span>
+<span class="font-label-xs text-label-xs text-on-surface font-bold uppercase bg-primary-container px-1 rounded border border-border-hairline">ASC 3 • 78 RR</span>
+</div>
+</div>
+</div>
+<!-- TECHNICAL FILTER MATRIX BAR -->
+<div class="mt-space-md pt-space-md border-t border-border-hairline flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex flex-wrap items-center gap-space-xs">
+<!-- Season Filter -->
+<div class="flex items-center bg-canvas-soft border border-border-hairline rounded px-space-sm py-1">
+<span class="font-label-xs text-label-xs text-secondary mr-space-xs uppercase">ACT:</span>
+<select class="bg-transparent font-label-sm text-label-sm text-on-surface uppercase focus:outline-none cursor-pointer pr-1">
+<option>EP 9 ACT 2 (ATUAL)</option>
+<option>EP 9 ACT 1</option>
+<option>EP 8 ACT 3</option>
+</select>
+</div>
+<!-- Mode Filter -->
+<div class="flex items-center bg-canvas-soft border border-border-hairline rounded px-space-sm py-1">
+<span class="font-label-xs text-label-xs text-secondary mr-space-xs uppercase">MODO:</span>
+<select class="bg-transparent font-label-sm text-label-sm text-on-surface uppercase focus:outline-none cursor-pointer pr-1">
+<option>COMPETITIVO (RANKED)</option>
+<option>PREMIER LEAGUE</option>
+<option>TORNEIO PRIVADO / SCRIM</option>
+</select>
+</div>
+<!-- Agent Filter -->
+<div class="flex items-center bg-canvas-soft border border-border-hairline rounded px-space-sm py-1">
+<span class="font-label-xs text-label-xs text-secondary mr-space-xs uppercase">AGENTE:</span>
+<select class="bg-transparent font-label-sm text-label-sm text-on-surface uppercase focus:outline-none cursor-pointer pr-1" id="agentFilter">
+<option value="all">TODOS OS AGENTES</option>
+<option value="jett">JETT (DUELISTA)</option>
+<option value="omen">OMEN (CONTROLADOR)</option>
+<option value="sova">SOVA (INICIADOR)</option>
+</select>
+</div>
+<!-- Map Filter -->
+<div class="flex items-center bg-canvas-soft border border-border-hairline rounded px-space-sm py-1">
+<span class="font-label-xs text-label-xs text-secondary mr-space-xs uppercase">MAPA:</span>
+<select class="bg-transparent font-label-sm text-label-sm text-on-surface uppercase focus:outline-none cursor-pointer pr-1" id="mapFilter">
+<option value="all">TODOS OS MAPAS</option>
+<option value="ascent">ASCENT</option>
+<option value="haven">HAVEN</option>
+<option value="lotus">LOTUS</option>
+<option value="bind">BIND</option>
+<option value="sunset">SUNSET</option>
+<option value="icebox">ICEBOX</option>
+</select>
+</div>
+<!-- Result Toggle Buttons -->
+<div class="flex items-center border border-border-hairline rounded overflow-hidden">
+<button class="result-filter-btn px-space-sm py-1 font-label-xs text-label-xs uppercase bg-primary-container text-on-surface font-bold border-r border-border-hairline" data-filter="all" type="button">TODOS</button>
+<button class="result-filter-btn px-space-sm py-1 font-label-xs text-label-xs uppercase bg-surface-container-lowest text-secondary hover:text-on-surface hover:bg-surface-container-low border-r border-border-hairline" data-filter="win" type="button">VITÓRIAS</button>
+<button class="result-filter-btn px-space-sm py-1 font-label-xs text-label-xs uppercase bg-surface-container-lowest text-secondary hover:text-on-surface hover:bg-surface-container-low" data-filter="loss" type="button">DERROTAS</button>
+</div>
+</div>
+<div class="flex items-center gap-space-xs ml-auto">
+<span class="font-label-xs text-label-xs text-secondary uppercase hidden md:inline">INDEXADOS: 69 PARTIDAS (EXIBINDO 6 RECENTES)</span>
+<button class="px-space-md py-1 bg-surface-container-lowest border border-border-hairline rounded hover:bg-surface-container-low text-on-surface font-label-xs text-label-xs uppercase flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-xs">tune</span>
+          FILTRO AVANÇADO
+        </button>
+</div>
+</div>
+</section>
+<!-- KPI OVERVIEW TAPE / RESUMO DAS ÚLTIMAS 20 PARTIDAS -->
+<section class="w-full bg-canvas-soft border-b border-border-hairline px-margin py-space-md">
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-space-sm">
+<!-- Card 1: Winrate -->
+<div class="p-space-md bg-surface-container-lowest border border-border-hairline rounded flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-xs text-label-xs uppercase text-secondary">WINRATE (20J)</span>
+<span class="font-label-xs text-label-xs px-1 bg-primary-container border border-border-hairline rounded text-on-surface font-bold">13V - 7D</span>
+</div>
+<div class="my-space-xs flex items-baseline gap-space-xs">
+<span class="font-headline-lg text-headline-lg text-on-surface">65.0%</span>
+<span class="font-label-xs text-label-xs text-primary font-bold">+7.2% VS ACT 1</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-1.5 bg-surface-container-highest border border-border-hairline rounded-sm overflow-hidden flex">
+<div class="h-full bg-border-hairline" style="width: 65%;">
+</div>
+<div class="h-full bg-surface-container-high" style="width: 35%;">
+</div>
+</div>
+</div>
+<!-- Card 2: Net RR -->
+<div class="p-space-md bg-surface-container-lowest border border-border-hairline rounded flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-xs text-label-xs uppercase text-secondary">NET RR TELEMETRY</span>
+<span class="material-symbols-outlined text-xs text-secondary">trending_up</span>
+</div>
+<div class="my-space-xs flex items-baseline gap-space-xs">
+<span class="font-headline-lg text-headline-lg text-on-surface font-bold">+144 RR</span>
+<span class="font-label-xs text-label-xs text-secondary font-mono">Δ POSITIVO</span>
+</div>
+<div class="font-label-xs text-label-xs text-secondary truncate">
+          ASC 2 (34 RR) → <span class="text-on-surface font-bold">ASC 3 (78 RR)</span>
+</div>
+</div>
+<!-- Card 3: Avg K/D -->
+<div class="p-space-md bg-surface-container-lowest border border-border-hairline rounded flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-xs text-label-xs uppercase text-secondary">K/D MÉDIO</span>
+<span class="font-label-xs text-label-xs text-secondary">TOP 4%</span>
+</div>
+<div class="my-space-xs flex items-baseline gap-space-xs">
+<span class="font-headline-lg text-headline-lg text-on-surface">1.34</span>
+<span class="font-label-xs text-label-xs text-primary font-bold">▲ +0.29 DELTA</span>
+</div>
+<div class="font-label-xs text-label-xs text-secondary">
+          BENCHMARK ASCENDANT: <span class="text-on-surface font-bold">1.05</span>
+</div>
+</div>
+<!-- Card 4: Avg ACS -->
+<div class="p-space-md bg-surface-container-lowest border border-border-hairline rounded flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-xs text-label-xs uppercase text-secondary">ACS MÉDIO (SCORE)</span>
+<span class="material-symbols-outlined text-xs text-secondary">speed</span>
+</div>
+<div class="my-space-xs flex items-baseline gap-space-xs">
+<span class="font-headline-lg text-headline-lg text-on-surface">248.6</span>
+<span class="font-label-xs text-label-xs text-secondary">PTS/RND</span>
+</div>
+<div class="font-label-xs text-label-xs text-secondary">
+          DAMAGE/RND: <span class="text-on-surface font-bold">161.4 ADR</span>
+</div>
+</div>
+<!-- Card 5: Headshot % -->
+<div class="p-space-md bg-surface-container-lowest border border-border-hairline rounded flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-xs text-label-xs uppercase text-secondary">PRECISÃO (HS%)</span>
+<span class="font-label-xs text-label-xs px-1 bg-surface-container-highest rounded border border-border-hairline text-on-surface">VANDAL 71%</span>
+</div>
+<div class="my-space-xs flex items-baseline gap-space-xs">
+<span class="font-headline-lg text-headline-lg text-on-surface">28.4%</span>
+<span class="font-label-xs text-label-xs text-primary font-bold">ELITE TIER</span>
+</div>
+<div class="font-label-xs text-label-xs text-secondary">
+          CORPO: 64.2% | PERNAS: 7.4%
+        </div>
+</div>
+<!-- Card 6: First Bloods -->
+<div class="p-space-md bg-surface-container-lowest border border-border-hairline rounded flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-xs text-label-xs uppercase text-secondary">FIRST BLOODS (FB)</span>
+<span class="material-symbols-outlined text-xs text-secondary">bolt</span>
+</div>
+<div class="my-space-xs flex items-baseline gap-space-xs">
+<span class="font-headline-lg text-headline-lg text-on-surface">42 FB</span>
+<span class="font-label-xs text-label-xs text-secondary">2.1/JOGO</span>
+</div>
+<div class="font-label-xs text-label-xs text-secondary">
+          DUELOS DE ABERTURA: <span class="text-on-surface font-bold">68.8% WIN</span>
+</div>
+</div>
+</div>
+</section>
+<!-- MAIN TELEMETRIC WORKSPACE: MATCH HISTORY + COACHING SIDEBAR -->
+<main class="w-full px-margin py-space-lg">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- LEFT 8.5 COLS: DENSE MATCH REGISTRY LIST -->
+<div class="lg:col-span-8 xl:col-span-9 flex flex-col gap-space-sm">
+<!-- List Header Bar -->
+<div class="flex items-center justify-between px-space-md py-space-xs bg-surface-container-low border border-border-hairline rounded">
+<div class="flex items-center gap-space-md">
+<span class="font-label-xs text-label-xs uppercase text-secondary">TELEMETRY MATRIX // EXECUÇÃO COMPETITIVA RECENTE</span>
+</div>
+<div class="flex items-center gap-space-lg font-label-xs text-label-xs text-secondary uppercase">
+<span class="hidden sm:inline">KDA (K/D)</span>
+<span class="hidden md:inline">ADR / HS%</span>
+<span class="hidden lg:inline">KAST / FB</span>
+<span>DELTA RR</span>
+</div>
+</div>
+<!-- MATCH CARD 1: ASCENT (VICTORY - MATCH MVP) -->
+<article class="match-item group bg-canvas-soft border border-border-hairline rounded p-space-md hover:bg-surface-container-lowest transition-all duration-150 relative" data-agent="jett" data-map="ascent" data-result="win">
+<!-- Active accent ribbon on hover/active -->
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-border-hairline rounded-l">
+</div>
+<div class="flex flex-col gap-space-sm">
+<!-- Row 1: Match metadata, Agent, Score and Badges -->
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-sm pl-1">
+<div class="flex items-center gap-space-md flex-wrap">
+<!-- Status Badge -->
+<span class="px-space-md py-0.5 bg-primary-container border border-border-hairline text-on-surface font-label-md text-label-md font-bold tracking-wider rounded uppercase">
+                  VITÓRIA
+                </span>
+<!-- Agent Avatar + Tag -->
+<div class="flex items-center gap-space-xs">
+<div class="w-8 h-8 rounded-full border border-border-hairline overflow-hidden bg-surface-container-highest shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Tactical esports portrait of Jett agent with white windblown hair against a stark technical minimalist white studio background with faint neon yellow lighting highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARn5goqoAVzrRKPfFZrK1lf4JSCagBB7rYlOT0ueiv-Ggp7S1qkkPpy1kSuFei70ussBNRdZ3IIZGoNb-Shm-vUxvy8ARD4pNUDAobSyByPuA655F1NhuuOFAfS2ZPOb6G7MpTHtaMlsb_t4Q3hOgnQrnIhOQzp77PjTwOA2USPDQy8MlMu5z5pzZsvkV7U5vzvRZrvsMHcLpioLoHDYXnYvIqdwBU4odE3otjkEQ5RgafBCmlKQxGZg"/>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md uppercase text-on-surface leading-tight">JETT</span>
+<span class="font-label-xs text-label-xs text-secondary uppercase leading-none">DUELISTA</span>
+</div>
+</div>
+<!-- Score & Map -->
+<div class="flex items-baseline gap-space-xs border-l border-border-hairline pl-space-md">
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface">13 - 9</span>
+<span class="font-label-md text-label-md uppercase text-on-surface font-semibold">ASCENT</span>
+</div>
+<!-- Match MVP Badge -->
+<div class="px-space-sm py-0.5 bg-primary-container border border-border-hairline rounded font-label-xs text-label-xs uppercase font-bold text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[11px]">military_tech</span>
+                  MATCH MVP
+                </div>
+</div>
+<!-- Match context & Delta RR -->
+<div class="flex items-center gap-space-md ml-auto md:ml-0">
+<div class="text-right hidden sm:block">
+<div class="font-label-xs text-label-xs text-secondary uppercase">38M 14S • SA-SAOPAULO-1</div>
+<div class="font-label-xs text-label-xs text-secondary uppercase">HÁ 42 MINUTOS</div>
+</div>
+<div class="px-space-md py-1 bg-surface-container-lowest border border-border-hairline rounded text-right shadow-[1px_1px_0px_#000000]">
+<div class="font-headline-md text-headline-md font-bold text-on-surface">+22 RR</div>
+<div class="font-label-xs text-label-xs text-secondary uppercase">ASC 3 • 78 RR</div>
+</div>
+</div>
+</div>
+<!-- Row 2: Performance Telemetry Grid -->
+<div class="grid grid-cols-2 sm:grid-cols-5 gap-space-xs bg-surface-container-lowest border border-border-hairline rounded p-space-sm">
+<div class="flex flex-col pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">K / D / A</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">26 / 13 / 4 <span class="text-secondary font-normal">(2.00)</span>
+</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">ADR (DMG/RND)</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">184.2</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">HEADSHOT %</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">34.8%</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">KAST %</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">81.8%</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs col-span-2 sm:col-span-1">
+<span class="font-label-xs text-label-xs text-secondary uppercase">FIRST BLOOD / DEATH</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">4 / 1 <span class="text-primary font-bold">(+3)</span>
+</span>
+</div>
+</div>
+<!-- Row 3: MiniMax AI Tactical Insight & Action trigger -->
+<div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm pt-space-xs border-t border-border-hairline">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="px-space-xs py-0.5 bg-border-hairline text-surface-container-lowest font-label-xs text-label-xs uppercase font-mono rounded shrink-0">AI PROTOCOL</span>
+<p class="font-body-sm text-body-sm text-on-surface truncate">
+<span class="font-bold">DECISÕES CLUTCH: 2/3 GANHOS</span> // Impacto positivo no pós-plant A-Site com Dash de reposicionamento perfeito.
+                </p>
+</div>
+<button class="px-space-md py-1 bg-surface-container-lowest border border-border-hairline rounded font-label-md text-label-md uppercase text-on-surface font-bold hover:bg-primary-container transition-all flex items-center justify-center gap-space-xs shrink-0 shadow-[1px_1px_0px_#000000]" type="button">
+                VER ANÁLISE PROFUNDA
+                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- MATCH CARD 2: HAVEN (VICTORY - TEAM MVP) -->
+<article class="match-item group bg-canvas-soft border border-border-hairline rounded p-space-md hover:bg-surface-container-lowest transition-all duration-150 relative" data-agent="omen" data-map="haven" data-result="win">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-border-hairline rounded-l">
+</div>
+<div class="flex flex-col gap-space-sm">
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-sm pl-1">
+<div class="flex items-center gap-space-md flex-wrap">
+<span class="px-space-md py-0.5 bg-primary-container border border-border-hairline text-on-surface font-label-md text-label-md font-bold tracking-wider rounded uppercase">
+                  VITÓRIA
+                </span>
+<div class="flex items-center gap-space-xs">
+<div class="w-8 h-8 rounded-full border border-border-hairline overflow-hidden bg-surface-container-highest shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Tactical esports portrait of Omen agent wrapped in shadowy ethereal dark smoke with glowing slits against a crisp technical off-white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxrYEltsanTHLbxWUKowgqbiVACsnpY0n9BZ2xWAkkw61OyGf06zNW5gSbgA5h9G7_W6_ROW0ocXIkfErZSYaPU5OodHv3GLXztYBcBf3QCjfzOS2UfPm0D-2YtRO8mqx6NQoXyLvf-NxwYZ4UVlWUMOR7P019i30cArUFG7dE8YvKqy1AbujKxpp4Yf6D9xt-SwBIpVWv_uSiiHS6kWTFpvqKAMZ_yZQDOUZxig2XyLJ0b6u1LghBJQ"/>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md uppercase text-on-surface leading-tight">OMEN</span>
+<span class="font-label-xs text-label-xs text-secondary uppercase leading-none">CONTROLADOR</span>
+</div>
+</div>
+<div class="flex items-baseline gap-space-xs border-l border-border-hairline pl-space-md">
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface">13 - 11</span>
+<span class="font-label-md text-label-md uppercase text-on-surface font-semibold">HAVEN</span>
+</div>
+<div class="px-space-sm py-0.5 bg-surface-container-lowest border border-border-hairline rounded font-label-xs text-label-xs uppercase font-bold text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[11px]">shield_person</span>
+                  TEAM MVP
+                </div>
+</div>
+<div class="flex items-center gap-space-md ml-auto md:ml-0">
+<div class="text-right hidden sm:block">
+<div class="font-label-xs text-label-xs text-secondary uppercase">44M 02S • SA-SAOPAULO-1</div>
+<div class="font-label-xs text-label-xs text-secondary uppercase">HÁ 3 HORAS</div>
+</div>
+<div class="px-space-md py-1 bg-surface-container-lowest border border-border-hairline rounded text-right shadow-[1px_1px_0px_#000000]">
+<div class="font-headline-md text-headline-md font-bold text-on-surface">+19 RR</div>
+<div class="font-label-xs text-label-xs text-secondary uppercase">ASC 3 • 56 RR</div>
+</div>
+</div>
+</div>
+<!-- Stats -->
+<div class="grid grid-cols-2 sm:grid-cols-5 gap-space-xs bg-surface-container-lowest border border-border-hairline rounded p-space-sm">
+<div class="flex flex-col pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">K / D / A</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">21 / 15 / 11 <span class="text-secondary font-normal">(1.40)</span>
+</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">ADR (DMG/RND)</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">142.0</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">HEADSHOT %</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">26.0%</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">KAST %</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">77.2%</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs col-span-2 sm:col-span-1">
+<span class="font-label-xs text-label-xs text-secondary uppercase">FIRST BLOOD / DEATH</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">2 / 2 <span class="text-secondary font-normal">(EVEN)</span>
+</span>
+</div>
+</div>
+<!-- AI Insight -->
+<div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm pt-space-xs border-t border-border-hairline">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="px-space-xs py-0.5 bg-border-hairline text-surface-container-lowest font-label-xs text-label-xs uppercase font-mono rounded shrink-0">AI PROTOCOL</span>
+<p class="font-body-sm text-body-sm text-on-surface truncate">
+<span class="font-bold">COBERTURA DE SMOKES: 89.1% EFICIÊNCIA</span> em execuções de C-Long e Garagem defensiva.
+                </p>
+</div>
+<button class="px-space-md py-1 bg-surface-container-lowest border border-border-hairline rounded font-label-md text-label-md uppercase text-on-surface font-bold hover:bg-primary-container transition-all flex items-center justify-center gap-space-xs shrink-0 shadow-[1px_1px_0px_#000000]" type="button">
+                VER ANÁLISE PROFUNDA
+                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- MATCH CARD 3: LOTUS (DEFEAT) -->
+<article class="match-item group bg-canvas-soft border border-border-hairline rounded p-space-md hover:bg-surface-container-lowest transition-all duration-150 relative" data-agent="sova" data-map="lotus" data-result="loss">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-error rounded-l">
+</div>
+<div class="flex flex-col gap-space-sm">
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-sm pl-1">
+<div class="flex items-center gap-space-md flex-wrap">
+<span class="px-space-md py-0.5 bg-surface-container-highest border border-border-hairline text-on-surface font-label-md text-label-md font-bold tracking-wider rounded uppercase">
+                  DERROTA
+                </span>
+<div class="flex items-center gap-space-xs">
+<div class="w-8 h-8 rounded-full border border-border-hairline overflow-hidden bg-surface-container-highest shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Tactical esports portrait of Sova agent with bionic eye and reconnaissance bow against minimalist clean concrete background with studio technical lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxxv-F_icGIKL-fEc9Pw19TZDbv85M2_RGYsG6_S6KOsBKa49ITIaoJYEsmjttL_tZa_TeqZ68nsVi4FOIfGGQLldkFqWfFH6x7CK0OWv_-sNYxxeylDIagNXuMczyR8tri-2lC7o99BdtJGcW6kbhCwCNfjsOEZBvKbjH2lDpDqngfKtZRxwwf-0W0pVErLGhkC8BAKcGDnsNKE01NVouT3D3AAdVTEELLiYCboansnp9aCjKUThbGQ"/>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md uppercase text-on-surface leading-tight">SOVA</span>
+<span class="font-label-xs text-label-xs text-secondary uppercase leading-none">INICIADOR</span>
+</div>
+</div>
+<div class="flex items-baseline gap-space-xs border-l border-border-hairline pl-space-md">
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface">9 - 13</span>
+<span class="font-label-md text-label-md uppercase text-on-surface font-semibold">LOTUS</span>
+</div>
+<div class="px-space-sm py-0.5 bg-surface-container-lowest border border-border-hairline rounded font-label-xs text-label-xs uppercase text-secondary flex items-center gap-1">
+                  3º NO TIME
+                </div>
+</div>
+<div class="flex items-center gap-space-md ml-auto md:ml-0">
+<div class="text-right hidden sm:block">
+<div class="font-label-xs text-label-xs text-secondary uppercase">36M 50S • SA-SAOPAULO-1</div>
+<div class="font-label-xs text-label-xs text-secondary uppercase">ONTEM</div>
+</div>
+<div class="px-space-md py-1 bg-surface-container-lowest border border-border-hairline rounded text-right shadow-[1px_1px_0px_#000000]">
+<div class="font-headline-md text-headline-md font-bold text-error">-16 RR</div>
+<div class="font-label-xs text-label-xs text-secondary uppercase">ASC 3 • 37 RR</div>
+</div>
+</div>
+</div>
+<!-- Stats -->
+<div class="grid grid-cols-2 sm:grid-cols-5 gap-space-xs bg-surface-container-lowest border border-border-hairline rounded p-space-sm">
+<div class="flex flex-col pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">K / D / A</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">17 / 16 / 8 <span class="text-secondary font-normal">(1.06)</span>
+</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">ADR (DMG/RND)</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">115.3</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">HEADSHOT %</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">24.0%</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">KAST %</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">68.1%</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs col-span-2 sm:col-span-1">
+<span class="font-label-xs text-label-xs text-secondary uppercase">FIRST BLOOD / DEATH</span>
+<span class="font-label-md text-label-md font-bold text-error">1 / 3 <span class="text-secondary font-normal">(-2)</span>
+</span>
+</div>
+</div>
+<!-- AI Insight -->
+<div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm pt-space-xs border-t border-border-hairline">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="px-space-xs py-0.5 bg-error text-surface-container-lowest font-label-xs text-label-xs uppercase font-mono rounded shrink-0">ALERTA TÁTICO</span>
+<p class="font-body-sm text-body-sm text-error font-medium truncate">
+                  MORTE PRECOCE NO A-RUBBLE: 71% de overpeek desnecessário antes do drone de reconhecimento.
+                </p>
+</div>
+<button class="px-space-md py-1 bg-surface-container-lowest border border-border-hairline rounded font-label-md text-label-md uppercase text-on-surface font-bold hover:bg-surface-container-low transition-all flex items-center justify-center gap-space-xs shrink-0 shadow-[1px_1px_0px_#000000]" type="button">
+                VER ANÁLISE PROFUNDA
+                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- MATCH CARD 4: BIND (VICTORY - MATCH MVP) -->
+<article class="match-item group bg-canvas-soft border border-border-hairline rounded p-space-md hover:bg-surface-container-lowest transition-all duration-150 relative" data-agent="jett" data-map="bind" data-result="win">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-border-hairline rounded-l">
+</div>
+<div class="flex flex-col gap-space-sm">
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-sm pl-1">
+<div class="flex items-center gap-space-md flex-wrap">
+<span class="px-space-md py-0.5 bg-primary-container border border-border-hairline text-on-surface font-label-md text-label-md font-bold tracking-wider rounded uppercase">
+                  VITÓRIA
+                </span>
+<div class="flex items-center gap-space-xs">
+<div class="w-8 h-8 rounded-full border border-border-hairline overflow-hidden bg-surface-container-highest shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Tactical close up shot of Jett with sharp glowing kunai blades in hand against minimal stark studio white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCS3hFu4avqdmuox8gqp8SbVaRMauaq835Y0tw-YX4EhYMPGyIzcxmn0VQUPxI19d87lYxVSnHOTwojG4D7n5VpD2kCB6dzJpGjs6aN63n8LMhEF-9SIehi3kKlcJ9_Ehid-xovo2WbVV5tMEDxQbxD15zyqf7yXQJvbPhey8u96LZ_9EDFO_cfd2MfgoDav9i_SRlKGYJAKmWaA-ruqHmIaxhGT-aF57bf7teFQOlVD4ePG8UBPHFoOA"/>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md uppercase text-on-surface leading-tight">JETT</span>
+<span class="font-label-xs text-label-xs text-secondary uppercase leading-none">DUELISTA</span>
+</div>
+</div>
+<div class="flex items-baseline gap-space-xs border-l border-border-hairline pl-space-md">
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface">13 - 7</span>
+<span class="font-label-md text-label-md uppercase text-on-surface font-semibold">BIND</span>
+</div>
+<div class="px-space-sm py-0.5 bg-primary-container border border-border-hairline rounded font-label-xs text-label-xs uppercase font-bold text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[11px]">military_tech</span>
+                  MATCH MVP
+                </div>
+</div>
+<div class="flex items-center gap-space-md ml-auto md:ml-0">
+<div class="text-right hidden sm:block">
+<div class="font-label-xs text-label-xs text-secondary uppercase">31M 20S • SA-SAOPAULO-1</div>
+<div class="font-label-xs text-label-xs text-secondary uppercase">ONTEM</div>
+</div>
+<div class="px-space-md py-1 bg-surface-container-lowest border border-border-hairline rounded text-right shadow-[1px_1px_0px_#000000]">
+<div class="font-headline-md text-headline-md font-bold text-on-surface">+25 RR</div>
+<div class="font-label-xs text-label-xs text-secondary uppercase">ASC 3 • 53 RR</div>
+</div>
+</div>
+</div>
+<!-- Stats -->
+<div class="grid grid-cols-2 sm:grid-cols-5 gap-space-xs bg-surface-container-lowest border border-border-hairline rounded p-space-sm">
+<div class="flex flex-col pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">K / D / A</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">26 / 11 / 4 <span class="text-secondary font-normal">(2.36)</span>
+</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">ADR (DMG/RND)</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">195.0</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">HEADSHOT %</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">34.0%</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">KAST %</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">85.0%</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs col-span-2 sm:col-span-1">
+<span class="font-label-xs text-label-xs text-secondary uppercase">FIRST BLOOD / DEATH</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">5 / 0 <span class="text-primary font-bold">(+5)</span>
+</span>
+</div>
+</div>
+<!-- AI Insight -->
+<div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm pt-space-xs border-t border-border-hairline">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="px-space-xs py-0.5 bg-border-hairline text-surface-container-lowest font-label-xs text-label-xs uppercase font-mono rounded shrink-0">AI PROTOCOL</span>
+<p class="font-body-sm text-body-sm text-on-surface truncate">
+<span class="font-bold">FIRST PICK PERFEITO: 5/5</span> em opening duels no B-Long forçando recuo imediato do adversário.
+                </p>
+</div>
+<button class="px-space-md py-1 bg-surface-container-lowest border border-border-hairline rounded font-label-md text-label-md uppercase text-on-surface font-bold hover:bg-primary-container transition-all flex items-center justify-center gap-space-xs shrink-0 shadow-[1px_1px_0px_#000000]" type="button">
+                VER ANÁLISE PROFUNDA
+                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- MATCH CARD 5: SUNSET (VICTORY) -->
+<article class="match-item group bg-canvas-soft border border-border-hairline rounded p-space-md hover:bg-surface-container-lowest transition-all duration-150 relative" data-agent="omen" data-map="sunset" data-result="win">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-border-hairline rounded-l">
+</div>
+<div class="flex flex-col gap-space-sm">
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-sm pl-1">
+<div class="flex items-center gap-space-md flex-wrap">
+<span class="px-space-md py-0.5 bg-primary-container border border-border-hairline text-on-surface font-label-md text-label-md font-bold tracking-wider rounded uppercase">
+                  VITÓRIA
+                </span>
+<div class="flex items-center gap-space-xs">
+<div class="w-8 h-8 rounded-full border border-border-hairline overflow-hidden bg-surface-container-highest shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Tactical esports graphic of Omen looking sideways with high contrast minimalist shading and sharp neon highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBb9_IR4G8nTyNPPUwDPGWcKr-3VPCeNog-wFEAXsHqH6brLwuTV_ufcsT8uU5KCrx0GoDpWXQVJ_padfrKmr5dxUmUMugeyabCNJLfOVqoGUtGr9cbxN0zKaVfiNP_Tk3x8yHaoOQFj7PCuF9hIn3Rz48RYTECiQKLIpwwhzRp8ktqublETblSOvqdYFGIRPP36xZADvmONcGZCbxqJLe2Gx4GIq0tM_k9N7tys_PmWtDJIGCwzlNR_g"/>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md uppercase text-on-surface leading-tight">OMEN</span>
+<span class="font-label-xs text-label-xs text-secondary uppercase leading-none">CONTROLADOR</span>
+</div>
+</div>
+<div class="flex items-baseline gap-space-xs border-l border-border-hairline pl-space-md">
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface">13 - 10</span>
+<span class="font-label-md text-label-md uppercase text-on-surface font-semibold">SUNSET</span>
+</div>
+<div class="px-space-sm py-0.5 bg-surface-container-lowest border border-border-hairline rounded font-label-xs text-label-xs uppercase text-secondary flex items-center gap-1">
+                  2º NO TIME
+                </div>
+</div>
+<div class="flex items-center gap-space-md ml-auto md:ml-0">
+<div class="text-right hidden sm:block">
+<div class="font-label-xs text-label-xs text-secondary uppercase">39M 45S • SA-SAOPAULO-1</div>
+<div class="font-label-xs text-label-xs text-secondary uppercase">2 DIAS ATRÁS</div>
+</div>
+<div class="px-space-md py-1 bg-surface-container-lowest border border-border-hairline rounded text-right shadow-[1px_1px_0px_#000000]">
+<div class="font-headline-md text-headline-md font-bold text-on-surface">+20 RR</div>
+<div class="font-label-xs text-label-xs text-secondary uppercase">ASC 3 • 28 RR</div>
+</div>
+</div>
+</div>
+<!-- Stats -->
+<div class="grid grid-cols-2 sm:grid-cols-5 gap-space-xs bg-surface-container-lowest border border-border-hairline rounded p-space-sm">
+<div class="flex flex-col pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">K / D / A</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">19 / 13 / 9 <span class="text-secondary font-normal">(1.46)</span>
+</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">ADR (DMG/RND)</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">138.5</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">HEADSHOT %</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">27.0%</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">KAST %</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">73.9%</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs col-span-2 sm:col-span-1">
+<span class="font-label-xs text-label-xs text-secondary uppercase">FIRST BLOOD / DEATH</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">2 / 1 <span class="text-primary font-bold">(+1)</span>
+</span>
+</div>
+</div>
+<!-- AI Insight -->
+<div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm pt-space-xs border-t border-border-hairline">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="px-space-xs py-0.5 bg-border-hairline text-surface-container-lowest font-label-xs text-label-xs uppercase font-mono rounded shrink-0">AI PROTOCOL</span>
+<p class="font-body-sm text-body-sm text-on-surface truncate">
+<span class="font-bold">CONTROLE DE RETAKE A-SITE EXCELENTE:</span> Posicionamento de Paranoia neutralizou 4 spikes defuses.
+                </p>
+</div>
+<button class="px-space-md py-1 bg-surface-container-lowest border border-border-hairline rounded font-label-md text-label-md uppercase text-on-surface font-bold hover:bg-primary-container transition-all flex items-center justify-center gap-space-xs shrink-0 shadow-[1px_1px_0px_#000000]" type="button">
+                VER ANÁLISE PROFUNDA
+                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- MATCH CARD 6: ICEBOX (DEFEAT) -->
+<article class="match-item group bg-canvas-soft border border-border-hairline rounded p-space-md hover:bg-surface-container-lowest transition-all duration-150 relative" data-agent="jett" data-map="icebox" data-result="loss">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-error rounded-l">
+</div>
+<div class="flex flex-col gap-space-sm">
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-sm pl-1">
+<div class="flex items-center gap-space-md flex-wrap">
+<span class="px-space-md py-0.5 bg-surface-container-highest border border-border-hairline text-on-surface font-label-md text-label-md font-bold tracking-wider rounded uppercase">
+                  DERROTA
+                </span>
+<div class="flex items-center gap-space-xs">
+<div class="w-8 h-8 rounded-full border border-border-hairline overflow-hidden bg-surface-container-highest shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Tactical portrait of Jett in an Arctic combat environment with minimalist graphic novel aesthetics and harsh overhead studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCP_txlXhsOXEiPIEgXdRbLG33fPYleXxa8KGjjSooL0VrqLqQFsYTT_tf7lyMthYby7fWFLyXx6bNaYchcPhQAqabYqovMVvr5GUZgGNsJi0oq8OJtrmfDoReQfPNtSE9DPSqx5AA0R9aqgf6N46Uqvylr_3UQzORcmuflOzLfMAXxFxoQrGLQDUIXv12Dz7tE9B5roSH16_yq-wZmUtpOryJxSUDkBLtBYQlyra569ceX09V4-QAreA"/>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md uppercase text-on-surface leading-tight">JETT</span>
+<span class="font-label-xs text-label-xs text-secondary uppercase leading-none">DUELISTA</span>
+</div>
+</div>
+<div class="flex items-baseline gap-space-xs border-l border-border-hairline pl-space-md">
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface">11 - 13</span>
+<span class="font-label-md text-label-md uppercase text-on-surface font-semibold">ICEBOX</span>
+</div>
+<div class="px-space-sm py-0.5 bg-surface-container-lowest border border-border-hairline rounded font-label-xs text-label-xs uppercase text-secondary flex items-center gap-1">
+                  TEAM MVP
+                </div>
+</div>
+<div class="flex items-center gap-space-md ml-auto md:ml-0">
+<div class="text-right hidden sm:block">
+<div class="font-label-xs text-label-xs text-secondary uppercase">42M 10S • SA-SAOPAULO-1</div>
+<div class="font-label-xs text-label-xs text-secondary uppercase">2 DIAS ATRÁS</div>
+</div>
+<div class="px-space-md py-1 bg-surface-container-lowest border border-border-hairline rounded text-right shadow-[1px_1px_0px_#000000]">
+<div class="font-headline-md text-headline-md font-bold text-error">-18 RR</div>
+<div class="font-label-xs text-label-xs text-secondary uppercase">ASC 3 • 08 RR</div>
+</div>
+</div>
+</div>
+<!-- Stats -->
+<div class="grid grid-cols-2 sm:grid-cols-5 gap-space-xs bg-surface-container-lowest border border-border-hairline rounded p-space-sm">
+<div class="flex flex-col pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">K / D / A</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">20 / 17 / 3 <span class="text-secondary font-normal">(1.18)</span>
+</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">ADR (DMG/RND)</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">132.0</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">HEADSHOT %</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">29.5%</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs">
+<span class="font-label-xs text-label-xs text-secondary uppercase">KAST %</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">70.8%</span>
+</div>
+<div class="flex flex-col border-l border-border-hairline pl-space-xs col-span-2 sm:col-span-1">
+<span class="font-label-xs text-label-xs text-secondary uppercase">FIRST BLOOD / DEATH</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">3 / 2 <span class="text-primary font-bold">(+1)</span>
+</span>
+</div>
+</div>
+<!-- AI Insight -->
+<div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm pt-space-xs border-t border-border-hairline">
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="px-space-xs py-0.5 bg-error text-surface-container-lowest font-label-xs text-label-xs uppercase font-mono rounded shrink-0">ALERTA ECONÔMICO</span>
+<p class="font-body-sm text-body-sm text-error font-medium truncate">
+                  DÉFICIT ECONÔMICO: 2 rounds bônus forçados sem rifle no A-Pipes comprometeram o lado atacante.
+                </p>
+</div>
+<button class="px-space-md py-1 bg-surface-container-lowest border border-border-hairline rounded font-label-md text-label-md uppercase text-on-surface font-bold hover:bg-surface-container-low transition-all flex items-center justify-center gap-space-xs shrink-0 shadow-[1px_1px_0px_#000000]" type="button">
+                VER ANÁLISE PROFUNDA
+                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Pagination & Footer registry actions -->
+<div class="flex flex-col sm:flex-row items-center justify-between gap-space-md pt-space-md border-t border-border-hairline">
+<div class="flex items-center gap-space-xs">
+<button class="px-2.5 py-1 bg-primary-container border border-border-hairline rounded font-label-sm text-label-sm font-bold text-on-surface" type="button">1</button>
+<button class="px-2.5 py-1 bg-surface-container-lowest border border-border-hairline rounded font-label-sm text-label-sm text-on-surface hover:bg-surface-container-low" type="button">2</button>
+<button class="px-2.5 py-1 bg-surface-container-lowest border border-border-hairline rounded font-label-sm text-label-sm text-on-surface hover:bg-surface-container-low" type="button">3</button>
+<button class="px-2.5 py-1 bg-surface-container-lowest border border-border-hairline rounded font-label-sm text-label-sm text-on-surface hover:bg-surface-container-low" type="button">4</button>
+<span class="font-label-sm text-label-sm text-secondary px-1">...</span>
+<button class="px-2.5 py-1 bg-surface-container-lowest border border-border-hairline rounded font-label-sm text-label-sm text-on-surface hover:bg-surface-container-low" type="button">12</button>
+<button class="px-space-md py-1 bg-surface-container-lowest border border-border-hairline rounded font-label-sm text-label-sm text-on-surface hover:bg-surface-container-low flex items-center gap-1 uppercase font-bold" type="button">
+              PRÓXIMO <span class="material-symbols-outlined text-xs">chevron_right</span>
+</button>
+</div>
+<div class="flex items-center gap-space-xs w-full sm:w-auto">
+<button class="w-full sm:w-auto px-space-md py-1.5 bg-surface-container-lowest border border-border-hairline rounded text-on-surface font-label-xs text-label-xs uppercase font-bold hover:bg-primary-container transition-colors flex items-center justify-center gap-1.5 shadow-[1px_1px_0px_#000000]" type="button">
+<span class="material-symbols-outlined text-sm">download</span>
+              EXPORTAR REGISTRO TELEMÉTRICO (CSV / JSON)
+            </button>
+</div>
+</div>
+</div>
+<!-- RIGHT 3.5 COLS: MINIMAX AI COACH DIAGNOSTIC PANEL & RECENT PATTERNS -->
+<aside class="lg:col-span-4 xl:col-span-3 flex flex-col gap-space-md">
+<!-- AI Intelligence Card Header -->
+<div class="bg-surface-container-lowest border border-border-hairline rounded p-space-md shadow-[2px_2px_0px_#000000]">
+<div class="flex items-center justify-between pb-space-xs border-b border-border-hairline">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 bg-primary-container border border-border-hairline rounded-full animate-pulse">
+</span>
+<span class="font-label-xs text-label-xs uppercase font-bold text-on-surface">MINIMAX COACH MATRIX</span>
+</div>
+<span class="font-label-xs text-label-xs text-secondary font-mono">MODEL V4.2</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-space-xs">
+            Diagnóstico preditivo e comportamental sintetizado a partir dos micro-eventos das últimas partidas competitivas.
+          </p>
+<!-- Pattern Breakdown Modules -->
+<div class="flex flex-col gap-space-sm mt-space-md">
+<!-- Pattern 1: Win Engine -->
+<div class="bg-canvas-soft border border-border-hairline border-l-4 border-l-primary-container rounded p-space-sm">
+<div class="flex items-center justify-between mb-0.5">
+<span class="font-label-xs text-label-xs uppercase font-bold text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">verified</span>
+                  PADRÃO DE VITÓRIAS
+                </span>
+<span class="font-label-xs text-label-xs px-1 bg-surface-container-lowest border border-border-hairline rounded font-bold">82% CONF</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface">
+                Seu winrate é de <strong class="text-on-surface">82%</strong> quando sua equipe converte o Round 2 (anti-eco). Mantenha compras disciplinadas de Spectre/Bulldog.
+              </p>
+</div>
+<!-- Pattern 2: Defeat Bottleneck -->
+<div class="bg-canvas-soft border border-border-hairline border-l-4 border-l-error rounded p-space-sm">
+<div class="flex items-center justify-between mb-0.5">
+<span class="font-label-xs text-label-xs uppercase font-bold text-error flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">warning</span>
+                  GARGALO DE DERROTAS
+                </span>
+<span class="font-label-xs text-label-xs px-1 bg-surface-container-lowest border border-border-hairline text-error rounded font-bold">CRÍTICO</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface">
+<strong class="text-error">65% dos rounds perdidos</strong> ocorreram por falta de paciência em pós-plants 3v2 e 4v3. Evite duelos isolados antes do spike ser tocado.
+              </p>
+</div>
+<!-- Pattern 3: Top Revenue Map -->
+<div class="bg-canvas-soft border border-border-hairline border-l-4 border-l-border-hairline rounded p-space-sm">
+<div class="flex items-center justify-between mb-0.5">
+<span class="font-label-xs text-label-xs uppercase font-bold text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">map</span>
+                  MAPA MAIS RENTÁVEL
+                </span>
+<span class="font-label-xs text-label-xs px-1 bg-primary-container border border-border-hairline rounded font-bold">+67 RR</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface">
+<strong class="text-on-surface">Ascent</strong> acumula 5 vitórias consecutivas. Seu K/D como Jett é de 1.88 com controle exemplar de Mid Link.
+              </p>
+</div>
+</div>
+<!-- Micro Telemetry Chart: RR Trend Line -->
+<div class="mt-space-md pt-space-sm border-t border-border-hairline">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-label-xs text-label-xs uppercase text-secondary">TENDÊNCIA DE RR (ÚLTIMOS 6 JOGOS)</span>
+<span class="font-label-xs text-label-xs text-primary font-bold">+52 RR NET</span>
+</div>
+<div class="h-16 w-full bg-canvas-soft border border-border-hairline rounded p-1 flex items-end justify-between gap-1">
+<div class="flex flex-col items-center flex-1 h-full justify-end">
+<div class="w-full bg-primary-container border border-border-hairline" style="height: 75%;">
+</div>
+<span class="font-label-xs text-[8px] text-secondary mt-0.5">+22</span>
+</div>
+<div class="flex flex-col items-center flex-1 h-full justify-end">
+<div class="w-full bg-primary-container border border-border-hairline" style="height: 65%;">
+</div>
+<span class="font-label-xs text-[8px] text-secondary mt-0.5">+19</span>
+</div>
+<div class="flex flex-col items-center flex-1 h-full justify-end">
+<div class="w-full bg-surface-container-highest border border-border-hairline" style="height: 50%;">
+</div>
+<span class="font-label-xs text-[8px] text-error mt-0.5">-16</span>
+</div>
+<div class="flex flex-col items-center flex-1 h-full justify-end">
+<div class="w-full bg-primary-container border border-border-hairline" style="height: 90%;">
+</div>
+<span class="font-label-xs text-[8px] text-secondary mt-0.5">+25</span>
+</div>
+<div class="flex flex-col items-center flex-1 h-full justify-end">
+<div class="w-full bg-primary-container border border-border-hairline" style="height: 68%;">
+</div>
+<span class="font-label-xs text-[8px] text-secondary mt-0.5">+20</span>
+</div>
+<div class="flex flex-col items-center flex-1 h-full justify-end">
+<div class="w-full bg-surface-container-highest border border-border-hairline" style="height: 55%;">
+</div>
+<span class="font-label-xs text-[8px] text-error mt-0.5">-18</span>
+</div>
+</div>
+</div>
+</div>
+<!-- QUICK ACCESS PROTOCOL CARDS -->
+<div class="bg-surface-container-lowest border border-border-hairline rounded p-space-md">
+<div class="font-label-xs text-label-xs uppercase font-bold text-on-surface mb-space-xs flex items-center justify-between">
+<span>ROTINA DE CALIBRAÇÃO RECOMENDADA</span>
+<span class="material-symbols-outlined text-xs">timer</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mb-space-sm">
+            Com base no HS% de 28.4% e duelos longos em Lotus, complete o protocolo antes da próxima fila ranqueada:
+          </p>
+<ul class="flex flex-col gap-space-xs font-label-xs text-label-xs uppercase text-on-surface">
+<li class="p-space-xs bg-canvas-soft border border-border-hairline rounded flex items-center justify-between">
+<span>1. KovaaKs: Microshot Speed (10 min)</span>
+<span class="text-primary font-bold">RECOMENDADO</span>
+</li>
+<li class="p-space-xs bg-canvas-soft border border-border-hairline rounded flex items-center justify-between">
+<span>2. The Range: Strafe 100 Bots (Vandal)</span>
+<span class="text-secondary">PENDENTE</span>
+</li>
+<li class="p-space-xs bg-canvas-soft border border-border-hairline rounded flex items-center justify-between">
+<span>3. Deathmatch: Sheriff Only (1x)</span>
+<span class="text-secondary">OPCIONAL</span>
+</li>
+</ul>
+</div>
+<!-- TELEMETRY SYSTEM FOOTNOTE -->
+<div class="px-space-md py-space-sm bg-canvas-soft border border-border-hairline rounded text-center">
+<span class="font-label-xs text-label-xs text-secondary uppercase font-mono">
+            LOG ID: #VCR-99281-BR1 // ENCRIPTADO LOCAL
+          </span>
+</div>
+</aside>
+</div>
+</main>
+</div>
+<script>
+  (function() {
+    // Dynamic Filter Interaction Handler
+    const resultButtons = document.querySelectorAll('.result-filter-btn');
+    const matchItems = document.querySelectorAll('.match-item');
+    const agentFilter = document.getElementById('agentFilter');
+    const mapFilter = document.getElementById('mapFilter');
+
+    let currentResultFilter = 'all';
+
+    function applyFilters() {
+      const selectedAgent = agentFilter ? agentFilter.value : 'all';
+      const selectedMap = mapFilter ? mapFilter.value : 'all';
+
+      matchItems.forEach(item => {
+        const itemResult = item.getAttribute('data-result');
+        const itemAgent = item.getAttribute('data-agent');
+        const itemMap = item.getAttribute('data-map');
+
+        const matchesResult = (currentResultFilter === 'all') || (itemResult === currentResultFilter);
+        const matchesAgent = (selectedAgent === 'all') || (itemAgent === selectedAgent);
+        const matchesMap = (selectedMap === 'all') || (itemMap === selectedMap);
+
+        if (matchesResult && matchesAgent && matchesMap) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    resultButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        resultButtons.forEach(b => {
+          b.classList.remove('bg-primary-container', 'text-on-surface', 'font-bold');
+          b.classList.add('bg-surface-container-lowest', 'text-secondary');
+        });
+        btn.classList.add('bg-primary-container', 'text-on-surface', 'font-bold');
+        btn.classList.remove('bg-surface-container-lowest', 'text-secondary');
+
+        currentResultFilter = btn.getAttribute('data-filter') || 'all';
+        applyFilters();
+      });
+    });
+
+    if (agentFilter) {
+      agentFilter.addEventListener('change', applyFilters);
+    }
+    if (mapFilter) {
+      mapFilter.addEventListener('change', applyFilters);
+    }
+  })();
+</script>
+</main>
+<footer class="w-full bg-canvas-soft border-t border-border-hairline py-space-lg">
+<div class="w-full px-margin flex flex-col md:flex-row items-center justify-between gap-space-md font-label-xs text-label-xs uppercase text-secondary">
+<div class="">VALORANT.COACH // TELEMETRY MATRIX • PROTOCOL V4.2.0</div>
+<div class="flex items-center gap-space-lg">
+<span class="text-on-surface">LATENCY: 12MS</span>
+<span class="text-on-surface">API REFRESH: SYNCED</span>
+<span class="">© 2025 VALORANT.COACH ESPORTS ENGINE</span>
+</div>
+</div>
+</footer>
+</body>
+</html>

@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AGENT_ROLE_OPTIONS,
+  AGENT_SORT_OPTIONS,
   FILTER_ALL,
   distinctSortedDesc,
+  filterAgentsByRole,
   filterByMinMatches,
   filterMatchesForProfiles,
   queueOptions,
   seasonOptions,
 } from '@/services/analytics/agent-map-filters';
-import type { GroupedStat, MatchSummary } from '@/contracts/tracker';
+import type { AgentStat, GroupedStat, MatchSummary } from '@/contracts/tracker';
 
 /**
  * SUITE TDD — agent-map-filters: filtros REAIS da seção "Agentes & Mapas"
@@ -145,5 +148,58 @@ describe('seasonOptions / queueOptions', () => {
   it('sem partidas: apenas a opção "todas"', () => {
     expect(seasonOptions([])).toEqual([{ value: FILTER_ALL, label: 'Todas as temporadas' }]);
     expect(queueOptions([])).toEqual([{ value: FILTER_ALL, label: 'Todas as filas' }]);
+  });
+});
+
+describe('filterAgentsByRole', () => {
+  const roster: AgentStat[] = [
+    stat({ key: 'Jett' }),
+    stat({ key: 'Omen' }),
+    stat({ key: 'Sova' }),
+    stat({ key: 'Unknown' }),
+  ];
+
+  it('papel nulo devolve a lista intacta (mesma referência)', () => {
+    expect(filterAgentsByRole(roster, null)).toBe(roster);
+  });
+
+  it('filtra pelo papel derivado do nome real', () => {
+    expect(filterAgentsByRole(roster, 'Duelista').map((agent) => agent.key)).toEqual(['Jett']);
+    expect(filterAgentsByRole(roster, 'Controlador').map((agent) => agent.key)).toEqual(['Omen']);
+    expect(filterAgentsByRole(roster, 'Iniciador').map((agent) => agent.key)).toEqual(['Sova']);
+  });
+
+  it('papel sem agentes na amostra devolve vazio', () => {
+    expect(filterAgentsByRole(roster, 'Sentinela')).toEqual([]);
+  });
+
+  it('nome fora da tabela oficial nunca casa com papel ativo', () => {
+    expect(filterAgentsByRole([stat({ key: 'Unknown' })], 'Duelista')).toEqual([]);
+  });
+
+  it('lista vazia devolve lista vazia', () => {
+    expect(filterAgentsByRole([], 'Duelista')).toEqual([]);
+  });
+});
+
+describe('AGENT_ROLE_OPTIONS / AGENT_SORT_OPTIONS', () => {
+  it('papéis: "todos" + os quatro papéis oficiais na ordem canônica', () => {
+    expect(AGENT_ROLE_OPTIONS).toEqual([
+      { value: FILTER_ALL, label: 'Todos os papéis' },
+      { value: 'Duelista', label: 'Duelista' },
+      { value: 'Iniciador', label: 'Iniciador' },
+      { value: 'Controlador', label: 'Controlador' },
+      { value: 'Sentinela', label: 'Sentinela' },
+    ]);
+  });
+
+  it('ordenação: métricas reais disponíveis no perfil', () => {
+    expect(AGENT_SORT_OPTIONS.map((option) => option.value)).toEqual([
+      'acs',
+      'winrate',
+      'kd',
+      'matches',
+      'hs',
+    ]);
   });
 });

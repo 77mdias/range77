@@ -173,6 +173,61 @@ export function buildAgentCardProfiles(
   );
 }
 
+/** Métrica usada para ordenar a matriz de agentes (dado real do perfil). */
+export type AgentSortKey = 'acs' | 'winrate' | 'kd' | 'matches' | 'hs';
+
+/** Direção da ordenação: decrescente (maior→menor) ou crescente. */
+export type SortDirection = 'desc' | 'asc';
+
+/**
+ * Valor comparável do perfil por chave. `null` só em HS% ausente — sinalizado
+ * para a ordenação manter amostras sem dado sempre no fim.
+ */
+function agentSortValue(profile: AgentCardProfile, key: AgentSortKey): number | null {
+  switch (key) {
+    case 'acs':
+      return profile.avgAcs;
+    case 'winrate':
+      return profile.winRatePercent;
+    case 'kd':
+      return profile.kdRatio;
+    case 'matches':
+      return profile.matches;
+    case 'hs':
+      return profile.hsPercent;
+  }
+}
+
+/**
+ * Ordena os perfis de agente pela métrica escolhida (padrão: ACS decrescente,
+ * a assinatura atual da matriz). Perfis sem dado (HS% nulo) ficam SEMPRE no
+ * fim, independente da direção e na ordem de entrada; empates desempatam pelo
+ * nome (ascendente, determinístico). Não muta a entrada.
+ */
+export function sortAgentProfiles(
+  profiles: readonly AgentCardProfile[],
+  key: AgentSortKey = 'acs',
+  direction: SortDirection = 'desc',
+): readonly AgentCardProfile[] {
+  // Comparador: negativo = `a` antes de `b`. Desc → maior primeiro.
+  const sign = direction === 'desc' ? 1 : -1;
+
+  const measured = profiles
+    .map((profile) => ({ profile, value: agentSortValue(profile, key) }))
+    .filter((entry): entry is { profile: AgentCardProfile; value: number } => entry.value !== null);
+
+  measured.sort((a, b) => {
+    if (a.value === b.value) {
+      return a.profile.name.localeCompare(b.profile.name);
+    }
+    return a.value < b.value ? sign : -sign;
+  });
+
+  const missing = profiles.filter((profile) => agentSortValue(profile, key) === null);
+
+  return [...measured.map((entry) => entry.profile), ...missing];
+}
+
 /**
  * Status no map pool por faixa de WR real (`MAP_WINRATE_BANDS`): melhor →
  * positivo → estável → neutro → desfavorável → pior. O rótulo reflete só o

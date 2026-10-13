@@ -9,6 +9,7 @@ import {
   classifyAgentTier,
   classifyMapStatus,
   kdRatio,
+  sortAgentProfiles,
 } from '@/services/analytics/agent-map-profiles';
 import type { GroupedStat } from '@/contracts/tracker';
 
@@ -132,6 +133,67 @@ describe('buildAgentCardProfiles', () => {
   it('único agente com WR < 45 é bottleneck (precedência sobre main)', () => {
     const profiles = buildAgentCardProfiles([stat('Cypher', { winrate: 42 })]);
     expect(profiles[0]?.tier).toBe('bottleneck');
+  });
+});
+
+describe('sortAgentProfiles', () => {
+  // Jett: ACS 265, WR 65, K/D 18/11 (1.64), HS 32 · Omen: ACS 210, WR 52,
+  // K/D 1.0, HS 25 · Cypher: ACS 150, WR 40, K/D 0.67, HS ausente.
+  const base = buildAgentCardProfiles([
+    stat('Jett', { winrate: 65, avgAcs: 265, avgKills: 18, avgDeaths: 11, avgHsPercentage: 32 }),
+    stat('Cypher', { winrate: 40, avgAcs: 150, avgKills: 10, avgDeaths: 15, avgHsPercentage: null }),
+    stat('Omen', { winrate: 52, avgAcs: 210, avgKills: 12, avgDeaths: 12, avgHsPercentage: 25 }),
+  ]);
+
+  const names = (profiles: ReturnType<typeof sortAgentProfiles>): string[] =>
+    profiles.map((profile) => profile.name);
+
+  it('lista vazia → lista vazia', () => {
+    expect(sortAgentProfiles([])).toEqual([]);
+  });
+
+  it('padrão: ACS decrescente (assinatura atual)', () => {
+    expect(names(sortAgentProfiles(base))).toEqual(['Jett', 'Omen', 'Cypher']);
+  });
+
+  it('ordena por win rate decrescente', () => {
+    expect(names(sortAgentProfiles(base, 'winrate'))).toEqual(['Jett', 'Omen', 'Cypher']);
+  });
+
+  it('ordena por K/D decrescente', () => {
+    expect(names(sortAgentProfiles(base, 'kd'))).toEqual(['Jett', 'Omen', 'Cypher']);
+  });
+
+  it('ordena por HS% decrescente mantendo o nulo no fim', () => {
+    expect(names(sortAgentProfiles(base, 'hs'))).toEqual(['Jett', 'Omen', 'Cypher']);
+  });
+
+  it('direção crescente inverte a ordem e também joga o nulo para o fim', () => {
+    expect(names(sortAgentProfiles(base, 'hs', 'asc'))).toEqual(['Omen', 'Jett', 'Cypher']);
+  });
+
+  it('empate desempata pelo nome (ascendente)', () => {
+    const tied = buildAgentCardProfiles([
+      stat('Zephyr', { avgAcs: 200 }),
+      stat('Ascent', { avgAcs: 200 }),
+      stat('Brim', { avgAcs: 200 }),
+    ]);
+    expect(names(sortAgentProfiles(tied, 'matches'))).toEqual(['Ascent', 'Brim', 'Zephyr']);
+  });
+
+  it('reordena quando a entrada não está na ordem alvo', () => {
+    const ascending = [...base].reverse(); // Cypher, Omen, Jett
+    expect(names(sortAgentProfiles(ascending, 'acs', 'desc'))).toEqual(['Jett', 'Omen', 'Cypher']);
+  });
+
+  it('não muta a lista de entrada', () => {
+    const input = buildAgentCardProfiles([
+      stat('Jett', { avgAcs: 265 }),
+      stat('Omen', { avgAcs: 210 }),
+    ]);
+    const before = input.map((profile) => profile.name);
+    sortAgentProfiles(input, 'winrate', 'asc');
+    expect(input.map((profile) => profile.name)).toEqual(before);
   });
 });
 

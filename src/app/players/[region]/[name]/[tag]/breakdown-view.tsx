@@ -1,17 +1,20 @@
 import type { PlayerOverview } from '@/services/tracker/player-overview';
 import { SectionHeader } from '@/components/ui/section-header';
-import { indexRrDeltaByMatchId } from '@/services/analytics/rr-trend';
 import { AgentsMapsExplorer } from './agents-maps-explorer';
-import { MatchesTab } from './profile-view';
+import { BreakdownTabs } from './breakdown-tabs';
+import { MatchHistoryTab } from './match-history-tab';
 
 /**
  * BreakdownView — tela PARTIDAS & BREAKDOWN do jogador (Stitch
- * "partidas-breakdown"): strip de filtros reais + seção "Agentes & Mapas"
- * (matriz de performance, map pool e advice) + últimas partidas jogadas.
- * Apresentação PURA — dados prontos do overview.
+ * "match-breakdown"): cabeçalho + DUAS abas de HUD:
+ *   1. "Desempenho por Agente & Mapa" (matriz, map pool e advice — ilha de
+ *      filtros já existente);
+ *   2. "Partidas & Histórico Completo" (registro denso de partidas + KPIs +
+ *      painel de coaching IA).
+ * A antiga lista "Últimas partidas jogadas" foi removida: virou a aba de
+ * histórico. Apresentação PURA — dados prontos do overview.
  */
 export function BreakdownView({ overview }: { readonly overview: PlayerOverview }) {
-  const rrDeltas = indexRrDeltaByMatchId(overview.rrHistory);
   const eloBase =
     overview.rank?.tier ?? overview.rrHistory[overview.rrHistory.length - 1]?.tier ?? undefined;
 
@@ -32,27 +35,23 @@ export function BreakdownView({ overview }: { readonly overview: PlayerOverview 
         }
       />
 
-      <section id="agentes-mapas" data-breakdown-section="agentes-mapas" className="flex flex-col gap-4 scroll-mt-24">
-        <AgentsMapsExplorer matches={overview.matches} eloBase={eloBase} />
-      </section>
-
-      <section id="partidas" data-breakdown-section="partidas" className="flex flex-col gap-4 scroll-mt-24">
-        <SectionHeader
-          title="Últimas partidas jogadas"
-          annotation="AMOSTRA POR ATO"
-          meta={
-            <span className="font-hud text-label uppercase text-text-secondary">
-              {overview.matches.length} partidas • ΔRR quando disponível
-            </span>
-          }
-        />
-        <MatchesTab
-          matches={overview.matches}
-          region={overview.player.region}
-          player={{ name: overview.player.name, tag: overview.player.tag }}
-          rrDeltas={rrDeltas}
-        />
-      </section>
+      <BreakdownTabs
+        matchCount={overview.matches.length}
+        agentsMaps={<AgentsMapsExplorer matches={overview.matches} eloBase={eloBase} />}
+        history={
+          <MatchHistoryTab
+            matches={overview.matches}
+            rrHistory={overview.rrHistory}
+            player={{
+              region: overview.player.region,
+              name: overview.player.name,
+              tag: overview.player.tag,
+            }}
+            coachingHooks={overview.combat.coaching_hooks}
+            eloBase={eloBase}
+          />
+        }
+      />
     </div>
   );
 }

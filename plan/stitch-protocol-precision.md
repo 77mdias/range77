@@ -23,7 +23,8 @@
 |---|---|---|---|---|---|
 | 1 | Busca de Jogador & Apresentação do Ecossistema | `27e682689ef64c95971120332c86960c` | `/` | `src/app/home-landing.tsx` | estrutura ~igual |
 | 2 | Visão Geral do Jogador & AI Coaching Hub | `0afd6f3231cc4b2499b4336e9e12b049` | `/players/[region]/[name]/[tag]` | `.../profile-view.tsx` | parcial |
-| 3 | Desempenho por Agente & Mapa | `0d982740f8b547b7bf8e8a811a6730ae` | seções `#agentes` / `#mapas` | `.../profile-view.tsx` | parcial (sem filtros) |
+| 3 | Desempenho por Agente & Mapa | `0d982740f8b547b7bf8e8a811a6730ae` | `/players/[region]/[name]/[tag]/breakdown` (aba 1) | `.../agents-maps-explorer.tsx` | implementado |
+| 3b | Histórico de Partidas & Breakdown Detalhado | `6d1b02cf02274378bfab2c30c26f0544` | `/players/[region]/[name]/[tag]/breakdown` (aba 2) | `.../match-history-tab.tsx` | implementado |
 | 4 | Histórico & Análise Profunda de Partida (Aprimorado) | `5d74c25c05b247e5a9be99ff50b76def` | `/matches/[matchId]` | `src/app/matches/[matchId]/match-view.tsx` | **maior gap** |
 | 5 | Console API & IA Coaching Assistant | `7d1c0b3db8e14fbfa48e49556314ab86` | `/console` | `src/app/console/console-view.tsx` | ~igual |
 | — | DESIGN.md (upload do dono) | `667638550059620293` | `DESIGN.md` / `/design-system` | `DESIGN.md` | referência |
@@ -199,6 +200,18 @@ Arquivos: `src/app/players/[region]/[name]/[tag]/profile-view.tsx` (`AgentsTab`,
 - [ ] B.3.6 Cobertura 100% em `agent-map-profiles.ts` e novos cálculos.
 
 **DoD Fase B:** filtros funcionais e reais; cards fiéis; nada fabricado.
+
+> **Atualização (tela `match-breakdown`, id `6d1b02cf02274378bfab2c30c26f0544`):**
+> Agentes & Mapas deixou de ser seções ancoradas do perfil e passou a ser a
+> rota `/players/[region]/[name]/[tag]/breakdown`, com DUAS abas Stitch
+> (`.../breakdown-tabs.tsx`): **1)** Desempenho por Agente & Mapa
+> (`agents-maps-explorer.tsx`, com filtros reais + papel/ordenação da matriz);
+> **2)** Partidas & Histórico Completo (`match-history-tab.tsx`: matriz de
+> filtros reais, fita de 6 KPIs, registro denso de partidas e painel de
+> coaching IA com os hooks reais). A antiga lista "Últimas partidas jogadas"
+> foi removida e virou a aba 2. ADR/KAST/MVP por partida e narrativa de IA por
+> partida **não** existem no contrato → omitidos/travessão (nada fabricado).
+> Analytics novos em `src/services/analytics/match-history.ts` (100% coberto).
 
 ---
 

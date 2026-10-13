@@ -310,7 +310,7 @@ function groupStat(key: string, overrides: Partial<GroupedStat> = {}): GroupedSt
 }
 
 describe('AgentsTab', () => {
-  it('classifica tier, nota tática e mantém radar + tabela', () => {
+  it('classifica tier e nota tática na matriz de cards (sem radar nem tabela de agentes)', () => {
     const agents = [
       groupStat('Jett', { winrate: 65, avgAcs: 265, avgKills: 18, avgDeaths: 11 }),
       groupStat('Cypher', { key: 'Cypher', winrate: 40, avgKills: 10, avgDeaths: 15 }),
@@ -324,6 +324,20 @@ describe('AgentsTab', () => {
     expect(html).toContain('Alerta // gargalo crítico:');
     expect(html).toContain('Solid sec');
     expect(html).toContain('// Viável:');
+    // Radar e tabela de agentes foram removidos desta tela.
+    expect(html).not.toContain('data-chart="agent-radar"');
+    expect(html).not.toContain('Win%');
+  });
+
+  it('aplica a ordenação escolhida na matriz', () => {
+    const agents = [
+      groupStat('Jett', { winrate: 65, avgAcs: 265, avgKills: 18, avgDeaths: 11 }),
+      groupStat('Omen', { key: 'Omen', winrate: 52, avgAcs: 210, avgKills: 13, avgDeaths: 12 }),
+    ];
+    const html = renderToStaticMarkup(
+      <AgentsTab agents={agents} sort="winrate" direction="asc" />,
+    );
+    expect(html.indexOf('Omen')).toBeLessThan(html.indexOf('Jett'));
   });
 
   it('role ausente no payload não quebra o card', () => {
@@ -388,6 +402,12 @@ describe('AgentsMapsExplorer', () => {
     expect(html).toContain('Mínimo de 3 jogos');
     expect(html).toContain('data-sample-total');
     expect(html).toContain('Amostra total: 1 partidas');
+    // Controles da matriz de agentes (papel + ordenação).
+    expect(html).toContain('data-agent-controls');
+    expect(html).toContain('Todos os papéis');
+    expect(html).toContain('Ordenar por');
+    expect(html).toContain('data-sort-direction="desc"');
+    expect(html).toContain('1 agentes na amostra');
     // Recomputou agente/mapa a partir de overview.matches (não dos props prontos)
     expect(html).toContain('data-agent-cards');
     expect(html).toContain('Jett');

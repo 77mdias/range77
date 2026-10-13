@@ -5,7 +5,6 @@ import {
   type AgentCardProps,
   type AgentProgress,
 } from '@/components/agents';
-import { AgentRadar } from '@/components/charts';
 import { CoachingTip } from '@/components/ui/coaching-tip';
 import { EmptyState } from '@/components/ui/states';
 import { TagLabel } from '@/components/ui/tag-label';
@@ -24,9 +23,12 @@ import {
   buildAgentCardProfiles,
   buildMapCardProfiles,
   buildMapPoolAdvice,
+  sortAgentProfiles,
   type AgentCardProfile,
+  type AgentSortKey,
   type AgentTier,
   type MapPoolStatus,
+  type SortDirection,
 } from '@/services/analytics/agent-map-profiles';
 import type { AgentSignature } from '@/services/analytics/agent-signatures';
 import type { BenchmarkMetric } from '@/services/analytics/benchmark';
@@ -209,14 +211,20 @@ export function AgentsTab({
   signatures,
   benchmark,
   eloBase,
+  sort = 'acs',
+  direction = 'desc',
 }: {
   readonly agents: readonly GroupedStat[];
   readonly signatures?: ReadonlyMap<string, AgentSignature>;
   readonly benchmark?: readonly BenchmarkMetric[];
   /** Elo de referência (nome exibido) usado no título do benchmark. */
   readonly eloBase?: string;
+  /** Métrica de ordenação da matriz (padrão: ACS). */
+  readonly sort?: AgentSortKey;
+  /** Direção da ordenação (padrão: decrescente). */
+  readonly direction?: SortDirection;
 }) {
-  const profiles = buildAgentCardProfiles(agents);
+  const profiles = sortAgentProfiles(buildAgentCardProfiles(agents), sort, direction);
 
   if (profiles.length === 0) {
     return (
@@ -238,8 +246,6 @@ export function AgentsTab({
         ))}
       </div>
       <BenchmarkCalibration metrics={benchmark ?? []} eloLabel={eloBase} />
-      <AgentRadar agents={agents} />
-      <GroupedStatTable rows={agents} keyLabel="Agente" />
     </div>
   );
 }

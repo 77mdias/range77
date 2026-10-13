@@ -1,4 +1,6 @@
-import type { GroupedStat, MatchSummary } from '@/contracts/tracker';
+import type { AgentStat, GroupedStat, MatchSummary } from '@/contracts/tracker';
+import { agentRole, type AgentRole } from '@/lib/agent-roles';
+import type { AgentSortKey } from './agent-map-profiles';
 
 /**
  * PASSO 3 — IMPLEMENTAÇÃO: filtros REAIS da seção "Agentes & Mapas".
@@ -77,4 +79,43 @@ export function queueOptions(matches: readonly MatchSummary[]): readonly FilterO
       label: queue.charAt(0).toUpperCase() + queue.slice(1),
     })),
   ];
+}
+
+/** Papéis na ordem canônica de exibição do filtro. */
+export const AGENT_ROLE_ORDER: readonly AgentRole[] = [
+  'Duelista',
+  'Iniciador',
+  'Controlador',
+  'Sentinela',
+];
+
+/** Opções do select de papel: "todos" + os quatro papéis oficiais do jogo. */
+export const AGENT_ROLE_OPTIONS: readonly FilterOption[] = [
+  { value: FILTER_ALL, label: 'Todos os papéis' },
+  ...AGENT_ROLE_ORDER.map((role) => ({ value: role, label: role })),
+];
+
+/** Opções do select de ordenação da matriz de agentes. */
+export const AGENT_SORT_OPTIONS: readonly { readonly value: AgentSortKey; readonly label: string }[] =
+  [
+    { value: 'acs', label: 'ACS' },
+    { value: 'winrate', label: 'Win rate' },
+    { value: 'kd', label: 'K/D Ratio' },
+    { value: 'matches', label: 'Partidas' },
+    { value: 'hs', label: 'Headshot %' },
+  ];
+
+/**
+ * Mantém apenas os agentes do papel escolhido; `null` = todos os papéis.
+ * O papel é derivado do nome real do agente (`agentRole`); nomes fora da
+ * tabela oficial nunca casam com um papel ativo.
+ */
+export function filterAgentsByRole(
+  agents: readonly AgentStat[],
+  role: AgentRole | null,
+): readonly AgentStat[] {
+  if (role === null) {
+    return agents;
+  }
+  return agents.filter((agent) => agentRole(agent.key) === role);
 }
