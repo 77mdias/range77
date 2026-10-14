@@ -88,6 +88,8 @@ describe('MatchView', () => {
     expect(html).toContain('24 / 14 / 6');
     expect(html).toContain('+10');
     expect(html).toContain('Immortal 3');
+    // Logo do elo derivado do tier do scoreboard (tabela local de assets).
+    expect(html).toContain('/assets/images/ranks/immortal-3.png');
   });
 
   it('usa a perspectiva do jogador buscado: VOCÊ, W/L e DEF/ATK do time dele', () => {
@@ -168,6 +170,8 @@ describe('MatchView', () => {
     // Minimapa real do mapa + ícone do agente (assets locais)
     expect(html).toContain('/assets/images/maps/ascent-map.png');
     expect(html).toContain('/assets/images/agents/jett.png');
+    // MVP (TenZ, tier "Immortal 3") também exibe o logo do elo.
+    expect(html).toContain('/assets/images/ranks/immortal-3.png');
     // Match ID real na meta bar
     expect(html).toContain('Match ID: a1b2c3d4-e5f6-7890-abcd-ef1234567890');
   });

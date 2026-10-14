@@ -15,6 +15,7 @@ const TEAMS: readonly ScoreboardTeam[] = [
         name: 'TenZ',
         tag: 'BR1',
         rank: 'Ascendant 3',
+        rankIconSrc: '/assets/images/ranks/ascendant-3.png',
         agent: 'Jett',
         acs: 287,
         kills: 24,
@@ -61,6 +62,51 @@ describe('ScoreboardTable', () => {
     expect(html).toContain('#BR1');
     expect(html).toContain('+10');
     expect(html).toContain('text-win');
+    // Logo do elo junto ao nickname (chip do ranque).
+    expect(html).toContain('/assets/images/ranks/ascendant-3.png');
+  });
+
+  it('jogador sem rankIconSrc mantém o chip só de texto (sem img)', () => {
+    const html = renderToStaticMarkup(<ScoreboardTable teams={TEAMS} />);
+    // Derke não tem rank → nenhum chip; TenZ tem exatamente 1 <img> de elo.
+    // (Contamos as tags <img>, não a URL: o React 19 também emite um
+    // <link rel="preload" as="image"> para o mesmo asset.)
+    const rankImgs = html.match(/<img[^>]*\/assets\/images\/ranks\//g) ?? [];
+    expect(rankImgs).toHaveLength(1);
+  });
+
+  it('exibe o logo do elo no chip do jogador buscado (VOCÊ)', () => {
+    const html = renderToStaticMarkup(
+      <ScoreboardTable
+        teams={[
+          {
+            name: 'Time Red',
+            label: 'Time aliado',
+            isViewerTeam: true,
+            players: [
+              {
+                name: 'TenZ',
+                tag: 'BR1',
+                rank: 'Immortal 3',
+                rankIconSrc: '/assets/images/ranks/immortal-3.png',
+                agent: 'Jett',
+                agentIconSrc: '/assets/images/agents/jett.png',
+                acs: 300,
+                kills: 24,
+                deaths: 14,
+                assists: 6,
+                kdDiff: 10,
+                adr: 184.2,
+                hsPercentage: 30,
+                isViewer: true,
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+    expect(html).toContain('/assets/images/ranks/immortal-3.png');
+    expect(html).toContain('IMM 3');
   });
 
   it('renderiza colunas KAST%/FK-FD/ECON com dado real e fallback —', () => {

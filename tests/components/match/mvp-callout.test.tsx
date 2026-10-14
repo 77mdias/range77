@@ -9,6 +9,7 @@ describe('MvpCallout', () => {
         playerName="TenZ"
         agent="Jett"
         rank="Ascendant 3"
+        rankImageSrc="/assets/images/ranks/ascendant-3.png"
         rating={1.48}
         kills={26}
         deaths={13}
@@ -29,5 +30,24 @@ describe('MvpCallout', () => {
     expect(html).toContain('81.8%');
     expect(html).toContain('1.48');
     expect(html).toContain('+13 DIFF');
+    // Logo do elo ao lado do tier.
+    expect(html).toContain('/assets/images/ranks/ascendant-3.png');
+  });
+
+  it('sem rankImageSrc o rank fica só com texto', () => {
+    const html = renderToStaticMarkup(
+      <MvpCallout
+        playerName="TenZ"
+        agent="Jett"
+        rank="Ascendant 3"
+        rating={1.48}
+        kills={26}
+        deaths={13}
+        assists={4}
+        metrics={[{ label: 'ACS', value: '312' }]}
+      />,
+    );
+    expect(html).toContain('Ascendant 3');
+    expect(html).not.toContain('/assets/images/ranks/');
   });
 });

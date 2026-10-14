@@ -37,6 +37,8 @@ export interface ScoreboardPlayer {
   readonly tag?: string;
   /** Tier real (ex.: "Immortal 3") → chip abreviado + segunda linha. */
   readonly rank?: string;
+  /** Ícone oficial do elo (asset local do tier); ausente → só o texto. */
+  readonly rankIconSrc?: string | null;
   readonly agent: string;
   /** Ícone do agente (asset local); ausente → só o nome. */
   readonly agentIconSrc?: string | null;
@@ -320,12 +322,20 @@ export function ScoreboardTable({
                             {player.rank !== undefined ? (
                               <span
                                 className={cx(
-                                  'shrink-0 px-1 py-0.5 font-hud text-label-xs font-bold uppercase tracking-wider',
+                                  'inline-flex shrink-0 items-center gap-1 px-1 py-0.5 font-hud text-label-xs font-bold uppercase tracking-wider',
                                   player.isViewer === true
                                     ? 'bg-text-primary text-accent'
                                     : 'bg-surface-hover text-text-secondary',
                                 )}
                               >
+                                {player.rankIconSrc ? (
+                                  // eslint-disable-next-line @next/next/no-img-element -- ícone local do elo
+                                  <img
+                                    src={player.rankIconSrc}
+                                    alt=""
+                                    className="size-3.5 object-contain"
+                                  />
+                                ) : null}
                                 {formatRankChip(player.rank)}
                               </span>
                             ) : null}

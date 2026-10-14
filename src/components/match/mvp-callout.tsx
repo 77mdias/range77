@@ -16,6 +16,8 @@ export interface MvpCalloutProps {
   readonly playerName: string;
   readonly agent: string;
   readonly rank?: string;
+  /** Ícone oficial do elo (asset local do tier); ausente → só o texto. */
+  readonly rankImageSrc?: string;
   /** Rating ValCoach computado (composto); ausente/`null` → `—`. */
   readonly rating?: number | null;
   readonly kills: number;
@@ -33,6 +35,7 @@ export function MvpCallout({
   playerName,
   agent,
   rank,
+  rankImageSrc,
   rating,
   kills,
   deaths,
@@ -79,7 +82,13 @@ export function MvpCallout({
               {agent}
             </span>
             {rank !== undefined ? (
-              <span className="font-hud text-label uppercase text-tertiary">{rank}</span>
+              <span className="inline-flex items-center gap-1.5 font-hud text-label uppercase text-tertiary">
+                {rankImageSrc !== undefined ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- ícone local do elo
+                  <img src={rankImageSrc} alt="" className="size-4 object-contain" />
+                ) : null}
+                {rank}
+              </span>
             ) : null}
           </div>
           <p className="mt-1 flex flex-wrap gap-x-2 font-body-sm text-text-secondary">

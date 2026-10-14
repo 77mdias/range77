@@ -4,6 +4,7 @@ import {
   agentIconSrc,
   mapMinimapSrc,
   mapSplashSrc,
+  rankIconSrc,
 } from '@/lib/valorant-assets';
 
 /**
@@ -56,5 +57,30 @@ describe('mapSplashSrc / mapMinimapSrc', () => {
   it('mapa desconhecido devolve null nas duas variantes', () => {
     expect(mapSplashSrc('Nuke')).toBeNull();
     expect(mapMinimapSrc('Nuke')).toBeNull();
+  });
+});
+
+describe('rankIconSrc', () => {
+  it('resolve tiers da HenrikDev com divisão e grafias da fonte', () => {
+    expect(rankIconSrc('Diamond 2')).toBe('/assets/images/ranks/diamond-2.png');
+    expect(rankIconSrc('Iron 1')).toBe('/assets/images/ranks/iron-1.png');
+    expect(rankIconSrc('Ascendant 3')).toBe('/assets/images/ranks/ascendant-3.png');
+    expect(rankIconSrc('Immortal 3')).toBe('/assets/images/ranks/immortal-3.png');
+    expect(rankIconSrc('Radiant')).toBe('/assets/images/ranks/radiant.png');
+  });
+
+  it('cobre Unrated e a grafia "Unranked" da fonte', () => {
+    expect(rankIconSrc('Unrated')).toBe('/assets/images/ranks/unrated.png');
+    expect(rankIconSrc('Unranked')).toBe('/assets/images/ranks/unrated.png');
+  });
+
+  it('normaliza caixa/espaços como os outros mapas', () => {
+    expect(rankIconSrc('  DIAMOND 2 ')).toBe('/assets/images/ranks/diamond-2.png');
+    expect(rankIconSrc('gold 3')).toBe('/assets/images/ranks/gold-3.png');
+  });
+
+  it('tier desconhecido/vazio devolve null (chip só de texto)', () => {
+    expect(rankIconSrc('Ultra')).toBeNull();
+    expect(rankIconSrc('')).toBeNull();
   });
 });

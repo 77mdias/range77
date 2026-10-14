@@ -23,7 +23,7 @@ import {
   type PlayerFirstBloods,
 } from '@/services/analytics/match-breakdown';
 import { computePerformanceRating } from '@/services/analytics/rating';
-import { agentArtSrc, agentIconSrc, mapMinimapSrc } from '@/lib/valorant-assets';
+import { agentArtSrc, agentIconSrc, mapMinimapSrc, rankIconSrc } from '@/lib/valorant-assets';
 import { formatRelativeTime } from '@/lib/format/relative-time';
 
 /**
@@ -198,6 +198,7 @@ export function MatchView({ detail, viewer, mvpCardSrc }: MatchViewProps) {
           name: row.name,
           tag: row.tag === '' ? undefined : row.tag,
           rank: row.tier ?? undefined,
+          rankIconSrc: row.tier === null ? null : rankIconSrc(row.tier),
           agent: row.agent,
           agentIconSrc: agentIconSrc(row.agent),
           acs: row.acs,
@@ -274,6 +275,9 @@ export function MatchView({ detail, viewer, mvpCardSrc }: MatchViewProps) {
                 playerName={riotId(mvp.name, mvp.tag)}
                 agent={mvp.agent}
                 rank={mvp.tier ?? undefined}
+                rankImageSrc={
+                  mvp.tier === null ? undefined : (rankIconSrc(mvp.tier) ?? undefined)
+                }
                 portraitSrc={
                   mvpCardSrc ?? agentIconSrc(mvp.agent) ?? agentArtSrc(mvp.agent) ?? undefined
                 }

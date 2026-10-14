@@ -91,6 +91,41 @@ const MAP_SPLASH: Readonly<Record<string, string>> = {
   sunset: '/assets/images/maps/sunset.webp',
 };
 
+/**
+ * Ícones de elo (`/assets/images/ranks`), baixados do competitivetiers oficial
+ * (valorant-api, a mesma fonte que a HenrikDev usa no v2/mmr `images`). O match
+ * v4 traz só o NOME do tier (`player.tier.name`) — a imagem sai desta tabela.
+ */
+const TIER_ICONS: Readonly<Record<string, string>> = {
+  unrated: '/assets/images/ranks/unrated.png',
+  unranked: '/assets/images/ranks/unrated.png', // grafia alternativa da fonte
+  'iron-1': '/assets/images/ranks/iron-1.png',
+  'iron-2': '/assets/images/ranks/iron-2.png',
+  'iron-3': '/assets/images/ranks/iron-3.png',
+  'bronze-1': '/assets/images/ranks/bronze-1.png',
+  'bronze-2': '/assets/images/ranks/bronze-2.png',
+  'bronze-3': '/assets/images/ranks/bronze-3.png',
+  'silver-1': '/assets/images/ranks/silver-1.png',
+  'silver-2': '/assets/images/ranks/silver-2.png',
+  'silver-3': '/assets/images/ranks/silver-3.png',
+  'gold-1': '/assets/images/ranks/gold-1.png',
+  'gold-2': '/assets/images/ranks/gold-2.png',
+  'gold-3': '/assets/images/ranks/gold-3.png',
+  'platinum-1': '/assets/images/ranks/platinum-1.png',
+  'platinum-2': '/assets/images/ranks/platinum-2.png',
+  'platinum-3': '/assets/images/ranks/platinum-3.png',
+  'diamond-1': '/assets/images/ranks/diamond-1.png',
+  'diamond-2': '/assets/images/ranks/diamond-2.png',
+  'diamond-3': '/assets/images/ranks/diamond-3.png',
+  'ascendant-1': '/assets/images/ranks/ascendant-1.png',
+  'ascendant-2': '/assets/images/ranks/ascendant-2.png',
+  'ascendant-3': '/assets/images/ranks/ascendant-3.png',
+  'immortal-1': '/assets/images/ranks/immortal-1.png',
+  'immortal-2': '/assets/images/ranks/immortal-2.png',
+  'immortal-3': '/assets/images/ranks/immortal-3.png',
+  radiant: '/assets/images/ranks/radiant.png',
+};
+
 const MAP_MINIMAP: Readonly<Record<string, string>> = {
   abyss: '/assets/images/maps/abyss-map.webp',
   ascent: '/assets/images/maps/ascent-map.png',
@@ -145,4 +180,12 @@ export function mapSplashSrc(map: string): string | null {
 /** Minimapa do mapa (`/assets/images/maps/{map}-map`); `null` se sem asset. */
 export function mapMinimapSrc(map: string): string | null {
   return lookup(MAP_MINIMAP, map);
+}
+
+/**
+ * Ícone do elo pelo nome do tier da HenrikDev ("Diamond 2", "Radiant",
+ * "Unrated"); `null` se sem asset (a view cai no chip só de texto).
+ */
+export function rankIconSrc(tier: string): string | null {
+  return lookup(TIER_ICONS, tier);
 }
