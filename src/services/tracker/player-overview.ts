@@ -186,6 +186,10 @@ async function loadActSampleMatches(
     mode: COMPETITIVE_QUEUE_ID,
   };
 
+  // O MMR v3 (necessário só para dimensionar a amostra) é independente da 1ª
+  // página — dispara junto, em vez de esperar a página para então começar.
+  const seasonalPromise = loadSeasonalMmr(client, region, name, tag);
+
   const firstPage = await client.fetchPlayerMatches({
     ...base,
     size: MATCHES_PAGE_SIZE,
@@ -195,21 +199,31 @@ async function loadActSampleMatches(
     return firstPage;
   }
 
-  const seasonal = await loadSeasonalMmr(client, region, name, tag);
+  const seasonal = await seasonalPromise;
   const seasonId = firstPage[0]?.metadata?.season?.id ?? null;
   const target = resolveActMatchSample(seasonId, seasonal, options);
 
   const collected: HenrikDevMatchV4[] = [...firstPage];
-  let lastPageLength = firstPage.length;
-  while (collected.length < target && lastPageLength === MATCHES_PAGE_SIZE) {
-    const remaining = target - collected.length;
-    const page = await client.fetchPlayerMatches({
-      ...base,
-      size: Math.min(MATCHES_PAGE_SIZE, remaining),
-      start: collected.length,
-    });
+
+  // Páginas restantes são INDEPENDENTES entre si: buscamos todas em PARALELO.
+  // Antes eram sequenciais e dominavam a latência do Breakdown (30 partidas =
+  // 3 páginas de ~4MB em série). A ordenação dos `start` preserva a
+  // concatenação cronológica.
+  const remainingStarts: number[] = [];
+  for (let start = MATCHES_PAGE_SIZE; start < target; start += MATCHES_PAGE_SIZE) {
+    remainingStarts.push(start);
+  }
+  const remainingPages = await Promise.all(
+    remainingStarts.map((start) =>
+      client.fetchPlayerMatches({
+        ...base,
+        size: Math.min(MATCHES_PAGE_SIZE, target - start),
+        start,
+      }),
+    ),
+  );
+  for (const page of remainingPages) {
     collected.push(...page);
-    lastPageLength = page.length;
   }
 
   return collected.slice(0, target);
@@ -229,10 +243,16 @@ export async function buildPlayerOverview(
     params.client ??
     createHenrikDevClient({ apiKey: requireEnv(loadAppEnv(), 'HENRIKDEV_API_KEY') });
 
-  const rawMatches: readonly HenrikDevMatchV4[] =
+  // A amostra de partidas e os recursos complementares (MMR history, conta,
+  // ranque) são INDEPENDENTES. Disparamos os complementos em PARALELO com a
+  // amostra: antes a amostra era aguardada primeiro e só então os complementos
+  // começavam, SOMANDO as duas latências upstream (medido: ~3,2s + ~3,3s no
+  // caminho frio). Os três complementos nunca rejeitam (best-effort), então a
+  // promise agregada não deixa rejeição pendurada se a amostra falhar.
+  const matchesPromise: Promise<readonly HenrikDevMatchV4[]> =
     params.actSample !== undefined
-      ? await loadActSampleMatches(client, region, name, tag, params.actSample)
-      : await client.fetchPlayerMatches({
+      ? loadActSampleMatches(client, region, name, tag, params.actSample)
+      : client.fetchPlayerMatches({
           affinity: region.toLowerCase(),
           platform: 'pc',
           name,
@@ -240,6 +260,14 @@ export async function buildPlayerOverview(
           mode: COMPETITIVE_QUEUE_ID,
           size,
         });
+
+  const auxPromise = Promise.all([
+    loadRrHistory(client, region, name, tag),
+    loadAccountCard(client, name, tag),
+    loadRank(client, region, name, tag),
+  ]);
+
+  const rawMatches = await matchesPromise;
 
   // O envelope de combate/snapshot fica na janela padrão (5) mesmo no modo por
   // ato: a tela Breakdown exibe só as PARTIDAS (janela maior), e manter o
@@ -251,20 +279,17 @@ export async function buildPlayerOverview(
       : rawMatches;
   const combatSampleSize = params.actSample !== undefined ? combatMatches.length : size;
 
-  // Combate (com write-through de snapshot), MMR history, cartão da conta e
-  // ranque atual são independentes entre si — rodam em paralelo.
-  const [combat, rrHistory, cardSrc, rank] = await Promise.all([
-    buildCombatInsightFromMatches(combatMatches, {
-      region,
-      name,
-      tag,
-      size: combatSampleSize,
-      snapshotStore: store,
-    }),
-    loadRrHistory(client, region, name, tag),
-    loadAccountCard(client, name, tag),
-    loadRank(client, region, name, tag),
-  ]);
+  // Combate é puro (sem I/O) sobre a amostra já baixada; roda após a amostra,
+  // enquanto os complementos seguem em voo até o `await auxPromise` abaixo.
+  const combat = await buildCombatInsightFromMatches(combatMatches, {
+    region,
+    name,
+    tag,
+    size: combatSampleSize,
+    snapshotStore: store,
+  });
+
+  const [rrHistory, cardSrc, rank] = await auxPromise;
 
   const matches = normalizeMatchesToSummaries(rawMatches, { name, tag }, region);
   if (matches.length === 0) {

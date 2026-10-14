@@ -210,6 +210,47 @@ describe('buildPlayerOverview', () => {
     expect(overview.rrHistory.map((point) => point.result)).toEqual(['loss', 'win']);
   });
 
+  it('dispara amostra e complementos em PARALELO (não soma as latências)', async () => {
+    let releaseMatches: (() => void) | undefined;
+    const matchesGate = new Promise<void>((resolve) => {
+      releaseMatches = resolve;
+    });
+    const client = {
+      fetchPlayerMatches: vi.fn(async () => {
+        await matchesGate;
+        return [win, loss];
+      }),
+      fetchMatchById: vi.fn(),
+      fetchMmrHistory: vi.fn(async () => mmrHistory),
+      fetchAccount: vi.fn(async () => ({ card: { large: 'https://media/card-large.png' } })),
+      fetchMmr: vi.fn(async () => ({
+        current_data: {
+          currenttierpatched: 'Ascendant 3',
+          images: { small: 'https://media/rank-small.png' },
+          ranking_in_tier: 84,
+        },
+      })),
+      fetchMmrV3: vi.fn(),
+    };
+
+    const pending = buildPlayerOverview({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      client: client as never,
+      snapshotStore: null,
+    });
+
+    // Sem aguardar a amostra (gate ainda fechado), os complementos JÁ foram
+    // disparados — prova de que rodam concorrentes, não em série.
+    expect(client.fetchMmrHistory).toHaveBeenCalledTimes(1);
+    expect(client.fetchAccount).toHaveBeenCalledTimes(1);
+    expect(client.fetchMmr).toHaveBeenCalledTimes(1);
+
+    releaseMatches?.();
+    await pending;
+  });
+
   it('MMR history indisponível → rrHistory vazia sem derrubar o perfil', async () => {
     const client = makeClient([win, loss], new Error('premium required'));
 
@@ -334,6 +375,51 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
     });
   });
 
+  it('busca as páginas restantes em PARALELO e o mmr v3 junto da 1ª página', async () => {
+    const all = makeRun(30);
+    const startsCalled: number[] = [];
+    const gates = new Map<number, () => void>();
+    const client = {
+      fetchPlayerMatches: vi.fn(
+        async (params: { readonly start?: number; readonly size?: number }) => {
+          const start = params.start ?? 0;
+          startsCalled.push(start);
+          if (start > 0) {
+            await new Promise<void>((resolve) => gates.set(start, resolve));
+          }
+          return all.slice(start, start + (params.size ?? 10));
+        },
+      ),
+      fetchMatchById: vi.fn(),
+      fetchMmrHistory: vi.fn(async () => []),
+      fetchAccount: vi.fn(async () => null),
+      fetchMmr: vi.fn(async () => {
+        throw new Error('fetchMmr não usado neste fluxo');
+      }),
+      fetchMmrV3: vi.fn(async () => seasonal(25)),
+    };
+
+    const pending = buildPlayerOverview({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      actSample: ACT_OPTS,
+      client: client as never,
+      snapshotStore: null,
+    });
+
+    // Deixa a 1ª página resolver; as páginas 2 e 3 já devem ter sido disparadas
+    // em conjunto (estão bloqueadas nos gates até liberarmos).
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(client.fetchMmrV3).toHaveBeenCalledTimes(1);
+    expect(startsCalled).toEqual([0, 10, 20]);
+
+    gates.get(10)?.();
+    gates.get(20)?.();
+    const overview = await pending;
+    expect(overview.matches.map((m) => m.matchId)).toHaveLength(25);
+  });
+
   it('aplica o teto de 30 mesmo com mais partidas no ato', async () => {
     const client = makePagedClient(makeRun(40), seasonal(40));
 
@@ -441,7 +527,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
     }
   });
 
-  it('sem partidas no ato → PlayerNoMatchesError sem consultar o mmr v3', async () => {
+  it('sem partidas no ato → PlayerNoMatchesError (mmr v3 pode ir em paralelo)', async () => {
     const client = makePagedClient([], seasonal(25));
 
     await expect(
@@ -454,7 +540,10 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
         snapshotStore: null,
       }),
     ).rejects.toBeInstanceOf(PlayerNoMatchesError);
-    expect(client.fetchMmrV3).not.toHaveBeenCalled();
+    // O MMR v3 dispara em PARALELO com a 1ª página (latência), então pode ser
+    // consultado mesmo no caso vazio — troca deliberada de 1 chamada upstream
+    // rara (jogador sem partidas competitivas) por latência no caminho quente.
+    expect(client.fetchMmrV3).toHaveBeenCalledTimes(1);
   });
 
   it('mantém o snapshot de combate na janela padrão (5) mesmo com amostra maior', async () => {

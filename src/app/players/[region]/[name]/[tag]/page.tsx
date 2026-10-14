@@ -95,8 +95,12 @@ export async function PlayerProfileData({
   readonly tag: string;
 }) {
   try {
-    const overview = await getCachedPlayerOverview(region, name, tag, PROFILE_SAMPLE_SIZE);
-    const headerAction = await FollowSection({ region, name, tag });
+    // A visão geral (HenrikDev + cache) e a ação "Seguir" (sessão + DB) são
+    // independentes — rodam em paralelo em vez de somar as duas latências.
+    const [overview, headerAction] = await Promise.all([
+      getCachedPlayerOverview(region, name, tag, PROFILE_SAMPLE_SIZE),
+      FollowSection({ region, name, tag }),
+    ]);
     return <PlayerProfileView overview={overview} headerAction={headerAction} />;
   } catch (error) {
     if (hasErrorName(error, 'PlayerNoMatchesError')) {
