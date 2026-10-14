@@ -1,12 +1,16 @@
 import Link from 'next/link';
+import { StatusDot } from '@/components/ui/status-dot';
 import { getUserRiotStore, type UserRiotAccountRow } from '@/lib/db/user-riot-store';
 import { getSession } from '@/lib/session';
 
 /**
- * NavUser — slot autenticado do header global (server). Resolve a sessão e,
- * quando houver Riot ID vinculado, mostra o chip do jogador CONECTADO
- * (`NOME#TAG • REGIÃO`) apontando para o perfil — nunca inventado: sem
- * sessão vira "Entrar"; com sessão sem vínculo, convite para conectar.
+ * NavUser — slot de perfil do header global (server), fiel ao cluster do
+ * Stitch: linha superior com `NOME#TAG` (label mono uppercase) e linha
+ * inferior com ponto-live + região; à direita, avatar circular com a
+ * inicial. Sem dado de elo no store, a segunda linha mostra a REGIÃO —
+ * nunca inventamos rank. Estados sem perfil: "Entrar", convite para
+ * conectar o Riot ID e o chip neutro de indisponível (mesma linguagem
+ * visual do design system).
  *
  * Dinâmico por natureza (auth + DB): sempre dentro de <Suspense> no layout
  * (regra do Cache Components — `headers()` lança o sinal antes do DB).
@@ -62,12 +66,24 @@ export async function NavUser() {
     <Link
       href={`/players/${linked.region}/${encodeURIComponent(linked.nameKey)}/${linked.tagKey}`}
       data-nav-player-chip
-      className="flex items-center gap-2 rounded-md border border-line bg-surface-raised px-3 py-1.5 font-hud text-label uppercase text-text-primary transition-colors duration-[var(--duration-fast)] hover:bg-surface-hover"
+      className="flex items-center gap-1"
+      aria-label={`Perfil de ${linked.displayName}#${linked.tagKey} (${linked.region.toUpperCase()})`}
     >
-      <span aria-hidden="true" className="size-2 bg-accent" />
-      {linked.displayName}
-      <span className="text-text-secondary">#{linked.tagKey}</span>
-      <span className="text-text-secondary">• {linked.region.toUpperCase()}</span>
+      <span className="hidden text-right sm:block">
+        <span className="block font-hud text-label uppercase leading-none text-text-primary">
+          {linked.displayName}#{linked.tagKey}
+        </span>
+        <span className="mt-0.75 flex items-center justify-end gap-0.75 font-hud text-label-xs uppercase leading-tight text-text-secondary">
+          <StatusDot variant="live" className="border border-line" />
+          {linked.region.toUpperCase()}
+        </span>
+      </span>
+      <span
+        aria-hidden="true"
+        className="flex size-8 items-center justify-center rounded-full border border-line bg-surface-raised font-hud text-label uppercase text-text-primary"
+      >
+        {linked.displayName.charAt(0).toUpperCase()}
+      </span>
     </Link>
   );
 }

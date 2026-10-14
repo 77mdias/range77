@@ -27,7 +27,8 @@ describe('AppShell', () => {
   it('renderiza o header global com a marca ValCoach', () => {
     const html = renderShell();
     expect(html).toContain('data-component="top-nav"');
-    expect(html).toContain('ValCoach');
+    expect(html).toContain('VALORANT.COACH');
+    expect(html).toContain('aria-label="ValCoach — início"');
   });
 
   it('fora de um contexto de jogador: apenas rotas globais reais', () => {
@@ -64,12 +65,17 @@ describe('AppShell', () => {
     expect(resolveActiveHref(items, '/players/br/nexus/br1')).toBe('/players/br/nexus/br1');
   });
 
-  it('exibe o status do pipeline e o CTA de login sem sessão', () => {
+  it('exibe o status do pipeline (literal do Stitch) e o CTA de login sem sessão', () => {
     mockPathname = '/';
     const html = renderShell();
-    expect(html).toContain('Pipeline 3-layer: online');
+    expect(html).toContain('API Pipeline: Active (3-Layer Mode)');
     expect(html).toContain('href="/login"');
     expect(html).toContain('Entrar');
+  });
+
+  it('header fixo é compensado com pt-14 no main (altura h-14)', () => {
+    const html = renderShell();
+    expect(html).toContain('<main class="flex-1 pt-14"');
   });
 
   it('renderiza o children dentro de main', () => {

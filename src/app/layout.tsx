@@ -57,7 +57,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="font-body">
         <AppShell
           user={
-            <Suspense fallback={<Skeleton width={128} height={30} />}>
+            <Suspense fallback={<Skeleton width={168} height={32} />}>
               <NavUser />
             </Suspense>
           }

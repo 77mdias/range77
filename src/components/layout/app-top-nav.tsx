@@ -12,6 +12,7 @@ import { TopNav, type TopNavItem } from './top-nav';
  * apontam para as telas daquele jogador (Visão Geral / Partidas & Breakdown /
  * Agentes & Mapas). Fora de um contexto de jogador, só as rotas globais
  * reais existem (Busca / Console) — nunca inventamos um "player conectado".
+ * O texto do status pill é o literal do Stitch.
  */
 
 const PLAYER_ROUTE = /^\/players\/([^/]+)\/([^/]+)\/([^/]+)(?:\/|$)/;
@@ -59,7 +60,7 @@ export function AppTopNav({ user }: { readonly user?: ReactNode }) {
   const pathname = usePathname();
   const items = resolveNavItems(pathname);
 
-  const actions =
+  const profile =
     user ?? (
       <Link
         href="/login"
@@ -73,8 +74,8 @@ export function AppTopNav({ user }: { readonly user?: ReactNode }) {
     <TopNav
       items={items}
       activeHref={resolveActiveHref(items, pathname)}
-      statusText="Pipeline 3-layer: online"
-      actions={actions}
+      statusText="API Pipeline: Active (3-Layer Mode)"
+      user={profile}
     />
   );
 }

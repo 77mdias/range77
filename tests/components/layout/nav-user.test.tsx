@@ -53,7 +53,7 @@ describe('NavUser', () => {
     expect(html).toContain('Conectar Riot ID');
   });
 
-  it('com vínculo → chip do jogador apontando para o perfil', async () => {
+  it('com vínculo → cluster de perfil do Stitch (NOME#TAG + região + avatar) apontando para o perfil', async () => {
     mocks.getSession.mockResolvedValueOnce(SESSION);
     mocks.get.mockResolvedValueOnce({
       id: 'riot-1',
@@ -70,7 +70,12 @@ describe('NavUser', () => {
 
     expect(html).toContain('data-nav-player-chip');
     expect(html).toContain('twmz');
+    expect(html).toContain('#tower');
     expect(html).toContain('/players/br/twmz/tower');
+    // Linha secundária: ponto-live + região (sem rank inventado)
+    expect(html).toContain('BR');
+    // Avatar circular com a inicial do display name
+    expect(html).toContain('>T</span>');
   });
 
   it('FALHA ao ler o vínculo → chip neutro, sem lançar', async () => {

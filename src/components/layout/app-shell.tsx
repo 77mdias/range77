@@ -3,8 +3,9 @@ import { AppFooter } from './app-footer';
 import { AppTopNav } from './app-top-nav';
 
 /**
- * Shell da aplicação (Server Component): header global (`AppTopNav`, com
- * rota ativa via ilha client), `<main>` para a página e footer de
+ * Shell da aplicação (Server Component): header global FIXO (`AppTopNav`,
+ * com rota ativa via ilha client — estrutura do Stitch: `fixed top-0 z-50`),
+ * `<main>` compensado com `pt-14` (altura exata do header) e footer de
  * telemetria (`AppFooter`). O fundo do canvas fica no `body`.
  */
 
@@ -18,7 +19,7 @@ export function AppShell({ children, user }: AppShellProps) {
   return (
     <div className="flex min-h-dvh flex-col">
       <AppTopNav user={user} />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pt-14">{children}</main>
       <AppFooter protocolText="VALCOACH // TELEMETRY MATRIX • DADOS HENRIKDEV" />
     </div>
   );

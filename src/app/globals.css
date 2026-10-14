@@ -136,6 +136,7 @@
   --color-surface-raised: var(--color-canvas-soft);
   --color-surface-recessed: var(--color-surface-low);
   --color-surface-hover: var(--color-hover);
+  --color-surface-pressed: var(--color-surface-highest); /* chips/badges do header (Stitch) */
   --color-line: var(--color-hairline);
   --color-text-primary: var(--color-ink);
   --color-text-secondary: var(--color-ink-mute);
