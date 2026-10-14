@@ -35,9 +35,9 @@ import {
 export interface ScoreboardPlayer {
   readonly name: string;
   readonly tag?: string;
-  /** Tier real (ex.: "Immortal 3") → chip abreviado + segunda linha. */
+  /** Tier real (ex.: "Immortal 3") → ícone do elo ao lado do nickname + tier por extenso na 2ª linha. */
   readonly rank?: string;
-  /** Ícone oficial do elo (asset local do tier); ausente → só o texto. */
+  /** Ícone oficial do elo (asset local do tier); ausente → chip abreviado de texto. */
   readonly rankIconSrc?: string | null;
   readonly agent: string;
   /** Ícone do agente (asset local); ausente → só o nome. */
@@ -320,24 +320,22 @@ export function ScoreboardTable({
                               <span className="text-text-secondary">#{player.tag}</span>
                             ) : null}
                             {player.rank !== undefined ? (
-                              <span
-                                className={cx(
-                                  'inline-flex shrink-0 items-center gap-1 px-1 py-0.5 font-hud text-label-xs font-bold uppercase tracking-wider',
-                                  player.isViewer === true
-                                    ? 'bg-text-primary text-accent'
-                                    : 'bg-surface-hover text-text-secondary',
-                                )}
-                              >
-                                {player.rankIconSrc ? (
-                                  // eslint-disable-next-line @next/next/no-img-element -- ícone local do elo
-                                  <img
-                                    src={player.rankIconSrc}
-                                    alt=""
-                                    className="size-3.5 object-contain"
-                                  />
-                                ) : null}
-                                {formatRankChip(player.rank)}
-                              </span>
+                              player.rankIconSrc ? (
+                                // Ícone SOZINHO ao lado do nickname — o tier por
+                                // extenso já aparece na linha de baixo.
+                                // eslint-disable-next-line @next/next/no-img-element -- ícone local do elo
+                                <img
+                                  src={player.rankIconSrc}
+                                  alt=""
+                                  title={player.rank}
+                                  className="size-6 shrink-0 object-contain"
+                                />
+                              ) : (
+                                // Sem asset local → fallback no chip de texto.
+                                <span className="shrink-0 bg-surface-hover px-1 py-0.5 font-hud text-label-xs font-bold uppercase tracking-wider text-text-secondary">
+                                  {formatRankChip(player.rank)}
+                                </span>
+                              )
                             ) : null}
                           </span>
                           {player.rank !== undefined ? (

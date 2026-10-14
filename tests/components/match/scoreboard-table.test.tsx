@@ -75,7 +75,7 @@ describe('ScoreboardTable', () => {
     expect(rankImgs).toHaveLength(1);
   });
 
-  it('exibe o logo do elo no chip do jogador buscado (VOCÊ)', () => {
+  it('exibe o logo do elo no jogador buscado (VOCÊ) — só o ícone, sem texto duplicado', () => {
     const html = renderToStaticMarkup(
       <ScoreboardTable
         teams={[
@@ -106,7 +106,13 @@ describe('ScoreboardTable', () => {
       />,
     );
     expect(html).toContain('/assets/images/ranks/immortal-3.png');
-    expect(html).toContain('IMM 3');
+    // Ícone SOZINHO ao lado do nickname (maior, com tooltip do tier): o chip
+    // abreviado "IMM 3" não é renderizado quando há asset — o tier por extenso
+    // já aparece na segunda linha.
+    expect(html).not.toContain('IMM 3');
+    expect(html).toContain('Immortal 3');
+    expect(html).toContain('size-6 shrink-0 object-contain');
+    expect(html).toContain('title="Immortal 3"');
   });
 
   it('renderiza colunas KAST%/FK-FD/ECON com dado real e fallback —', () => {
@@ -155,7 +161,7 @@ describe('ScoreboardTable', () => {
     expect(html).toContain('—');
   });
 
-  it('destaca a linha do jogador buscado com VOCÊ e chip abreviado', () => {
+  it('destaca a linha do jogador buscado com VOCÊ e chip abreviado (fallback sem asset)', () => {
     const html = renderToStaticMarkup(
       <ScoreboardTable
         teams={[
@@ -187,7 +193,8 @@ describe('ScoreboardTable', () => {
     expect(html).toContain('VOCÊ');
     expect(html).toContain('data-viewer="true"');
     expect(html).toContain('Time aliado');
-    // Chip abreviado + tier por extenso na segunda linha.
+    // Sem asset do tier → fallback no chip abreviado + tier por extenso na
+    // segunda linha.
     expect(html).toContain('IMM 3');
     expect(html).toContain('Immortal 3');
     // ADR computado exibido.
