@@ -5,13 +5,16 @@ import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@/components/ui/icon';
 import { HENRIKDEV_AFFINITIES, type HenrikDevAffinity } from '@/contracts/henrikdev';
+import { saveRecentPlayer } from '@/lib/recents/recent-players';
 import { parseRiotId } from '@/lib/validation/riot-id';
 
 /**
  * NavSearch — busca rápida do header (Stitch): campo `Player#Tag` + badge
  * de região (chip mono com hairline preta). Enter navega DIRETO para o
  * perfil do jogador — é um atalho; o fluxo completo com modal de ingestão
- * vive na home. Riot ID inválido mostra alerta inline e não navega.
+ * vive na home. Buscas válidas alimentam o histórico de perfis recentes
+ * da home (localStorage, por navegador). Riot ID inválido mostra alerta
+ * inline e não navega.
  *
  * Fiel ao Stitch: some abaixo de `md` (o header não tem menu mobile) e o
  * badge de região é um `<select>` estilizado como chip (`appearance-none`).
@@ -28,10 +31,10 @@ const REGION_LABELS: Record<HenrikDevAffinity, string> = {
 };
 
 export type SearchTargetResult =
-  | { readonly ok: true; readonly href: string }
+  | { readonly ok: true; readonly href: string; readonly riotId: string }
   | { readonly ok: false; readonly message: string };
 
-/** Puro: converte `região + "Nome#Tag"` na rota do perfil (ou erro). */
+/** Puro: converte `região + "Nome#Tag"` na rota e Riot ID canônicos (ou erro). */
 export function resolveSearchTarget(
   region: HenrikDevAffinity,
   raw: string,
@@ -45,6 +48,7 @@ export function resolveSearchTarget(
     href: `/players/${region}/${encodeURIComponent(parsed.value.name)}/${encodeURIComponent(
       parsed.value.tag,
     )}`,
+    riotId: `${parsed.value.name}#${parsed.value.tag}`,
   };
 }
 
@@ -66,6 +70,7 @@ export function NavSearch() {
       return;
     }
     setError(null);
+    saveRecentPlayer({ riotId: target.riotId, region });
     router.push(target.href);
   }
 

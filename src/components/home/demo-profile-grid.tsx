@@ -2,17 +2,21 @@ import { Icon } from '@/components/ui/icon';
 import { cx } from '@/lib/cx';
 
 /**
- * DemoProfileGrid — perfis demo catalogados do hero: card-botão por
- * perfil (nome + chip de região, rank • RR). Perfil destacado usa acento.
+ * DemoProfileGrid — perfis do hero da home: card-botão por perfil (nome +
+ * chip de região; rank • RR quando disponíveis). Perfil destacado usa
+ * acento. Serve tanto aos perfis catalogados quanto aos buscados
+ * recentemente (esses, sem rank/RR — nada inventado).
  */
 
 export interface DemoProfile {
   /** Riot ID completo (ex.: "twmz#tower"). */
   readonly riotId: string;
   readonly regionChip: string;
-  readonly rank: string;
+  /** Afinidade HenrikDev usada ao selecionar o perfil (ex.: "br"). */
+  readonly region?: string;
+  readonly rank?: string;
   /** RR formatado (ex.: "78 RR"). */
-  readonly rr: string;
+  readonly rr?: string;
   readonly highlighted?: boolean;
 }
 
@@ -40,7 +44,7 @@ export function DemoProfileGrid({
       </p>
       <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         {profiles.map((profile) => (
-          <li key={profile.riotId}>
+          <li key={`${profile.region ?? 'demo'}-${profile.riotId}`}>
             <button
               type="button"
               data-demo-profile={profile.riotId}
@@ -68,12 +72,14 @@ export function DemoProfileGrid({
                   {profile.regionChip}
                 </span>
               </span>
-              <span className="mt-0.5 flex items-center justify-between font-hud text-label uppercase text-text-secondary">
-                <span>{profile.rank}</span>
-                <span className={cx('font-semibold', profile.highlighted ? 'text-text-primary' : 'text-text-primary')}>
-                  {profile.rr}
+              {profile.rank !== undefined || profile.rr !== undefined ? (
+                <span className="mt-0.5 flex items-center justify-between font-hud text-label uppercase text-text-secondary">
+                  <span>{profile.rank}</span>
+                  <span className={cx('font-semibold', profile.highlighted ? 'text-text-primary' : 'text-text-primary')}>
+                    {profile.rr}
+                  </span>
                 </span>
-              </span>
+              ) : null}
             </button>
           </li>
         ))}

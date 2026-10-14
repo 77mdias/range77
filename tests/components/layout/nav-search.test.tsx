@@ -31,12 +31,17 @@ describe('NavSearch', () => {
 });
 
 describe('resolveSearchTarget', () => {
-  it('Riot ID válido → rota do perfil com região e encoding', () => {
+  it('Riot ID válido → rota do perfil + riotId canônico, com região e encoding', () => {
     expect(resolveSearchTarget('br', 'TenZ#0001')).toEqual({
       ok: true,
       href: '/players/br/TenZ/0001',
+      riotId: 'TenZ#0001',
     });
-    expect(resolveSearchTarget('latam', '  Nome Da Silva #tag1  ').ok).toBe(true);
+    const spaced = resolveSearchTarget('latam', '  Nome Da Silva #tag1  ');
+    expect(spaced.ok).toBe(true);
+    if (spaced.ok) {
+      expect(spaced.riotId).toBe('Nome Da Silva#tag1');
+    }
   });
 
   it('Riot ID inválido → mensagem de erro, sem href', () => {

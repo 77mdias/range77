@@ -17,15 +17,20 @@ import { Icon } from '@/components/ui/icon';
 import { SearchBar, type SearchQuery } from '@/components/ui/search-bar';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/ui/section-header';
+import {
+  readRecentPlayers,
+  saveRecentPlayer,
+  type RecentPlayer,
+} from '@/lib/recents/recent-players';
 import { parseRiotId } from '@/lib/validation/riot-id';
 
 /**
  * HomeLanding — landing completa (tela Stitch "Busca de Jogador &
- * Apresentação do Ecossistema"): hero com console de busca, perfis demo,
- * modal de ingestão 3-layer (progresso simulado), arquitetura, módulos e
- * strip de status ao vivo. Ilha client única porque o modal é disparado
- * da busca, dos perfis demo e do CTA do strip — conteúdo 100% estático
- * (sem fetch), renderizado por SSR no primeiro paint.
+ * Apresentação do Ecossistema"): hero com console de busca, perfis
+ * RECENTES buscados (histórico do navegador; sem histórico, os perfis
+ * catalogados entram no lugar), modal de ingestão 3-layer (progresso
+ * simulado), arquitetura, módulos e strip de status ao vivo. Ilha client
+ * única porque o modal é disparado da busca, dos perfis e do CTA do strip.
  */
 
 const DEMO_REGION = 'br' as const;
@@ -33,9 +38,27 @@ const DEMO_REGION = 'br' as const;
 /** Perfil demo real (HenrikDev): nome verdadeiro — nada de Riot ID fictício. */
 const DEMO_RIOT_ID = 'twmz#tower' as const;
 
-const DEMO_PROFILES: readonly DemoProfile[] = [
-  { riotId: DEMO_RIOT_ID, regionChip: 'BR', rank: 'Diamond 2', rr: '10 RR', highlighted: true },
+/** Fallback da grade: catálogo exibido quando NÃO há buscas recentes. */
+const FALLBACK_PROFILES: readonly DemoProfile[] = [
+  {
+    riotId: DEMO_RIOT_ID,
+    region: DEMO_REGION,
+    regionChip: 'BR',
+    rank: 'Diamond 2',
+    rr: '10 RR',
+    highlighted: true,
+  },
+  { riotId: 'next to nothing#NOWAY', region: 'na', regionChip: 'NA' },
 ];
+
+/** RecentPlayer → card da grade (sem rank/RR: o histórico não carrega elo). */
+function toDemoProfile(recent: RecentPlayer): DemoProfile {
+  return {
+    riotId: recent.riotId,
+    region: recent.region,
+    regionChip: recent.region.toUpperCase(),
+  };
+}
 
 const STEP_DELAYS_MS = [600, 1400, 2200];
 
@@ -129,6 +152,13 @@ export function HomeLanding() {
   const [target, setTarget] = useState<string>(DEMO_RIOT_ID);
   const [route, setRoute] = useState<string | null>(null);
   const [stepStates, setStepStates] = useState<readonly IngestionStepState[]>(INITIAL_STEPS);
+  // Histórico só existe no navegador: SSR pinta o fallback (catálogo) e a
+  // hidratação troca pelos recentes quando há buscas prévias.
+  const [recents, setRecents] = useState<readonly RecentPlayer[]>([]);
+
+  useEffect(() => {
+    setRecents(readRecentPlayers());
+  }, []);
 
   const doneCount = stepStates.filter((state) => state === 'done').length;
   const progress = (doneCount / INITIAL_STEPS.length) * 100;
@@ -150,13 +180,22 @@ export function HomeLanding() {
     setStepStates(['running', 'pending', 'pending']);
 
     const parsed = parseRiotId(riotId);
-    setRoute(
-      parsed.ok
-        ? `/players/${region}/${encodeURIComponent(parsed.value.name)}/${encodeURIComponent(
-            parsed.value.tag,
-          )}`
-        : null,
-    );
+    if (parsed.ok) {
+      setRoute(
+        `/players/${region}/${encodeURIComponent(parsed.value.name)}/${encodeURIComponent(
+          parsed.value.tag,
+        )}`,
+      );
+      // Busca concluída → histórico de recentes (região validada no módulo).
+      setRecents(
+        saveRecentPlayer({
+          riotId: `${parsed.value.name}#${parsed.value.tag}`,
+          region: region as RecentPlayer['region'],
+        }),
+      );
+    } else {
+      setRoute(null);
+    }
 
     STEP_DELAYS_MS.forEach((delay, index) => {
       const id = window.setTimeout(() => {
@@ -224,14 +263,23 @@ export function HomeLanding() {
             <SearchConsole
               hardShadow
               statusChip="STATUS: AGUARDANDO INPUT"
-              helperText="Pipeline 3-layer pronto — pressione Enter ou escolha um perfil demo"
+              helperText={
+                recents.length > 0
+                  ? 'Pipeline 3-layer pronto — pressione Enter ou escolha um perfil recente'
+                  : 'Pipeline 3-layer pronto — pressione Enter ou escolha um perfil demo'
+              }
             >
               <SearchBar onSubmit={handleSearchSubmit} />
             </SearchConsole>
 
             <DemoProfileGrid
-              profiles={DEMO_PROFILES}
-              onSelect={(profile) => startIngestion(profile.riotId, DEMO_REGION)}
+              profiles={
+                recents.length > 0 ? recents.map(toDemoProfile) : FALLBACK_PROFILES
+              }
+              label={
+                recents.length > 0 ? 'Perfis recentes buscados' : 'Perfis demo catalogados'
+              }
+              onSelect={(profile) => startIngestion(profile.riotId, profile.region ?? DEMO_REGION)}
             />
           </div>
         </div>

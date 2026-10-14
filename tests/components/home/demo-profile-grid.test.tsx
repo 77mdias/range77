@@ -29,4 +29,22 @@ describe('DemoProfileGrid', () => {
     );
     expect(html.match(/<button/g)?.length).toBe(2);
   });
+
+  it('sem rank/RR omite a segunda linha (perfis recentes não inventam elo)', () => {
+    const html = renderToStaticMarkup(
+      <DemoProfileGrid
+        profiles={[{ riotId: 'next to nothing#NOWAY', regionChip: 'NA', region: 'na' }]}
+      />,
+    );
+    expect(html).toContain('next to nothing#NOWAY');
+    expect(html).toContain('NA');
+    expect(html).not.toContain('undefined');
+  });
+
+  it('label customizável (grade de perfis recentes buscados)', () => {
+    const html = renderToStaticMarkup(
+      <DemoProfileGrid profiles={PROFILES} label="Perfis recentes buscados" />,
+    );
+    expect(html).toContain('Perfis recentes buscados');
+  });
 });
