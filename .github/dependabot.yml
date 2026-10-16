@@ -8,7 +8,9 @@
 version: 2
 updates:
   # Dependências npm: PRs semanais; minor+patch agrupados p/ reduzir ruído.
-  # Major vem como PR individual — merece revisão dedicada.
+  # Major NÃO abre PR — migração major vira decisão deliberada (issue
+  # dedicada), pois exige validação coordenada de pares (ex.: vitest 5 exige
+  # @vitest/coverage-v8 5 em lockstep).
   - package-ecosystem: npm
     directory: /
     schedule:
@@ -19,6 +21,10 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      - dependency-name: '*'
+        update-types:
+          - 'version-update:semver-major'
 
   # Actions do GitHub (todas pinadas por SHA nos workflows).
   - package-ecosystem: github-actions
