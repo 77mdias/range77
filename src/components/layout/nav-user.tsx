@@ -1,7 +1,8 @@
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { StatusDot } from '@/components/ui/status-dot';
 import { getUserRiotStore, type UserRiotAccountRow } from '@/lib/db/user-riot-store';
-import { getSession } from '@/lib/session';
+import { getSessionFromHeaders, type SessionView } from '@/lib/session';
 
 /**
  * NavUser — slot de perfil do header global (server), fiel ao cluster do
@@ -13,15 +14,42 @@ import { getSession } from '@/lib/session';
  * visual do design system).
  *
  * Dinâmico por natureza (auth + DB): sempre dentro de <Suspense> no layout
- * (regra do Cache Components — `headers()` lança o sinal antes do DB).
+ * (regra do Cache Components).
  *
- * FAIL-SOFT: a leitura do vínculo é "best-effort". Uma falha de
- * infraestrutura (ex.: Neon indisponível) NÃO pode derrubar o shell global —
- * sem este catch o erro vira exceção não capturada no <Suspense> do layout
- * raiz e, em dev, dispara full-reload em loop (RuntimeErrorHandler).
+ * FAIL-SOFT: tanto a leitura da SESSÃO (auth/env/DB) quanto a do vínculo são
+ * "best-effort". Uma falha de infraestrutura (ex.: BETTER_AUTH_SECRET ausente
+ * ou Neon indisponível) NÃO pode derrubar o shell global — sem estes catches o
+ * erro vira exceção não capturada no <Suspense> do layout raiz e, em dev,
+ * dispara full-reload em loop (RuntimeErrorHandler).
+ *
+ * `headers()` fica FORA do try/catch: em prerender ele lança o sinal de
+ * "dinâmico" que o Cache Components usa para abrir o hole — capturá-lo
+ * desligaria o slot. Só auth/DB entram no catch.
  */
+
+const UNAVAILABLE_CHIP_CLASS =
+  'rounded-md border border-line bg-surface-raised px-3 py-1.5 font-hud text-label uppercase text-text-secondary';
+
+/** Chip neutro para qualquer falha fail-soft (sessão ou vínculo). */
+function NavUnavailable() {
+  return (
+    <span data-nav-unavailable className={UNAVAILABLE_CHIP_CLASS}>
+      Conta indisponível
+    </span>
+  );
+}
+
 export async function NavUser() {
-  const session = await getSession();
+  const resolvedHeaders = await headers();
+
+  let session: SessionView | null;
+  try {
+    session = await getSessionFromHeaders(resolvedHeaders);
+  } catch (error) {
+    // Diagnóstico no servidor; o cliente só vê o chip neutro de indisponível.
+    console.error('[NavUser] falha ao ler a sessão', error);
+    return <NavUnavailable />;
+  }
 
   if (session === null) {
     return (
@@ -40,14 +68,7 @@ export async function NavUser() {
   } catch (error) {
     // Diagnóstico no servidor; o cliente só vê o chip neutro de indisponível.
     console.error('[NavUser] falha ao ler o Riot ID vinculado', error);
-    return (
-      <span
-        data-nav-unavailable
-        className="rounded-md border border-line bg-surface-raised px-3 py-1.5 font-hud text-label uppercase text-text-secondary"
-      >
-        Conta indisponível
-      </span>
-    );
+    return <NavUnavailable />;
   }
 
   if (linked === null) {

@@ -7,6 +7,11 @@ import { getAuth } from '@/lib/auth';
  * Wrapper fino sobre `auth.api.getSession` com a forma que o app consome:
  * retorna `null` quando não autenticado e achata o usuário (email/image
  * podem ser nulos — Discord). Sempre via `await headers()` (Next 16).
+ *
+ * `getSessionFromHeaders` é o núcleo SEM `headers()`: recebe os headers já
+ * resolvidos para que consumidores fail-soft (ex.: NavUser) possam chamar
+ * `headers()` FORA do try/catch — o sinal de "dinâmico" do Cache Components
+ * lança e NÃO pode ser capturado — tratando apenas falhas de auth/DB.
  */
 
 export interface SessionUser {
@@ -20,10 +25,9 @@ export interface SessionView {
   readonly user: SessionUser;
 }
 
-export async function getSession(): Promise<SessionView | null> {
-  // `headers()` PRIMEIRO: em prerender ele lança o sinal de "dinâmico" que o
-  // Cache Components usa para abrir o hole — antes de qualquer custo de DB.
-  const resolvedHeaders = await headers();
+export async function getSessionFromHeaders(
+  resolvedHeaders: Headers,
+): Promise<SessionView | null> {
   const auth = await getAuth();
   const session = await auth.api.getSession({ headers: resolvedHeaders });
   if (session === null) {
@@ -37,4 +41,11 @@ export async function getSession(): Promise<SessionView | null> {
       image: session.user.image ?? null,
     },
   };
+}
+
+export async function getSession(): Promise<SessionView | null> {
+  // `headers()` PRIMEIRO: em prerender ele lança o sinal de "dinâmico" que o
+  // Cache Components usa para abrir o hole — antes de qualquer custo de DB.
+  const resolvedHeaders = await headers();
+  return getSessionFromHeaders(resolvedHeaders);
 }

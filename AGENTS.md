@@ -33,6 +33,13 @@ Nunca criar arquivos `.env` (regra do projeto).
   `<Suspense>`; páginas com `params`/`searchParams` assíncronos usam
   `export const instant = false`. Sessão: `headers()` ANTES de tocar o DB
   (`src/lib/session.ts`).
+- **Slots dinâmicos do layout raiz são FAIL-SOFT**: `NavUser` (auth/env/DB)
+  roda dentro do `<Suspense>` do `layout.tsx`. Uma exceção NÃO capturada ali
+  vira página de erro do Next e, em dev, cada mensagem de HMR dispara
+  `window.location.reload()` (`hot-reloader-app.js`) → loop de `GET /`. Regra:
+  `headers()` FORA do try/catch (sinal de dinâmico não pode ser capturado) e
+  `getSessionFromHeaders()` + store DENTRO do catch, degradando para o chip
+  neutro "Conta indisponível". Já regrediu 2x (commits `ccaa6b3` e NavUser).
 - **Next 16**: middleware virou **proxy** — é `src/proxy.ts` com
   `export function proxy` (não `middleware.ts`).
 - **React 19**: `<title>` (inclusive em SVG) exige FILHO ÚNICO em template
