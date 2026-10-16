@@ -4,7 +4,8 @@
 - **Status:** aprovado para planejamento
 - **Fonte de verdade visual:** telas 7 (`3bb8ff118e7948be9211054ef15892db`, "Autenticação & Login") e 8
   (`6aa4ce44cbca4477b0f98a11a079f305`, "Cadastro & Novo Operador") do projeto Stitch
-  `projects/10337952812821192130`, exportadas para `.stitch/login.html` e `.stitch/signup.html`.
+  `projects/10337952812821192130`, exportadas para `.stitch/login.html` e `.stitch/signup.html`
+  (commitadas como referência de design — são a fonte de verdade do layout, não código de produção).
 - **Design system:** *Protocol Precision* — já traduzido em `src/app/globals.css`.
 
 ## 1. Problema
@@ -145,4 +146,3 @@ Antes de escrever qualquer código: ler `node_modules/next/dist/docs/` conforme 
 - Fluxo de reset de senha com provider de e-mail (fase própria).
 - Páginas de Termos de Serviço, Política de Privacidade e Status do Sistema.
 - Login oficial via Riot Sign-On, quando a key de produção sair.
-- `.stitch/*.html` está fora do controle de versão — decidir se entra no repo ou no `.gitignore`.

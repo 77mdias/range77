@@ -1,0 +1,996 @@
+<!doctype html>
+
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="web_standard" name="shell-type" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      @layer base {
+        html,
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        body {
+          overscroll-behavior: none;
+        }
+        main > :first-child {
+          margin-top: 0 !important;
+        }
+        main > :last-child {
+          margin-bottom: 0 !important;
+        }
+      }
+      ::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              outline: "#797861",
+              "on-secondary": "#ffffff",
+              "on-surface-variant": "#484833",
+              "on-error-container": "#93000a",
+              "surface-variant": "#e2e2e2",
+              "surface-container": "#eeeeee",
+              "on-tertiary-fixed": "#002022",
+              "on-tertiary": "#ffffff",
+              "on-secondary-container": "#646464",
+              "on-tertiary-container": "#3b757a",
+              "on-secondary-fixed": "#1b1b1b",
+              "surface-dim": "#dadada",
+              "surface-container-low": "#f3f3f4",
+              "on-secondary-fixed-variant": "#474747",
+              "secondary-fixed-dim": "#c6c6c6",
+              "surface-container-lowest": "#ffffff",
+              secondary: "#5e5e5e",
+              "on-primary-container": "#6f7100",
+              "tertiary-container": "#c0faff",
+              "on-background": "#1a1c1c",
+              "canvas-soft": "#f9fafb",
+              "surface-container-high": "#e8e8e8",
+              surface: "#f9f9f9",
+              "tertiary-fixed-dim": "#97d0d5",
+              tertiary: "#2c676b",
+              "on-primary-fixed-variant": "#484a00",
+              "secondary-fixed": "#e2e2e2",
+              "surface-tint": "#616200",
+              "tertiary-fixed": "#b2edf2",
+              "inverse-primary": "#cbce04",
+              "border-hairline": "#000000",
+              error: "#ba1a1a",
+              "surface-container-highest": "#e2e2e2",
+              "on-surface": "#1a1c1c",
+              "primary-fixed-dim": "#cbce04",
+              "error-container": "#ffdad6",
+              "on-primary-fixed": "#1c1d00",
+              primary: "#616200",
+              "on-error": "#ffffff",
+              "surface-bright": "#f9f9f9",
+              "outline-variant": "#cac8ad",
+              "inverse-on-surface": "#f0f1f1",
+              "primary-fixed": "#e7ea33",
+              background: "#f9f9f9",
+              "on-primary": "#ffffff",
+              "on-tertiary-fixed-variant": "#0a4f53",
+              "inverse-surface": "#2f3131",
+              "secondary-container": "#e2e2e2",
+              "primary-container": "#f5f841",
+            },
+            borderRadius: {
+              DEFAULT: "0.125rem",
+              lg: "0.25rem",
+              xl: "0.5rem",
+              full: "0.75rem",
+            },
+            spacing: {
+              "margin-mobile": "0.75rem",
+              "gutter-mobile": "0.5rem",
+              "space-md": "0.375rem",
+              "space-sm": "0.25rem",
+              margin: "1rem",
+              "space-lg": "0.5rem",
+              "space-xl": "0.625rem",
+              "space-xs": "0.1875rem",
+              gutter: "0.75rem",
+            },
+            fontFamily: {
+              "headline-lg": ["Space Grotesk"],
+              "label-xs": ["JetBrains Mono"],
+              "display-xl-mobile": ["Space Grotesk"],
+              "headline-md": ["Space Grotesk"],
+              "body-lg": ["Geist"],
+              "display-xl": ["Space Grotesk"],
+              "label-md": ["JetBrains Mono"],
+              "body-md": ["Geist"],
+              "body-sm": ["Geist"],
+              "label-sm": ["JetBrains Mono"],
+            },
+            fontSize: {
+              "headline-lg": [
+                "20px",
+                {
+                  lineHeight: "24px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "600",
+                },
+              ],
+              "label-xs": [
+                "9px",
+                {
+                  lineHeight: "11px",
+                  letterSpacing: "0.08em",
+                  fontWeight: "700",
+                },
+              ],
+              "display-xl-mobile": [
+                "24px",
+                {
+                  lineHeight: "28px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "headline-md": [
+                "16px",
+                {
+                  lineHeight: "20px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+              "body-lg": ["14px", { lineHeight: "18px", fontWeight: "500" }],
+              "display-xl": [
+                "32px",
+                {
+                  lineHeight: "36px",
+                  letterSpacing: "-0.03em",
+                  fontWeight: "700",
+                },
+              ],
+              "label-md": [
+                "11px",
+                {
+                  lineHeight: "14px",
+                  letterSpacing: "0.04em",
+                  fontWeight: "600",
+                },
+              ],
+              "body-md": ["13px", { lineHeight: "17px", fontWeight: "400" }],
+              "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }],
+              "label-sm": [
+                "10px",
+                {
+                  lineHeight: "12px",
+                  letterSpacing: "0.06em",
+                  fontWeight: "500",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body
+    class="bg-background font-body-md text-on-surface min-h-screen flex flex-col"
+  >
+    <header
+      class="fixed top-0 left-0 w-full z-50 bg-surface-container-lowest border-b border-border-hairline"
+    >
+      <div class="h-14 w-full px-margin flex items-center justify-between">
+        <div class="flex items-center gap-gutter">
+          <div class="flex items-center gap-space-sm">
+            <div
+              class="w-3 h-3 bg-primary-container border border-border-hairline flex items-center justify-center"
+            >
+              <div class="w-1.5 h-1.5 bg-on-background"></div>
+            </div>
+            <span
+              class="font-headline-md text-headline-md tracking-tighter uppercase text-on-surface"
+              >VALORANT<span class="text-outline">.COACH</span></span
+            ><span
+              class="font-label-xs text-label-xs bg-surface-container-highest px-space-xs py-0.5 border border-border-hairline text-on-surface-variant uppercase"
+              >SYS_AUTH</span
+            >
+          </div>
+          <div
+            class="hidden md:flex items-center gap-space-md pl-gutter border-l border-border-hairline"
+          >
+            <div class="flex items-center gap-space-xs">
+              <span
+                class="w-2 h-2 rounded-full bg-primary-container border border-border-hairline animate-pulse"
+              ></span
+              ><span
+                class="font-label-xs text-label-xs uppercase text-on-surface"
+                >RIOT API // SECURE V4</span
+              >
+            </div>
+            <span class="font-label-xs text-label-xs text-outline">|</span
+            ><span
+              class="font-label-xs text-label-xs text-on-surface-variant uppercase"
+              >SSL 256-BIT ENCRYPTION</span
+            ><span class="font-label-xs text-label-xs text-outline">|</span>
+            <div
+              class="flex items-center gap-space-xs bg-canvas-soft px-space-sm py-0.5 border border-border-hairline"
+            >
+              <span
+                class="material-symbols-outlined text-label-xs text-on-surface"
+                >speed</span
+              ><span class="font-label-xs text-label-xs text-on-surface"
+                >RTT &lt;15MS</span
+              >
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-gutter">
+          <nav
+            class="flex items-center gap-space-sm border border-border-hairline p-0.5 bg-canvas-soft"
+            data-active-classes="bg-primary-container text-on-surface font-semibold border-border-hairline"
+          >
+            <a
+              class="font-label-sm text-label-sm px-space-lg py-1 border border-transparent text-on-surface-variant hover:text-on-surface transition-colors uppercase"
+              data-path="login"
+              href="#"
+              >Entrar</a
+            ><a
+              aria-current="page"
+              class="px-space-lg py-1 transition-colors uppercase bg-primary-container text-on-surface font-semibold border-border-hairline"
+              data-path="cadastro"
+              href="#"
+              >Criar Conta</a
+            >
+          </nav>
+          <div
+            class="flex items-center gap-space-sm pl-space-md border-l border-border-hairline"
+          >
+            <div class="hidden sm:flex flex-col text-right">
+              <span
+                class="font-label-xs text-label-xs text-on-surface uppercase"
+                >STATUS: READY</span
+              ><span class="font-label-xs text-label-xs text-outline"
+                >TELEMETRY ACTIVE</span
+              >
+            </div>
+            <div
+              class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"
+            >
+              <span
+                class="material-symbols-outlined text-on-primary text-[18px]"
+                >person</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="w-full pt-14 bg-background flex-1 flex flex-col">
+      <div class="flex flex-col w-full">
+        <div
+          class="w-full px-margin py-gutter max-w-7xl mx-auto flex flex-col gap-gutter"
+        >
+          <!-- Top System Telemetry Bar -->
+          <div
+            class="w-full bg-surface-container-lowest p-space-md flex flex-wrap items-center justify-between gap-space-sm shadow-sm"
+          >
+            <div class="flex items-center gap-space-md">
+              <span class="inline-block w-2 h-2 bg-primary-container"></span>
+              <span
+                class="font-label-xs text-label-xs uppercase text-on-surface"
+                >SYS_ENV: PROD_GLOBAL // PROTOCOL_V4.2.1</span
+              >
+              <span class="text-outline font-label-xs text-label-xs">/</span>
+              <span class="font-label-xs text-label-xs uppercase text-secondary"
+                >LATENCY: 12ms (SA-EAST)</span
+              >
+            </div>
+            <div class="flex items-center gap-space-lg">
+              <div class="flex items-center gap-space-xs">
+                <span
+                  class="material-symbols-outlined text-label-sm text-primary"
+                  >verified_user</span
+                >
+                <span
+                  class="font-label-xs text-label-xs uppercase text-on-surface"
+                  >ZERO SCRIM LEAK CERTIFIED</span
+                >
+              </div>
+              <span
+                class="bg-surface-container px-space-sm py-0.5 font-label-xs text-label-xs uppercase text-on-surface font-semibold"
+                >CADASTRO ABERTO</span
+              >
+            </div>
+          </div>
+          <!-- Main Tactical Workspace: 12 Columns -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+            <!-- Primary Registration Card (8 Columns) -->
+            <div
+              class="lg:col-span-8 bg-surface-container-lowest p-gutter flex flex-col gap-gutter shadow-sm"
+            >
+              <!-- Header & State Switcher -->
+              <div class="flex flex-col gap-space-md">
+                <div
+                  class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm"
+                >
+                  <span
+                    class="font-label-xs text-label-xs uppercase tracking-wider text-secondary"
+                  >
+                    // PROTOCOLO DE REGISTRO // NOVO OPERADOR TELEMÉTRICO
+                  </span>
+                  <span
+                    class="font-label-xs text-label-xs uppercase px-space-sm py-0.5 bg-canvas-soft text-on-surface font-semibold"
+                  >
+                    HASH ID: REC_9942_NEW
+                  </span>
+                </div>
+                <!-- Dual Tab Navigation -->
+                <div
+                  class="grid grid-cols-2 gap-space-xs bg-surface-container-high p-space-xs"
+                >
+                  <a
+                    class="flex items-center justify-center gap-space-xs py-space-sm px-space-md text-center font-label-md text-label-md uppercase bg-surface-container-lowest text-secondary hover:text-on-surface transition-colors"
+                    data-path="login"
+                    href="#"
+                  >
+                    <span class="material-symbols-outlined text-[14px]"
+                      >login</span
+                    >
+                    [LOGIN (ENTRAR)]
+                  </a>
+                  <div
+                    class="flex items-center justify-center gap-space-xs py-space-sm px-space-md text-center font-label-md text-label-md uppercase bg-primary-container text-on-surface font-bold shadow-sm"
+                  >
+                    <span class="w-1.5 h-1.5 bg-on-background"></span>
+                    [• CADASTRO (CRIAR CONTA)]
+                  </div>
+                </div>
+                <!-- Title and Subtitle -->
+                <div class="flex flex-col gap-space-xs pt-space-xs">
+                  <h1
+                    class="font-display-xl text-display-xl uppercase tracking-tighter text-on-surface"
+                  >
+                    INICIALIZAR CONTA VALORANT.COACH
+                  </h1>
+                  <p class="font-body-md text-body-md text-secondary">
+                    Crie seu perfil telemétrico para calcular micro-decisões,
+                    benchmark de elo e coaching de IA.
+                  </p>
+                </div>
+              </div>
+              <!-- Fast Providers (SSO) Section -->
+              <div class="flex flex-col gap-space-sm">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+                  <!-- Google SSO Button -->
+                  <button
+                    class="group flex items-center justify-center gap-space-md px-space-lg py-space-md bg-canvas-soft hover:bg-surface-container transition-all"
+                    type="button"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewbox="0 0 24 24"
+                    >
+                      <path
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                        fill="#4285F4"
+                      ></path>
+                      <path
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        fill="#34A853"
+                      ></path>
+                      <path
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                        fill="#FBBC05"
+                      ></path>
+                      <path
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                        fill="#EA4335"
+                      ></path>
+                    </svg>
+                    <span
+                      class="font-label-md text-label-md uppercase tracking-wider text-on-surface font-semibold"
+                    >
+                      Cadastrar com Google
+                    </span>
+                  </button>
+                  <!-- Discord SSO Button -->
+                  <button
+                    class="group flex items-center justify-center gap-space-md px-space-lg py-space-md bg-canvas-soft hover:bg-surface-container transition-all"
+                    type="button"
+                  >
+                    <svg
+                      class="w-4 h-4 text-on-surface"
+                      fill="currentColor"
+                      viewbox="0 0 24 24"
+                    >
+                      <path
+                        d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"
+                      ></path>
+                    </svg>
+                    <span
+                      class="font-label-md text-label-md uppercase tracking-wider text-on-surface font-semibold"
+                    >
+                      Cadastrar com Discord
+                    </span>
+                  </button>
+                </div>
+                <!-- Riot SSO Homologation Callout -->
+                <div
+                  class="bg-surface-container p-space-md flex items-start gap-space-md"
+                >
+                  <span
+                    class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5"
+                    >info</span
+                  >
+                  <div class="flex flex-col gap-0.5">
+                    <span
+                      class="font-label-xs text-label-xs uppercase font-bold text-on-surface tracking-wide"
+                    >
+                      STATUS HOMOLOGAÇÃO RIOT GAMES OAUTH DIRECT
+                    </span>
+                    <p class="font-body-sm text-body-sm text-secondary">
+                      Riot Sign-On (OAuth direto) em processo de homologação de
+                      produção com a Riot Games. Você pode vincular seu Riot ID
+                      (ex:
+                      <span
+                        class="font-label-xs text-label-xs text-on-surface font-semibold bg-surface-container-highest px-1 py-0.5"
+                        >TenZ#0001</span
+                      >) imediatamente após a criação da conta.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <!-- Divider with Text -->
+              <div
+                class="relative flex items-center justify-center my-space-xs"
+              >
+                <div class="w-full h-px bg-surface-variant"></div>
+                <span
+                  class="absolute bg-surface-container-lowest px-space-md font-label-xs text-label-xs uppercase text-secondary tracking-widest"
+                >
+                  --- OU PREENCHA O FORMULÁRIO DE REGISTRO ---
+                </span>
+              </div>
+              <!-- Registration Form -->
+              <form
+                class="flex flex-col gap-space-lg"
+                onsubmit="event.preventDefault()"
+              >
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+                  <!-- Operator Username -->
+                  <div class="flex flex-col gap-space-xs">
+                    <label
+                      class="flex items-center justify-between font-label-xs text-label-xs uppercase text-on-surface font-bold"
+                      for="op_name"
+                    >
+                      <span>01 // NOME DE OPERADOR / USUÁRIO</span>
+                      <span class="text-outline font-label-xs text-label-xs"
+                        >OBRIGATÓRIO</span
+                      >
+                    </label>
+                    <div class="relative flex items-center">
+                      <input
+                        class="w-full bg-surface-container-low px-space-md py-space-sm font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest transition-colors"
+                        id="op_name"
+                        name="op_name"
+                        placeholder="ex: NexusOperator"
+                        required=""
+                        type="text"
+                      />
+                      <span
+                        class="material-symbols-outlined absolute right-space-md text-[16px] text-secondary"
+                        >badge</span
+                      >
+                    </div>
+                  </div>
+                  <!-- Email Address -->
+                  <div class="flex flex-col gap-space-xs">
+                    <label
+                      class="flex items-center justify-between font-label-xs text-label-xs uppercase text-on-surface font-bold"
+                      for="op_email"
+                    >
+                      <span>02 // E-MAIL DE TRABALHO OU PESSOAL</span>
+                      <span class="text-outline font-label-xs text-label-xs"
+                        >VERIFICÁVEL</span
+                      >
+                    </label>
+                    <div class="relative flex items-center">
+                      <input
+                        class="w-full bg-surface-container-low px-space-md py-space-sm font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest transition-colors"
+                        id="op_email"
+                        name="op_email"
+                        placeholder="ex: player@exemplo.com"
+                        required=""
+                        type="email"
+                      />
+                      <span
+                        class="material-symbols-outlined absolute right-space-md text-[16px] text-secondary"
+                        >alternate_email</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <!-- Initial Riot ID + Region Grid -->
+                <div
+                  class="bg-surface-container-low p-space-md flex flex-col gap-space-sm"
+                >
+                  <div
+                    class="flex flex-wrap items-center justify-between gap-space-xs"
+                  >
+                    <label
+                      class="font-label-xs text-label-xs uppercase text-on-surface font-bold flex items-center gap-space-xs"
+                    >
+                      <span class="inline-block w-1.5 h-1.5 bg-primary"></span>
+                      <span>03 // RIOT ID INICIAL (IMPORTAÇÃO AUTOMÁTICA)</span>
+                    </label>
+                    <span
+                      class="font-label-xs text-label-xs uppercase px-space-sm py-0.5 bg-primary-container text-on-surface font-semibold"
+                    >
+                      OPCIONAL • IMPORTAÇÃO IMEDIATA
+                    </span>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-12 gap-space-sm">
+                    <div class="md:col-span-8 relative flex items-center">
+                      <input
+                        class="w-full bg-surface-container-lowest px-space-md py-space-sm font-label-md text-label-md text-on-surface placeholder:text-outline focus:outline-none transition-colors"
+                        id="riot_id"
+                        name="riot_id"
+                        placeholder="ex: Aspas#LEV ou SeuNick#TAG"
+                        type="text"
+                      />
+                      <span
+                        class="material-symbols-outlined absolute right-space-md text-[16px] text-secondary"
+                        >sports_esports</span
+                      >
+                    </div>
+                    <div class="md:col-span-4">
+                      <select
+                        class="w-full bg-surface-container-lowest px-space-md py-space-sm font-label-sm text-label-sm uppercase text-on-surface focus:outline-none cursor-pointer"
+                        id="riot_region"
+                        name="riot_region"
+                      >
+                        <option value="br">REGIÃO: BR / LATAM</option>
+                        <option value="na">REGIÃO: NA (NORTH AMER)</option>
+                        <option value="emea">REGIÃO: EMEA (EUROPE)</option>
+                        <option value="kr">REGIÃO: KR / ASIA PACIFIC</option>
+                      </select>
+                    </div>
+                  </div>
+                  <p class="font-body-sm text-body-sm text-secondary">
+                    Importa automaticamente as últimas 20 partidas competitivas
+                    e partidas personalizadas no primeiro acesso para geração do
+                    primeiro relatório telemétrico.
+                  </p>
+                </div>
+                <!-- Password & Password Confirmation -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+                  <!-- Password Field with Strength Meter -->
+                  <div class="flex flex-col gap-space-xs">
+                    <label
+                      class="flex items-center justify-between font-label-xs text-label-xs uppercase text-on-surface font-bold"
+                      for="op_pass"
+                    >
+                      <span>04 // SENHA DE ACESSO</span>
+                      <span
+                        class="font-label-xs text-label-xs uppercase text-secondary"
+                        id="strength-label"
+                        >COMPLEXIDADE: FORTE</span
+                      >
+                    </label>
+                    <div class="relative flex items-center">
+                      <input
+                        class="w-full bg-surface-container-low px-space-md py-space-sm font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest transition-colors"
+                        id="op_pass"
+                        name="op_pass"
+                        placeholder="••••••••••••"
+                        required=""
+                        type="password"
+                        value="ValkyriePrecision2024!"
+                      />
+                      <button
+                        class="absolute right-space-md text-secondary hover:text-on-surface"
+                        id="toggle-pass"
+                        type="button"
+                      >
+                        <span class="material-symbols-outlined text-[16px]"
+                          >visibility</span
+                        >
+                      </button>
+                    </div>
+                    <!-- Telemetric Password Complexity Meter -->
+                    <div class="flex flex-col gap-1 pt-1">
+                      <div class="grid grid-cols-3 gap-1">
+                        <div class="h-1 bg-on-background"></div>
+                        <div class="h-1 bg-on-background"></div>
+                        <div class="h-1 bg-primary-container"></div>
+                      </div>
+                      <div
+                        class="flex justify-between items-center text-outline font-label-xs text-label-xs"
+                      >
+                        <span>8+ CARACTERES</span>
+                        <span>ALFANUMÉRICO</span>
+                        <span class="text-on-surface font-semibold"
+                          >ENTROPIA ELEVADA</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Confirm Password Field -->
+                  <div class="flex flex-col gap-space-xs">
+                    <label
+                      class="flex items-center justify-between font-label-xs text-label-xs uppercase text-on-surface font-bold"
+                      for="op_pass_confirm"
+                    >
+                      <span>05 // CONFIRMAR SENHA</span>
+                      <span
+                        class="text-primary font-label-xs text-label-xs font-semibold"
+                        >VALIDADO</span
+                      >
+                    </label>
+                    <div class="relative flex items-center">
+                      <input
+                        class="w-full bg-surface-container-low px-space-md py-space-sm font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest transition-colors"
+                        id="op_pass_confirm"
+                        name="op_pass_confirm"
+                        placeholder="••••••••••••"
+                        required=""
+                        type="password"
+                        value="ValkyriePrecision2024!"
+                      />
+                      <span
+                        class="material-symbols-outlined absolute right-space-md text-[16px] text-primary"
+                        >check_circle</span
+                      >
+                    </div>
+                    <span class="font-label-xs text-label-xs text-secondary">
+                      Confirmação de chave criptográfica para descriptografia
+                      local de VODs.
+                    </span>
+                  </div>
+                </div>
+                <!-- Terms Checkbox -->
+                <div
+                  class="bg-surface-container-low p-space-md flex items-start gap-space-md"
+                >
+                  <input
+                    checked=""
+                    class="w-4 h-4 mt-0.5 accent-on-background cursor-pointer"
+                    id="terms_consent"
+                    required=""
+                    type="checkbox"
+                  />
+                  <label
+                    class="font-body-sm text-body-sm text-on-surface cursor-pointer select-none"
+                    for="terms_consent"
+                  >
+                    Concordo com os
+                    <a
+                      class="font-semibold underline hover:text-primary"
+                      data-path="termos-de-servico"
+                      href="#"
+                      >Termos de Serviço</a
+                    >
+                    e a
+                    <a
+                      class="font-semibold underline hover:text-primary"
+                      data-path="politica-de-privacidade"
+                      href="#"
+                      >Política de Telemetria de Dados</a
+                    >
+                    (Compromisso irrestrito de zero vazamento de dados de
+                    scrims, composições secretas e callouts táticos).
+                  </label>
+                </div>
+                <!-- Primary Submit Action Button -->
+                <div
+                  class="flex flex-col sm:flex-row items-center gap-space-md pt-space-xs"
+                >
+                  <button
+                    class="w-full sm:w-auto flex-1 flex items-center justify-center gap-space-sm bg-primary-container hover:bg-primary-fixed-dim text-on-surface font-label-md text-label-md font-bold px-gutter py-space-md uppercase transition-all shadow-sm active:translate-y-px"
+                    type="submit"
+                  >
+                    <span>CRIAR CONTA E INICIAR TELEMETRIA</span>
+                    <span class="material-symbols-outlined text-[16px]"
+                      >arrow_forward</span
+                    >
+                  </button>
+                  <a
+                    class="w-full sm:w-auto px-gutter py-space-md bg-surface-container hover:bg-surface-container-highest text-center font-label-md text-label-md uppercase text-on-surface font-semibold transition-colors"
+                    data-path="login"
+                    href="#"
+                  >
+                    CANCELAR
+                  </a>
+                </div>
+              </form>
+            </div>
+            <!-- Tactical Onboarding & Intelligence Sidebar (4 Columns) -->
+            <div class="lg:col-span-4 flex flex-col gap-gutter">
+              <!-- Onboarding Checklist Panel -->
+              <div
+                class="bg-surface-container-lowest p-gutter flex flex-col gap-space-md shadow-sm"
+              >
+                <div class="flex items-center justify-between pb-space-xs">
+                  <span
+                    class="font-label-xs text-label-xs uppercase font-bold text-on-surface flex items-center gap-space-xs"
+                  >
+                    <span class="w-2 h-2 bg-primary"></span>
+                    PROTOCOLO DE ATIVAÇÃO
+                  </span>
+                  <span
+                    class="font-label-xs text-label-xs uppercase px-space-xs bg-canvas-soft text-secondary"
+                  >
+                    TIER // FREE VOD
+                  </span>
+                </div>
+                <p class="font-body-sm text-body-sm text-secondary">
+                  Ao finalizar seu cadastro, o motor analítico aplica
+                  automaticamente o seguinte roteiro de auditoria tática:
+                </p>
+                <!-- Precision Checklist -->
+                <div class="flex flex-col gap-space-sm pt-space-xs">
+                  <div
+                    class="bg-surface-container p-space-sm flex items-start gap-space-sm"
+                  >
+                    <span
+                      class="material-symbols-outlined text-primary text-[18px] shrink-0 font-bold"
+                      >check_box</span
+                    >
+                    <div class="flex flex-col">
+                      <span
+                        class="font-label-xs text-label-xs uppercase font-bold text-on-surface"
+                        >ANÁLISE DE ATÉ 20 PARTIDAS RECENTES</span
+                      >
+                      <span class="font-body-sm text-body-sm text-secondary"
+                        >Recuperação de dados brutos de rounds, first bloods e
+                        economia por rodada.</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="bg-surface-container p-space-sm flex items-start gap-space-sm"
+                  >
+                    <span
+                      class="material-symbols-outlined text-primary text-[18px] shrink-0 font-bold"
+                      >check_box</span
+                    >
+                    <div class="flex flex-col">
+                      <span
+                        class="font-label-xs text-label-xs uppercase font-bold text-on-surface"
+                        >SÍNTESE COGNITIVA MINIMAX (-98.5% TOKENS)</span
+                      >
+                      <span class="font-body-sm text-body-sm text-secondary"
+                        >Sumarização ultracompacta em linguagem natural para
+                        leitura em 30 segundos.</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="bg-surface-container p-space-sm flex items-start gap-space-sm"
+                  >
+                    <span
+                      class="material-symbols-outlined text-primary text-[18px] shrink-0 font-bold"
+                      >check_box</span
+                    >
+                    <div class="flex flex-col">
+                      <span
+                        class="font-label-xs text-label-xs uppercase font-bold text-on-surface"
+                        >DETECÇÃO DE OVERPEEKING &amp; RETAKE</span
+                      >
+                      <span class="font-body-sm text-body-sm text-secondary"
+                        >Algoritmo de trigonometria espacial identificando
+                        duelos em desvantagem numérica.</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="bg-surface-container p-space-sm flex items-start gap-space-sm"
+                  >
+                    <span
+                      class="material-symbols-outlined text-primary text-[18px] shrink-0 font-bold"
+                      >check_box</span
+                    >
+                    <div class="flex flex-col">
+                      <span
+                        class="font-label-xs text-label-xs uppercase font-bold text-on-surface"
+                        >SUPORTE NATIVO AO PATCH RIOT v9.11</span
+                      >
+                      <span class="font-body-sm text-body-sm text-secondary"
+                        >Pesos calibrados para balanceamento de duelistas,
+                        flashes e tempo de defuse.</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- System Architecture Card with Telemetry Graph -->
+              <div
+                class="bg-surface-container-lowest p-gutter flex flex-col gap-space-md shadow-sm"
+              >
+                <div class="flex items-center justify-between">
+                  <span
+                    class="font-label-xs text-label-xs uppercase font-bold text-on-surface"
+                  >
+                    // TELEMETRIA DE LATÊNCIA DA API
+                  </span>
+                  <span
+                    class="font-label-xs text-label-xs uppercase text-primary font-bold"
+                    >99.98% UP</span
+                  >
+                </div>
+                <!-- Mini Tactical Telemetry Sparkline -->
+                <div
+                  class="bg-canvas-soft p-space-md flex flex-col gap-space-xs"
+                >
+                  <div
+                    class="flex items-center justify-between font-label-xs text-label-xs text-secondary"
+                  >
+                    <span>INGESTION PIPELINE</span>
+                    <span>120 FPS PARSER</span>
+                  </div>
+                  <svg
+                    class="w-full h-12 overflow-visible"
+                    fill="none"
+                    viewbox="0 0 200 40"
+                  >
+                    <path
+                      d="M0,35 L20,30 L40,32 L60,18 L80,22 L100,8 L120,15 L140,12 L160,5 L180,9 L200,4"
+                      stroke="#000000"
+                      stroke-linecap="square"
+                      stroke-width="1.5"
+                    ></path>
+                    <path
+                      d="M0,35 L20,30 L40,32 L60,18 L80,22 L100,8 L120,15 L140,12 L160,5 L180,9 L200,4 L200,40 L0,40 Z"
+                      fill="#f5f841"
+                      fill-opacity="0.25"
+                    ></path>
+                    <circle cx="160" cy="5" fill="#000000" r="2.5"></circle>
+                    <circle
+                      cx="200"
+                      cy="4"
+                      fill="#f5f841"
+                      r="3"
+                      stroke="#000000"
+                      stroke-width="1"
+                    ></circle>
+                  </svg>
+                  <div
+                    class="flex items-center justify-between font-label-xs text-label-xs pt-1"
+                  >
+                    <span class="text-outline">MIN: 4.2ms</span>
+                    <span class="text-on-surface font-semibold"
+                      >MÉDIA: 9.8ms</span
+                    >
+                    <span class="text-outline">MAX: 16.1ms</span>
+                  </div>
+                </div>
+                <!-- Existing Account Reminder -->
+                <div
+                  class="bg-surface-container p-space-md flex flex-col gap-space-xs"
+                >
+                  <span
+                    class="font-label-xs text-label-xs uppercase font-bold text-on-surface"
+                  >
+                    JÁ POSSUI UMA CONTA TELEMÉTRICA?
+                  </span>
+                  <p class="font-body-sm text-body-sm text-secondary">
+                    Acesse imediatamente com suas credenciais para verificar os
+                    treinos e o histórico de VODs.
+                  </p>
+                  <a
+                    class="mt-space-xs inline-flex items-center justify-center gap-space-xs py-space-sm px-space-md bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm uppercase font-bold transition-colors"
+                    data-path="login"
+                    href="#"
+                  >
+                    <span>ACESSAR O LOGIN</span>
+                    <span class="material-symbols-outlined text-[14px]"
+                      >arrow_forward</span
+                    >
+                  </a>
+                </div>
+              </div>
+              <!-- Privacy & Security Seal -->
+              <div
+                class="bg-surface-container-lowest p-space-md flex items-center gap-space-md shadow-sm"
+              >
+                <div
+                  class="w-8 h-8 bg-surface-container flex items-center justify-center shrink-0"
+                >
+                  <span
+                    class="material-symbols-outlined text-on-surface text-[18px]"
+                    >lock</span
+                  >
+                </div>
+                <div class="flex flex-col">
+                  <span
+                    class="font-label-xs text-label-xs uppercase font-bold text-on-surface"
+                    >CRIPTOGRAFIA DE ARQUIVOS VOD</span
+                  >
+                  <span class="font-body-sm text-body-sm text-secondary"
+                    >Logs de partidas e dados analíticos blindados sob chave
+                    única de operador.</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script>
+          // Password visibility toggle interaction
+          const togglePassBtn = document.getElementById("toggle-pass");
+          const passInput = document.getElementById("op_pass");
+          if (togglePassBtn && passInput) {
+            togglePassBtn.addEventListener("click", () => {
+              const isPassword = passInput.getAttribute("type") === "password";
+              passInput.setAttribute("type", isPassword ? "text" : "password");
+              const icon = togglePassBtn.querySelector(
+                ".material-symbols-outlined",
+              );
+              if (icon) {
+                icon.textContent = isPassword ? "visibility_off" : "visibility";
+              }
+            });
+          }
+        </script>
+      </div>
+    </main>
+    <footer
+      class="w-full bg-surface-container-lowest border-t border-border-hairline py-space-xl"
+    >
+      <div
+        class="w-full px-margin flex flex-col md:flex-row items-center justify-between gap-space-md"
+      >
+        <div class="flex items-center gap-gutter">
+          <span
+            class="font-label-xs text-label-xs uppercase text-on-surface-variant"
+            >CONSOLE_BUILD: 2024.11.08-PROD</span
+          ><span class="font-label-xs text-label-xs text-outline">//</span
+          ><span class="font-label-xs text-label-xs text-on-surface-variant"
+            >© 2024 VALORANT.COACH TELEMETRY SYSTEMS. RIOT GAMES AFFILIATE
+            PROTOCOL.</span
+          >
+        </div>
+        <div class="flex items-center gap-gutter">
+          <a
+            class="font-label-xs text-label-xs uppercase text-on-surface-variant hover:text-on-surface hover:underline"
+            data-path="termos-de-servico"
+            href="#"
+            >Termos de Serviço</a
+          ><span class="font-label-xs text-label-xs text-outline">/</span
+          ><a
+            class="font-label-xs text-label-xs uppercase text-on-surface-variant hover:text-on-surface hover:underline"
+            data-path="politica-de-privacidade"
+            href="#"
+            >Privacidade &amp; Telemetria</a
+          ><span class="font-label-xs text-label-xs text-outline">/</span
+          ><a
+            class="font-label-xs text-label-xs uppercase text-on-surface-variant hover:text-on-surface hover:underline"
+            data-path="api-status"
+            href="#"
+            >Status do Sistema</a
+          >
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
