@@ -1,0 +1,28 @@
+# Dependabot — parte da pipeline de segurança (SCA contínuo).
+#
+# O gate em security.yml (npm audit + dependency-review) bloqueia CVEs
+# high/critical; o Dependabot abre os PRs de upgrade automaticamente.
+# Ações do GitHub são pinadas por SHA nos workflows — este ecosystem cobre
+# exatamente esses pinos, mantendo-os atualizados.
+
+version: 2
+updates:
+  # Dependências npm: PRs semanais; minor+patch agrupados p/ reduzir ruído.
+  # Major vem como PR individual — merece revisão dedicada.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      minor-e-patch:
+        update-types:
+          - minor
+          - patch
+
+  # Actions do GitHub (todas pinadas por SHA nos workflows).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

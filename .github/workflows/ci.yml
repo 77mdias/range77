@@ -1,0 +1,56 @@
+name: CI
+
+# Gate de QUALIDADE obrigatório para merge: typecheck + testes com cobertura +
+# build de produção. O build roda com Cache Components habilitado, então falhas
+# de RSC/Suspense aparecem aqui antes do merge.
+#
+# O gate de SEGURANÇA mora em security.yml (gitleaks, npm audit, CodeQL, Trivy).
+# Ações pinadas por SHA e permissões mínimas (CIS Software Supply Chain).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: typecheck · testes · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # O token efêmero não precisa sobreviver ao checkout (nenhum job
+          # faz push) — reduz o raio de exploração de um action comprometida.
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '20.x' # paridade com o Dockerfile (engines >=20.9)
+          cache: npm
+
+      # NODE_ENV não é definido aqui de propósito: com ele ausente o npm instala
+      # as devDependencies (tsc, vitest, tailwind). Definir NODE_ENV=production
+      # no job faria o npm omitir devDeps e o React resolver para o build de
+      # produção — que não expõe React.act e quebra os testes de componente.
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Typecheck (tsc --noEmit)
+        run: npm run typecheck
+
+      - name: Testes + cobertura
+        run: npx vitest run --coverage
+        env:
+          APP_ENV: test # nenhum serviço externo — 100% mockado
+
+      - name: Build de produção
+        run: npm run build

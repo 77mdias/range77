@@ -45,4 +45,6 @@ Imagem de **desenvolvimento** (`node:20-alpine`):
 - [ ] Variáveis de produção revisadas (todos os pontos da cadeia).
 - [ ] Sem segredos em código/logs.
 
-Ver [variáveis de ambiente](../desenvolvimento/variaveis-de-ambiente.md).
+Ver [variáveis de ambiente](../desenvolvimento/variaveis-de-ambiente.md) e
+[segurança & CI/CD](./seguranca-ci.md) (gates automáticos cobrem os três
+primeiros itens deste checklist).

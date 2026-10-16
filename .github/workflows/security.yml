@@ -1,0 +1,195 @@
+name: Segurança
+
+# =============================================================================
+# Pipeline de SEGURANÇA — gate estrito (política acordada com o dono):
+#
+#   Job                     Ferramenta        Bloqueia quando…
+#   ----------------------- ----------------- --------------------------------
+#   segredos                gitleaks          QUALQUER segredo no histórico
+#   dependencias            npm audit         CVE high/critical no lockfile
+#   review-deps-pr          dependency-review PR introduz CVE high/critical
+#   sast-codeql             CodeQL            (aba Security; merge travado por
+#                                             branch protection — ver docs)
+#   container-iac           Trivy misconfig   achado HIGH/CRITICAL nos arquivos
+#                                             de container
+#   scorecard               OpenSSF           informativo (postura semanal)
+#                           Scorecard
+#
+# Normas de referência:
+#   - NIST SSDF (SP 800-218) — PW.7 (revisão/manteve código), PW.8 (testes de
+#     segurança), PS.1 (proteção de segredos)
+#   - OWASP Top 10 2021 — A06 (componentes vulneráveis), A07 (auth — Better Auth)
+#   - CIS Software Supply Chain Security Guide — actions pinadas por SHA,
+#     permissões mínimas por job, `persist-credentials: false`
+#   - OpenSSF Scorecard — medição contínua da postura do repositório
+#
+# Roda sem NENHUM segredo configurado: APP_ENV=test não toca serviços externos
+# e o `GITHUB_TOKEN` abaixo é o token efêmero injetado pelo próprio Actions.
+# Detalhes e passos manuais: docs/operacao/seguranca-ci.md
+# =============================================================================
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Segundas-feiras 06:17 UTC — varredura semanal (drift de CVEs e segredos
+    # no histórico completo). Minuto fora de hora evita congestionamento.
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read # default de menor privilégio; jobs elevam individualmente
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Segredos — gitleaks. No PR escaneia os commits do PR (gate); no push
+  #    para main escaneia os commits novos; no schedule varre o histórico
+  #    completo (drift). Qualquer achado bloqueia.
+  # ---------------------------------------------------------------------------
+  segredos:
+    name: segredos (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write # publica SARIF na aba Security (push/schedule)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # histórico completo — o gitleaks seleciona o range
+          persist-credentials: false
+
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Sem GITLEAKS_LICENSE: contas pessoais não precisam de licença.
+
+  # ---------------------------------------------------------------------------
+  # 2. Dependências — audit do lockfile resolvido por `npm ci`.
+  #    Complementa o Dependabot (alerts + PRs): o audit falha o gate em
+  #    high/critical JÁ CONHECIDOS; o Dependabot propõe os upgrades.
+  # ---------------------------------------------------------------------------
+  dependencias:
+    name: dependências (npm audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '20.x'
+          cache: npm
+
+      - name: Instalar dependências (lockfile)
+        run: npm ci
+
+      - name: Audit de vulnerabilidades (gate high/critical)
+        run: npm audit --audit-level=high
+
+  # ---------------------------------------------------------------------------
+  # 3. Review de dependências — só em PRs. Bloqueia o PR que INTRODUZ
+  #    vulnerabilidade high/critical (compara base…head via API do GitHub).
+  # ---------------------------------------------------------------------------
+  review-deps-pr:
+    name: review de dependências (PR)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write # resumo no PR quando o gate falha
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
+
+  # ---------------------------------------------------------------------------
+  # 4. SAST — CodeQL (gratuito em repositórios públicos). Publica na aba
+  #    Security; o merge fica travado pela regra de branch protection
+  #    "Require code scanning results" (passo manual documentado).
+  # ---------------------------------------------------------------------------
+  sast-codeql:
+    name: SAST (CodeQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          languages: javascript-typescript
+          queries: security-extended # suite mais ampla que a default
+
+      - uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          category: '/language:javascript-typescript'
+
+  # ---------------------------------------------------------------------------
+  # 5. Container/IaC — Trivy em modo config: valida Dockerfile e
+  #    docker-compose.yml contra checks de configuração (CIS Docker etc.).
+  #    A imagem atual é de DEV; quando houver Dockerfile de produção, adicionar
+  #    também scan da imagem (vuln) aqui.
+  # ---------------------------------------------------------------------------
+  container-iac:
+    name: container/IaC (Trivy misconfig)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0 (Trivy v0.70.0)
+        with:
+          scan-type: config # modo config já roda apenas checks de misconfig
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: '1' # gate: falha o job em achados HIGH/CRITICAL
+          hide-progress: true
+
+  # ---------------------------------------------------------------------------
+  # 6. Postura do repositório — OpenSSF Scorecard (semanal + push em main).
+  #    Informativo: mede controles de supply chain (pinning, SAST, review,
+  #    permissões de token…) e publica o score público + SARIF.
+  # ---------------------------------------------------------------------------
+  scorecard:
+    name: postura (OpenSSF Scorecard)
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write # OIDC p/ publicar no scorecard público
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ossf/scorecard-action@fa7117db83c52d787ae5a89f350999701505d78e # v2.5.0
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          sarif_file: results.sarif

@@ -99,6 +99,15 @@ Os testes rodam dentro do container (`docker compose exec web npm test`) ou no
 host — o ambiente `test` não depende de credenciais reais. Convenções e mocks
 em [`docs/desenvolvimento/testes-e-cobertura.md`](./docs/desenvolvimento/testes-e-cobertura.md).
 
+## CI/CD & Segurança
+
+Dois gates obrigatórios por PR (GitHub Actions): **CI de qualidade**
+(typecheck, testes com cobertura, build de produção) e **pipeline de
+segurança** — gitleaks (segredos), `npm audit`/dependency-review (CVEs
+high/critical), CodeQL (SAST) e Trivy (container/IaC), com gate estrito:
+achados bloqueiam o merge. Dependabot mantém dependências e actions pinadas
+atualizados. Normas, exceções e setup: [`docs/operacao/seguranca-ci.md`](./docs/operacao/seguranca-ci.md).
+
 ## Stack
 
 - **Next.js 16.4** (App Router, Turbopack, Cache Components: `cacheComponents`
