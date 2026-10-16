@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-import HomePage from '@/app/page';
+import HomePage from '@/app/(app)/page';
 
 const REGIONS = ['eu', 'na', 'ap', 'kr', 'latam', 'br'] as const;
 

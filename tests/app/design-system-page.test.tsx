@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import DesignSystemPage from '@/app/design-system/page';
+import DesignSystemPage from '@/app/(app)/design-system/page';
 
 /**
  * SUITE TDD — styleguide viva (/design-system): renderiza todos os

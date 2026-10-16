@@ -15,7 +15,7 @@ vi.mock('@/lib/cache/tracker', () => ({
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 import { HenrikDevApiError } from '@/services/henrikdev/client';
-import PlayerPage, { PlayerProfileData } from '@/app/players/[region]/[name]/[tag]/page';
+import PlayerPage, { PlayerProfileData } from '@/app/(app)/players/[region]/[name]/[tag]/page';
 
 const render = async (region: string, name: string, tag: string) => {
   const element = await PlayerPage({

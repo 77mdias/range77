@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { AiQueryForm } from '@/components/ai';
 import { InfoCallout } from '@/components/ui/info-callout';
-import { COACH_GREETING, coachReply } from '@/app/console/console-data';
+import { COACH_GREETING, coachReply } from '@/app/(app)/console/console-data';
 
 /**
  * Sandbox de IA do perfil (tela Stitch, bloco "Enviar Consulta"): reutiliza

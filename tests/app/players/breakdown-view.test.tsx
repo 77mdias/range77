@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { BreakdownView } from '@/app/players/[region]/[name]/[tag]/breakdown-view';
-import { MatchHistoryCard } from '@/app/players/[region]/[name]/[tag]/match-history-card';
-import { MatchHistorySidebar } from '@/app/players/[region]/[name]/[tag]/match-history-sidebar';
-import { MatchHistoryTab } from '@/app/players/[region]/[name]/[tag]/match-history-tab';
+import { BreakdownView } from '@/app/(app)/players/[region]/[name]/[tag]/breakdown-view';
+import { MatchHistoryCard } from '@/app/(app)/players/[region]/[name]/[tag]/match-history-card';
+import { MatchHistorySidebar } from '@/app/(app)/players/[region]/[name]/[tag]/match-history-sidebar';
+import { MatchHistoryTab } from '@/app/(app)/players/[region]/[name]/[tag]/match-history-tab';
 import { buildHistoryMetrics } from '@/services/analytics/match-history';
 import type { MatchSummary, RrHistoryPoint } from '@/contracts/tracker';
 import type { PlayerOverview } from '@/services/tracker/player-overview';
