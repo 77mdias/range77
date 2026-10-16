@@ -47,24 +47,34 @@ gitleaks detect --source . --log-opts='--all' --no-banner      # segredos (hist�
 Estado na criação da pipeline (2026-10): **0 leaks em 73 commits**, 0
 misconfig HIGH/CRITICAL, 0 vulnerabilidades npm.
 
-## Passos manuais no GitHub (obrigatórios, uma vez)
+## Passos manuais no GitHub
 
-O pipeline só é completo com estas chaves ligadas — todas gratuitas em
-repositório **público** (Settings → Code security and analysis):
+Estado dos controles (verificado em 2026-10-16):
 
-1. **Secret scanning + Push protection** — bloqueia o push de segredos
-   conhecidos ANTES de entrarem no histórico (gitleaks é a segunda linha).
-2. **Dependabot alerts** — alimenta o painel; os PRs de upgrade vêm do
-   `dependabot.yml` (semanal, minor+patch agrupados).
-3. **Branch protection em `main`** (Settings → Branches):
-   - Require pull request + status checks obrigatórios:
-     `verify` (CI), `segredos`, `dependencias`, `review-deps-pr`,
-     `container-iac` (Segurança);
-   - **Require code scanning results → CodeQL** — é ISTO que torna o SAST
-     bloqueante (o CodeQL em si publica na aba Security; a regra de branch
-     trava o merge com alertas novos).
-4. **Code scanning**: usar o *advanced setup* (nossa workflow). NÃO ligar o
-   *default setup* — conflita com a workflow `security.yml`.
+| Controle | Estado |
+|---|---|
+| Secret scanning + Push protection | ✅ habilitados |
+| Dependabot alerts | ✅ habilitado (API: `PUT /vulnerability-alerts`) |
+| Dependabot security updates | ✅ habilitado (API: `PUT /automated-security-fixes`) |
+| **Dependency graph** | ❌ **pendente — último passo de painel restante** |
+| Branch protection em `main` | ❌ pendente (decisão de fluxo do dono) |
+
+**Dependency graph** (Settings → Code security → Dependency graph): sem ele o
+job `review-deps-pr` falha em TODO PR com "Dependency review is not supported
+on this repository" — é configuração de plataforma, não problema no código.
+Não existe endpoint de API para esse toggle em repositórios de usuário (o
+`PATCH /repos` ignora silenciosamente campos desconhecidos de
+`security_and_analysis`); é um clique no painel.
+
+**Branch protection em `main`** (Settings → Branches → Add rule):
+
+- Require pull request + status checks obrigatórios: `verify` (CI),
+  `segredos`, `dependencias`, `container-iac` (nomes em `security.yml`);
+- **Require code scanning results → CodeQL** — é ISTO que torna o SAST
+  bloqueante (o CodeQL em si publica na aba Security; a regra de branch
+  trava o merge com alertas novos);
+- NÃO ligar o *default setup* de code scanning — conflita com a workflow
+  `security.yml` (advanced setup).
 
 ## Exceções e falsos positivos
 
@@ -80,6 +90,13 @@ Exceção é um decisão registrada, nunca um `git commit -f`:
 
 ## Decisões já tomadas (contexto)
 
+- **Lockfile escrito pelo npm 10 (paridade com o CI)** — o `npm ci` do CI usa
+  o npm 10 do Node 20, que rejeita locks escritos pelo npm 11+ do host quando
+  há overrides na árvore ("Missing: X from lock file", mesmo com as versões
+  corretas). Após mudar dependências: regenerar com
+  `npx npm@10 install --package-lock-only` e validar com
+  `npx npm@10 ci --dry-run` antes de commitar. O npm 10 preserva as versões
+  já travadas (0 diffs de resolução; só reestrutura a árvore).
 - **`agents` 0.24.0 → 0.28.1** — corrige 3 CVEs high (GHSA-6qxp-vccf-f47h,
   OAuth do MCP SDK). O pacote ainda não é importado em nenhum código: se não
   entrar na fase do chatbot, REMOVÊ-lo é a postura de menor superfície.

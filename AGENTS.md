@@ -46,5 +46,10 @@ Nunca criar arquivos `.env` (regra do projeto).
   string; filhos JSX múltiplos renderizam vazio.
 - **Cobertura**: `src/services/analytics/**` exige 100% — nenhum cálculo
   fora de lá; componentes de chart apenas renderizam.
+- **Lockfile com paridade de npm do CI**: o `npm ci` do CI roda com o npm 10
+  (Node 20), que rejeita locks escritos pelo npm 11+ do host quando há
+  overrides (`Missing: X from lock file` mesmo com versões corretas). Após
+  mudar dependências: `npx npm@10 install --package-lock-only` + validar com
+  `npx npm@10 ci --dry-run` antes de commitar.
 - **Testes**: `next/navigation` mockado em testes de páginas Client
   (`useRouter`) e redirects espelhados lançando `NEXT_REDIRECT: <url>`.
