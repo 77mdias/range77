@@ -84,3 +84,78 @@ describe('parsePassword', () => {
     });
   });
 });
+
+import {
+  PASSWORD_STRENGTH_CHECKS,
+  parsePasswordConfirmation,
+  passwordStrength,
+} from '@/lib/validation/credentials';
+
+describe('passwordStrength', () => {
+  it('exibe os três critérios do Stitch, nesta ordem', () => {
+    expect(PASSWORD_STRENGTH_CHECKS.map((check) => check.id)).toEqual([
+      'length',
+      'alphanumeric',
+      'entropy',
+    ]);
+    expect(PASSWORD_STRENGTH_CHECKS.map((check) => check.label)).toEqual([
+      '8+ CARACTERES',
+      'ALFANUMÉRICO',
+      'ENTROPIA ELEVADA',
+    ]);
+  });
+
+  it('senha vazia não cumpre nada', () => {
+    const result = passwordStrength('');
+    expect(result.score).toBe(0);
+    expect(result.met).toEqual({ length: false, alphanumeric: false, entropy: false });
+  });
+
+  it('conta os critérios cumpridos cumulativamente', () => {
+    expect(passwordStrength('abcdefgh').met).toEqual({
+      length: true,
+      alphanumeric: false,
+      entropy: false,
+    });
+    expect(passwordStrength('abcdefg1').met).toEqual({
+      length: true,
+      alphanumeric: true,
+      entropy: false,
+    });
+  });
+
+  it('aceita símbolo ou 12+ caracteres como entropia elevada', () => {
+    expect(passwordStrength('abcdefg1!').met.entropy).toBe(true);
+    expect(passwordStrength('abcdefghijkl').met.entropy).toBe(true);
+    expect(passwordStrength('segred0!valcoach').score).toBe(3);
+  });
+
+  it('acima do teto do servidor a senha deixa de cumprir o critério de comprimento', () => {
+    expect(passwordStrength('a'.repeat(PASSWORD_MAX_LENGTH + 1)).met.length).toBe(false);
+  });
+
+  it('score nunca passa de 3', () => {
+    expect(passwordStrength('ValkyriePrecision2024!').score).toBe(3);
+  });
+});
+
+describe('parsePasswordConfirmation', () => {
+  it('aceita quando as senhas coincidem', () => {
+    expect(parsePasswordConfirmation('segred0!valcoach', 'segred0!valcoach')).toEqual({
+      ok: true,
+      value: 'segred0!valcoach',
+    });
+  });
+
+  it('recusa quando divergem', () => {
+    const result = parsePasswordConfirmation('segred0!valcoach', 'segred0!valcoacH');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toBe('As senhas não coincidem.');
+    }
+  });
+
+  it('recusa confirmação vazia', () => {
+    expect(parsePasswordConfirmation('segred0!valcoach', '').ok).toBe(false);
+  });
+});
