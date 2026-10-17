@@ -8,7 +8,7 @@ import { cx } from '@/lib/cx';
  *
  * Exporta `FIELD_CONTROL_CLASS` para controles irmãos (`<select>` de região)
  * usarem exatamente o mesmo tratamento — hoje a classe estava duplicada inline
- * em `email-auth-forms.tsx`.
+ * no `login-form.tsx` da tela 7.
  */
 
 export const FIELD_CONTROL_CLASS = cx(
