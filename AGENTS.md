@@ -53,3 +53,18 @@ Nunca criar arquivos `.env` (regra do projeto).
   `npx npm@10 ci --dry-run` antes de commitar.
 - **Testes**: `next/navigation` mockado em testes de páginas Client
   (`useRouter`) e redirects espelhados lançando `NEXT_REDIRECT: <url>`.
+
+- **Route groups `(app)`/`(auth)`**: o `AppShell` + `<Suspense>`/`NavUser` vivem em
+  `src/app/(app)/layout.tsx`; as telas de auth têm chrome próprio em
+  `src/app/(auth)/layout.tsx`. `src/app/layout.tsx` contém SÓ html/body/fontes —
+  não devolver o shell para lá. `src/app/fonts/` e `globals.css` ficam na raiz de
+  `src/app/` porque os paths de `next/font/local` e o import de CSS são relativos.
+- **Better Auth redireciona sozinho**: o cliente traz `redirectPlugin` ligado por
+  padrão. Passar `callbackURL` (ou o equivalente de sucesso) para uma chamada
+  seguida de trabalho no cliente faz o navegador sair ANTES do trabalho terminar.
+  `signUp.email` do cadastro é chamado SEM `callbackURL`; a navegação é explícita
+  no fim de `submit()`.
+- **Senha fora do Stitch**: força e confirmação são validação de UX em
+  `src/lib/validation/credentials.ts`. O servidor só conhece
+  `PASSWORD_MIN_LENGTH`/`PASSWORD_MAX_LENGTH`. A promessa de "30 dias" sai de
+  `src/lib/session-policy.ts`, a mesma constante que configura o `createAuth`.
