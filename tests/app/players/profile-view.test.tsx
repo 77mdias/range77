@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { PlayerProfileView, MatchesTab } from '@/app/players/[region]/[name]/[tag]/profile-view';
+import { PlayerProfileView, MatchesTab } from '@/app/(app)/players/[region]/[name]/[tag]/profile-view';
 import {
   AgentsTab,
   GroupedStatTable,
   MapsTab,
-} from '@/app/players/[region]/[name]/[tag]/agents-maps-sections';
-import { AgentsMapsExplorer } from '@/app/players/[region]/[name]/[tag]/agents-maps-explorer';
+} from '@/app/(app)/players/[region]/[name]/[tag]/agents-maps-sections';
+import { AgentsMapsExplorer } from '@/app/(app)/players/[region]/[name]/[tag]/agents-maps-explorer';
 import type { PlayerOverview } from '@/services/tracker/player-overview';
 import type { GroupedStat } from '@/contracts/tracker';
 

@@ -38,6 +38,7 @@ export function Sparkline({
     <svg
       role="img"
       aria-label={ariaLabel}
+      data-sparkline
       data-trend={trend}
       width={width}
       height={height}

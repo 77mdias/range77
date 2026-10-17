@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import ConsolePage from '@/app/console/page';
-import { ConsoleView } from '@/app/console/console-view';
+import ConsolePage from '@/app/(app)/console/page';
+import { ConsoleView } from '@/app/(app)/console/console-view';
 import {
   COACH_PROMPTS,
   CONSOLE_LAYERS,
   SEED_EXCHANGE,
   coachReply,
-} from '@/app/console/console-data';
+} from '@/app/(app)/console/console-data';
 
 /**
  * SUITE TDD — Console (tela Stitch "Console API & IA Coaching Assistant"):

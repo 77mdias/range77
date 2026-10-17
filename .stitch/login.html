@@ -1,0 +1,981 @@
+<!doctype html>
+
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="web_standard" name="shell-type" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      @layer base {
+        html,
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        body {
+          overscroll-behavior: none;
+        }
+        main > :first-child {
+          margin-top: 0 !important;
+        }
+        main > :last-child {
+          margin-bottom: 0 !important;
+        }
+      }
+      ::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              outline: "#797861",
+              "on-secondary": "#ffffff",
+              "on-surface-variant": "#484833",
+              "on-error-container": "#93000a",
+              "surface-variant": "#e2e2e2",
+              "surface-container": "#eeeeee",
+              "on-tertiary-fixed": "#002022",
+              "on-tertiary": "#ffffff",
+              "on-secondary-container": "#646464",
+              "on-tertiary-container": "#3b757a",
+              "on-secondary-fixed": "#1b1b1b",
+              "surface-dim": "#dadada",
+              "surface-container-low": "#f3f3f4",
+              "on-secondary-fixed-variant": "#474747",
+              "secondary-fixed-dim": "#c6c6c6",
+              "surface-container-lowest": "#ffffff",
+              secondary: "#5e5e5e",
+              "on-primary-container": "#6f7100",
+              "tertiary-container": "#c0faff",
+              "on-background": "#1a1c1c",
+              "canvas-soft": "#f9fafb",
+              "surface-container-high": "#e8e8e8",
+              surface: "#f9f9f9",
+              "tertiary-fixed-dim": "#97d0d5",
+              tertiary: "#2c676b",
+              "on-primary-fixed-variant": "#484a00",
+              "secondary-fixed": "#e2e2e2",
+              "surface-tint": "#616200",
+              "tertiary-fixed": "#b2edf2",
+              "inverse-primary": "#cbce04",
+              "border-hairline": "#000000",
+              error: "#ba1a1a",
+              "surface-container-highest": "#e2e2e2",
+              "on-surface": "#1a1c1c",
+              "primary-fixed-dim": "#cbce04",
+              "error-container": "#ffdad6",
+              "on-primary-fixed": "#1c1d00",
+              primary: "#616200",
+              "on-error": "#ffffff",
+              "surface-bright": "#f9f9f9",
+              "outline-variant": "#cac8ad",
+              "inverse-on-surface": "#f0f1f1",
+              "primary-fixed": "#e7ea33",
+              background: "#f9f9f9",
+              "on-primary": "#ffffff",
+              "on-tertiary-fixed-variant": "#0a4f53",
+              "inverse-surface": "#2f3131",
+              "secondary-container": "#e2e2e2",
+              "primary-container": "#f5f841",
+            },
+            borderRadius: {
+              DEFAULT: "0.125rem",
+              lg: "0.25rem",
+              xl: "0.5rem",
+              full: "0.75rem",
+            },
+            spacing: {
+              "margin-mobile": "0.75rem",
+              "gutter-mobile": "0.5rem",
+              "space-md": "0.375rem",
+              "space-sm": "0.25rem",
+              margin: "1rem",
+              "space-lg": "0.5rem",
+              "space-xl": "0.625rem",
+              "space-xs": "0.1875rem",
+              gutter: "0.75rem",
+            },
+            fontFamily: {
+              "headline-lg": ["Space Grotesk"],
+              "label-xs": ["JetBrains Mono"],
+              "display-xl-mobile": ["Space Grotesk"],
+              "headline-md": ["Space Grotesk"],
+              "body-lg": ["Geist"],
+              "display-xl": ["Space Grotesk"],
+              "label-md": ["JetBrains Mono"],
+              "body-md": ["Geist"],
+              "body-sm": ["Geist"],
+              "label-sm": ["JetBrains Mono"],
+            },
+            fontSize: {
+              "headline-lg": [
+                "20px",
+                {
+                  lineHeight: "24px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "600",
+                },
+              ],
+              "label-xs": [
+                "9px",
+                {
+                  lineHeight: "11px",
+                  letterSpacing: "0.08em",
+                  fontWeight: "700",
+                },
+              ],
+              "display-xl-mobile": [
+                "24px",
+                {
+                  lineHeight: "28px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "headline-md": [
+                "16px",
+                {
+                  lineHeight: "20px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+              "body-lg": ["14px", { lineHeight: "18px", fontWeight: "500" }],
+              "display-xl": [
+                "32px",
+                {
+                  lineHeight: "36px",
+                  letterSpacing: "-0.03em",
+                  fontWeight: "700",
+                },
+              ],
+              "label-md": [
+                "11px",
+                {
+                  lineHeight: "14px",
+                  letterSpacing: "0.04em",
+                  fontWeight: "600",
+                },
+              ],
+              "body-md": ["13px", { lineHeight: "17px", fontWeight: "400" }],
+              "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }],
+              "label-sm": [
+                "10px",
+                {
+                  lineHeight: "12px",
+                  letterSpacing: "0.06em",
+                  fontWeight: "500",
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body
+    class="bg-background font-body-md text-on-surface min-h-screen flex flex-col"
+  >
+    <header
+      class="fixed top-0 left-0 w-full z-50 bg-surface-container-lowest border-b border-border-hairline"
+    >
+      <div class="h-14 w-full px-margin flex items-center justify-between">
+        <div class="flex items-center gap-gutter">
+          <div class="flex items-center gap-space-sm">
+            <div
+              class="w-3 h-3 bg-primary-container border border-border-hairline flex items-center justify-center"
+            >
+              <div class="w-1.5 h-1.5 bg-on-background"></div>
+            </div>
+            <span
+              class="font-headline-md text-headline-md tracking-tighter uppercase text-on-surface"
+              >VALORANT<span class="text-outline">.COACH</span></span
+            ><span
+              class="font-label-xs text-label-xs bg-surface-container-highest px-space-xs py-0.5 border border-border-hairline text-on-surface-variant uppercase"
+              >SYS_AUTH</span
+            >
+          </div>
+          <div
+            class="hidden md:flex items-center gap-space-md pl-gutter border-l border-border-hairline"
+          >
+            <div class="flex items-center gap-space-xs">
+              <span
+                class="w-2 h-2 rounded-full bg-primary-container border border-border-hairline animate-pulse"
+              ></span
+              ><span
+                class="font-label-xs text-label-xs uppercase text-on-surface"
+                >RIOT API // SECURE V4</span
+              >
+            </div>
+            <span class="font-label-xs text-label-xs text-outline">|</span
+            ><span
+              class="font-label-xs text-label-xs text-on-surface-variant uppercase"
+              >SSL 256-BIT ENCRYPTION</span
+            ><span class="font-label-xs text-label-xs text-outline">|</span>
+            <div
+              class="flex items-center gap-space-xs bg-canvas-soft px-space-sm py-0.5 border border-border-hairline"
+            >
+              <span
+                class="material-symbols-outlined text-label-xs text-on-surface"
+                >speed</span
+              ><span class="font-label-xs text-label-xs text-on-surface"
+                >RTT &lt;15MS</span
+              >
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-gutter">
+          <nav
+            class="flex items-center gap-space-sm border border-border-hairline p-0.5 bg-canvas-soft"
+            data-active-classes="bg-primary-container text-on-surface font-semibold border-border-hairline"
+          >
+            <a
+              aria-current="page"
+              class="px-space-lg py-1 transition-colors uppercase bg-primary-container text-on-surface font-semibold border-border-hairline"
+              data-path="login"
+              href="#"
+              >Entrar</a
+            ><a
+              class="font-label-sm text-label-sm px-space-lg py-1 border border-transparent text-on-surface-variant hover:text-on-surface transition-colors uppercase"
+              data-path="cadastro"
+              href="#"
+              >Criar Conta</a
+            >
+          </nav>
+          <div
+            class="flex items-center gap-space-sm pl-space-md border-l border-border-hairline"
+          >
+            <div class="hidden sm:flex flex-col text-right">
+              <span
+                class="font-label-xs text-label-xs text-on-surface uppercase"
+                >STATUS: READY</span
+              ><span class="font-label-xs text-label-xs text-outline"
+                >TELEMETRY ACTIVE</span
+              >
+            </div>
+            <div
+              class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"
+            >
+              <span
+                class="material-symbols-outlined text-on-primary text-[18px]"
+                >person</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="w-full pt-14 bg-background flex-1 flex flex-col">
+      <div class="flex flex-col w-full">
+        <div
+          class="w-full max-w-7xl mx-auto px-margin py-gutter lg:py-space-xl flex-1 flex flex-col justify-center"
+        >
+          <!-- Top System Telemetry Marquee Banner -->
+          <div
+            class="w-full bg-surface-container-lowest border border-border-hairline p-space-sm mb-gutter flex flex-wrap items-center justify-between gap-space-sm shadow-[2px_2px_0px_#000000]"
+          >
+            <div class="flex items-center gap-space-sm">
+              <span
+                class="w-2 h-2 rounded-full bg-primary-container border border-border-hairline animate-pulse"
+              ></span>
+              <span
+                class="font-label-xs text-label-xs uppercase tracking-wider text-on-surface"
+                >GATEWAY: SA-BRAZIL-EAST-1 // SECURE ROUTE</span
+              >
+              <span class="text-outline hidden sm:inline">|</span>
+              <span
+                class="font-label-xs text-label-xs text-on-surface-variant uppercase hidden sm:inline"
+                >AUTH ENGINE: HYDRA-V4.2</span
+              >
+            </div>
+            <div class="flex items-center gap-space-md">
+              <span
+                class="font-label-xs text-label-xs bg-canvas-soft px-space-sm py-0.5 border border-border-hairline text-on-surface"
+                >ACTIVE THREADS: 14.802</span
+              >
+              <span
+                class="font-label-xs text-label-xs bg-primary-container px-space-sm py-0.5 border border-border-hairline text-on-surface font-semibold"
+                >TLS 1.3 VERIFIED</span
+              >
+            </div>
+          </div>
+          <!-- Main Grid: Telemetry Context + Auth Terminal -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+            <!-- Left Column: Tactical Value Prop & Live Telemetry Intelligence (5 cols) -->
+            <div
+              class="lg:col-span-5 flex flex-col gap-space-md order-2 lg:order-1"
+            >
+              <!-- Tactical Coaching Callout Component -->
+              <div
+                class="bg-surface-container-lowest border border-border-hairline border-l-4 border-l-primary-container p-space-lg shadow-[2px_2px_0px_#000000]"
+              >
+                <div
+                  class="flex items-center justify-between pb-space-xs border-b border-border-hairline mb-space-sm"
+                >
+                  <span
+                    class="font-label-xs text-label-xs text-on-surface uppercase"
+                    >// PROTOCOL ADVICE: ACCESS LEVEL-0</span
+                  >
+                  <span
+                    class="font-label-xs text-label-xs px-1.5 py-0.5 bg-canvas-soft border border-border-hairline uppercase text-outline"
+                    >SYS_ID: 8092-B</span
+                  >
+                </div>
+                <h2
+                  class="font-headline-md text-headline-md uppercase tracking-tight text-on-surface mb-space-xs"
+                >
+                  Inteligência Algorítmica Pós-Login
+                </h2>
+                <p
+                  class="font-body-sm text-body-sm text-on-surface-variant mb-space-sm leading-relaxed"
+                >
+                  Ao ingressar no terminal, seus logs de combate de Ascent,
+                  Haven e Lotus são ingeridos em tempo real. Identifique timing
+                  de crosshair placement, retakes e desperdício de utilitários
+                  em fração de segundos.
+                </p>
+                <div
+                  class="grid grid-cols-3 gap-space-xs text-center pt-space-xs border-t border-border-hairline"
+                >
+                  <div
+                    class="bg-canvas-soft p-space-xs border border-border-hairline"
+                  >
+                    <span
+                      class="font-label-xs text-label-xs block text-outline uppercase"
+                      >RTT LATENCY</span
+                    >
+                    <span
+                      class="font-headline-md text-headline-md text-on-surface"
+                      >&lt;14ms</span
+                    >
+                  </div>
+                  <div
+                    class="bg-canvas-soft p-space-xs border border-border-hairline"
+                  >
+                    <span
+                      class="font-label-xs text-label-xs block text-outline uppercase"
+                      >PRO MATCHES</span
+                    >
+                    <span
+                      class="font-headline-md text-headline-md text-on-surface"
+                      >1.2M+</span
+                    >
+                  </div>
+                  <div
+                    class="bg-canvas-soft p-space-xs border border-border-hairline"
+                  >
+                    <span
+                      class="font-label-xs text-label-xs block text-outline uppercase"
+                      >AI CONFIDENCE</span
+                    >
+                    <span
+                      class="font-headline-md text-headline-md text-on-surface"
+                      >99.4%</span
+                    >
+                  </div>
+                </div>
+              </div>
+              <!-- Telemetry Pipeline Card -->
+              <div
+                class="bg-canvas-soft border border-border-hairline p-space-lg shadow-[2px_2px_0px_#000000]"
+              >
+                <div class="flex items-center justify-between mb-space-md">
+                  <span
+                    class="font-label-xs text-label-xs text-on-surface uppercase tracking-wider font-semibold"
+                    >// PIPELINE SEGURO 3-LAYER</span
+                  >
+                  <span
+                    class="font-label-xs text-label-xs bg-surface-container-highest px-space-xs py-0.5 border border-border-hairline uppercase"
+                    >TELEMETRY ON</span
+                  >
+                </div>
+                <div
+                  class="flex flex-col gap-space-sm font-body-sm text-body-sm"
+                >
+                  <div
+                    class="flex items-start gap-space-sm p-space-sm bg-surface-container-lowest border border-border-hairline"
+                  >
+                    <div
+                      class="w-5 h-5 mt-0.5 bg-primary-container border border-border-hairline flex items-center justify-center shrink-0"
+                    >
+                      <span
+                        class="material-symbols-outlined text-[14px] text-on-surface"
+                        >key</span
+                      >
+                    </div>
+                    <div class="min-w-0">
+                      <div
+                        class="font-label-sm text-label-sm uppercase font-semibold text-on-surface"
+                      >
+                        Criptografia Local de Tokens
+                      </div>
+                      <div class="text-on-surface-variant font-body-sm">
+                        Armazenamento zero-knowledge. Suas credenciais de jogo
+                        nunca são expostas em texto puro.
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="flex items-start gap-space-sm p-space-sm bg-surface-container-lowest border border-border-hairline"
+                  >
+                    <div
+                      class="w-5 h-5 mt-0.5 bg-surface-container-highest border border-border-hairline flex items-center justify-center shrink-0"
+                    >
+                      <span
+                        class="material-symbols-outlined text-[14px] text-on-surface"
+                        >sync_alt</span
+                      >
+                    </div>
+                    <div class="min-w-0">
+                      <div
+                        class="font-label-sm text-label-sm uppercase font-semibold text-on-surface"
+                      >
+                        Riot API &amp; HenrikDev Live Sync
+                      </div>
+                      <div class="text-on-surface-variant font-body-sm">
+                        Sincronização imediata de MMR, split de danos de
+                        headshot e KAST por rodada.
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="flex items-start gap-space-sm p-space-sm bg-surface-container-lowest border border-border-hairline"
+                  >
+                    <div
+                      class="w-5 h-5 mt-0.5 bg-surface-container-highest border border-border-hairline flex items-center justify-center shrink-0"
+                    >
+                      <span
+                        class="material-symbols-outlined text-[14px] text-on-surface"
+                        >bolt</span
+                      >
+                    </div>
+                    <div class="min-w-0">
+                      <div
+                        class="font-label-sm text-label-sm uppercase font-semibold text-on-surface"
+                      >
+                        Diagnósticos Instantâneos &lt;150ms
+                      </div>
+                      <div class="text-on-surface-variant font-body-sm">
+                        Processamento neural ultrarrápido com análise de
+                        micro-decisões round a round.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="mt-space-md pt-space-sm border-t border-border-hairline flex items-center justify-between text-on-surface"
+                >
+                  <span class="font-label-xs text-label-xs uppercase"
+                    >REDE ATIVA: 42.890+ AGENTES CONECTADOS</span
+                  >
+                  <span
+                    class="font-label-xs text-label-xs bg-primary-container px-space-xs py-0.5 border border-border-hairline font-bold uppercase"
+                    >100% OPERACIONAL</span
+                  >
+                </div>
+              </div>
+              <!-- Telemetry Match Snapshot Preview Card -->
+              <div
+                class="bg-surface-container-lowest border border-border-hairline p-space-md shadow-[2px_2px_0px_#000000]"
+              >
+                <div
+                  class="flex items-center justify-between text-on-surface border-b border-border-hairline pb-space-xs mb-space-xs"
+                >
+                  <span
+                    class="font-label-xs text-label-xs uppercase font-semibold"
+                    >// ÚLTIMO SNAPSHOT ANALISADO</span
+                  >
+                  <span
+                    class="font-label-xs text-label-xs text-outline font-mono"
+                    >MAP: SUNSET // 13-9 VICTORY</span
+                  >
+                </div>
+                <div
+                  class="flex items-center justify-between text-on-surface py-space-xs font-mono text-body-sm"
+                >
+                  <div class="flex items-center gap-space-sm">
+                    <span
+                      class="px-space-xs py-0.5 bg-primary-container border border-border-hairline font-label-xs text-label-xs uppercase font-bold"
+                      >SOVA</span
+                    >
+                    <span class="font-label-sm text-label-sm font-semibold"
+                      >24 / 11 / 8</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-space-xs font-label-xs text-label-xs"
+                  >
+                    <span class="text-on-surface-variant">HS%:</span>
+                    <span
+                      class="font-bold text-on-surface bg-canvas-soft px-1 border border-border-hairline"
+                      >38.2%</span
+                    >
+                    <span class="text-on-surface-variant ml-space-xs"
+                      >ACS:</span
+                    >
+                    <span
+                      class="font-bold text-on-surface bg-canvas-soft px-1 border border-border-hairline"
+                      >289</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Right Column: Central High-Density Authentication Terminal (7 cols) -->
+            <div class="lg:col-span-7 order-1 lg:order-2">
+              <div
+                class="bg-surface-container-lowest border border-border-hairline shadow-[3px_3px_0px_#000000] p-space-md sm:p-gutter"
+              >
+                <!-- Protocol Meta Header -->
+                <div
+                  class="flex items-center justify-between border-b border-border-hairline pb-space-sm mb-space-md"
+                >
+                  <div class="flex items-center gap-space-xs">
+                    <span class="w-1.5 h-1.5 bg-on-background"></span>
+                    <span
+                      class="font-label-xs text-label-xs text-on-surface font-semibold tracking-wider uppercase"
+                      >// PROTOCOLO DE ACESSO // VALORANT.COACH TELEMETRY
+                      PIPELINE</span
+                    >
+                  </div>
+                  <span
+                    class="font-label-xs text-label-xs bg-canvas-soft px-space-xs py-0.5 border border-border-hairline text-outline uppercase font-mono"
+                    >PORT: 443</span
+                  >
+                </div>
+                <!-- Switcher Navigation Tabs -->
+                <div
+                  class="grid grid-cols-2 gap-space-xs p-space-xs bg-canvas-soft border border-border-hairline mb-space-lg"
+                >
+                  <button
+                    class="flex items-center justify-center gap-space-xs py-space-sm px-space-md bg-primary-container text-on-surface font-label-md text-label-md uppercase font-bold border border-border-hairline shadow-[1px_1px_0px_#000000] transition-all"
+                    type="button"
+                  >
+                    <span
+                      class="w-1.5 h-1.5 rounded-full bg-on-background"
+                    ></span>
+                    <span>LOGIN (ENTRAR)</span>
+                  </button>
+                  <a
+                    class="flex items-center justify-center gap-space-xs py-space-sm px-space-md bg-surface-container-lowest text-on-surface-variant hover:text-on-surface font-label-md text-label-md uppercase border border-transparent hover:border-border-hairline transition-all text-center"
+                    data-path="cadastro"
+                    href="#"
+                  >
+                    <span>CADASTRO (CRIAR CONTA)</span>
+                  </a>
+                </div>
+                <!-- Title & Subtitle -->
+                <div class="mb-space-lg">
+                  <h1
+                    class="font-display-xl text-display-xl uppercase tracking-tighter text-on-surface leading-none mb-space-xs"
+                  >
+                    ACESSO AO HUB TELEMÉTRICO
+                  </h1>
+                  <p class="font-body-md text-body-md text-on-surface-variant">
+                    Conecte suas credenciais para sincronizar partidas, rotinas
+                    de coaching e diagnósticos de IA.
+                  </p>
+                </div>
+                <!-- SSO Providers Block -->
+                <div class="flex flex-col gap-space-sm mb-space-lg">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+                    <!-- Google SSO Button -->
+                    <button
+                      class="flex items-center justify-center gap-space-sm bg-surface-container-lowest hover:bg-canvas-soft border border-border-hairline px-space-md py-space-md text-on-surface transition-all shadow-[1px_1px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 group"
+                      type="button"
+                    >
+                      <svg class="w-4 h-4 shrink-0" viewbox="0 0 24 24">
+                        <path
+                          d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+                          fill="#4285F4"
+                        ></path>
+                        <path
+                          d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+                          fill="#34A853"
+                        ></path>
+                        <path
+                          d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.14-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                          fill="#FBBC05"
+                        ></path>
+                        <path
+                          d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                          fill="#EA4335"
+                        ></path>
+                      </svg>
+                      <span
+                        class="font-label-sm text-label-sm uppercase font-semibold"
+                        >Continuar com Google</span
+                      >
+                    </button>
+                    <!-- Discord SSO Button -->
+                    <button
+                      class="flex items-center justify-between bg-surface-container-lowest hover:bg-canvas-soft border border-border-hairline px-space-md py-space-md text-on-surface transition-all shadow-[1px_1px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 group"
+                      type="button"
+                    >
+                      <div class="flex items-center gap-space-sm">
+                        <svg
+                          class="w-4 h-4 shrink-0 fill-current text-[#5865F2]"
+                          viewbox="0 0 24 24"
+                        >
+                          <path
+                            d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"
+                          ></path>
+                        </svg>
+                        <span
+                          class="font-label-sm text-label-sm uppercase font-semibold"
+                          >Discord</span
+                        >
+                      </div>
+                      <span
+                        class="font-label-xs text-label-xs bg-canvas-soft border border-border-hairline px-space-xs py-0.5 uppercase text-on-surface"
+                        >COMMUNITY</span
+                      >
+                    </button>
+                  </div>
+                  <!-- Riot Games RSO Special Card (Notice / Roadmap State) -->
+                  <div
+                    class="bg-canvas-soft border border-border-hairline p-space-sm relative"
+                  >
+                    <div
+                      class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs mb-space-xs"
+                    >
+                      <div class="flex items-center gap-space-sm">
+                        <!-- Riot Fist Stylized Glyph -->
+                        <div
+                          class="w-5 h-5 bg-[#D32936] text-white flex items-center justify-center font-black text-xs font-mono"
+                        >
+                          R
+                        </div>
+                        <span
+                          class="font-label-sm text-label-sm font-semibold uppercase text-on-surface"
+                          >Riot Games Sign-On (RSO) - Oficial</span
+                        >
+                      </div>
+                      <span
+                        class="font-label-xs text-label-xs bg-primary-container border border-border-hairline text-on-surface px-space-sm py-0.5 font-mono uppercase font-bold self-start sm:self-auto"
+                      >
+                        [AGUARDANDO KEY PROD RIOT V9]
+                      </span>
+                    </div>
+                    <p
+                      class="font-body-sm text-body-sm text-on-surface-variant leading-tight"
+                    >
+                      Integração direta com Riot ID (OAuth2) em homologação.
+                      Utilize login com e-mail, Google ou Discord e vincule seu
+                      Riot ID (ex:
+                      <code
+                        class="bg-surface-container-highest px-1 text-on-surface font-mono"
+                        >Agente#BR1</code
+                      >) no painel após entrar.
+                    </p>
+                  </div>
+                </div>
+                <!-- Divider -->
+                <div
+                  class="relative flex items-center justify-center my-space-lg"
+                >
+                  <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-border-hairline"></div>
+                  </div>
+                  <div
+                    class="relative bg-surface-container-lowest px-space-md border border-border-hairline font-label-xs text-label-xs text-on-surface-variant uppercase tracking-widest font-mono"
+                  >
+                    OU ACESSE COM E-MAIL E SENHA
+                  </div>
+                </div>
+                <!-- Credential Login Form -->
+                <form
+                  class="flex flex-col gap-space-md"
+                  id="auth-form"
+                  onsubmit="event.preventDefault()"
+                >
+                  <!-- Email / Riot ID Field -->
+                  <div class="flex flex-col gap-space-xs">
+                    <div class="flex items-center justify-between">
+                      <label
+                        class="font-label-sm text-label-sm uppercase font-semibold text-on-surface"
+                        for="identifier-input"
+                      >
+                        E-mail ou Riot ID associado
+                      </label>
+                      <span
+                        class="font-label-xs text-label-xs text-outline uppercase font-mono"
+                        >VALORANT_ID / RFC 822</span
+                      >
+                    </div>
+                    <div class="relative flex items-center">
+                      <div
+                        class="absolute left-space-md flex items-center pointer-events-none text-outline"
+                      >
+                        <span class="material-symbols-outlined text-[16px]"
+                          >alternate_email</span
+                        >
+                      </div>
+                      <input
+                        class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm border border-border-hairline rounded-[1px] pl-8 pr- space-md py-space-sm focus:outline-none focus:ring-1 focus:ring-border-hairline focus:bg-canvas-soft transition-all placeholder:text-outline"
+                        id="identifier-input"
+                        placeholder="agente@valorant.coach"
+                        required=""
+                        type="text"
+                      />
+                      <div
+                        class="absolute right-space-xs top-1/2 -translate-y-1/2 w-1.5 h-3 bg-primary-container border border-border-hairline"
+                      ></div>
+                    </div>
+                  </div>
+                  <!-- Password Field -->
+                  <div class="flex flex-col gap-space-xs">
+                    <div class="flex items-center justify-between">
+                      <label
+                        class="font-label-sm text-label-sm uppercase font-semibold text-on-surface"
+                        for="password-input"
+                      >
+                        Senha de Acesso
+                      </label>
+                      <a
+                        class="font-label-xs text-label-xs uppercase text-on-surface-variant hover:text-on-surface underline hover:decoration-2 font-mono"
+                        data-path="esqueci-senha"
+                        href="#"
+                      >
+                        Esqueceu a senha?
+                      </a>
+                    </div>
+                    <div class="relative flex items-center">
+                      <div
+                        class="absolute left-space-md flex items-center pointer-events-none text-outline"
+                      >
+                        <span class="material-symbols-outlined text-[16px]"
+                          >lock</span
+                        >
+                      </div>
+                      <input
+                        class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm border border-border-hairline rounded-[1px] pl-8 pr-10 py-space-sm focus:outline-none focus:ring-1 focus:ring-border-hairline focus:bg-canvas-soft transition-all placeholder:text-outline"
+                        id="password-input"
+                        placeholder="••••••••••••"
+                        required=""
+                        type="password"
+                      />
+                      <button
+                        aria-label="Alternar visibilidade de senha"
+                        class="absolute right-space-xs px-space-xs py-0.5 text-on-surface hover:text-on-background focus:outline-none"
+                        id="toggle-pwd-btn"
+                        onclick="
+                          const input =
+                            document.getElementById('password-input');
+                          const icon =
+                            document.getElementById('toggle-pwd-icon');
+                          if (input.type === 'password') {
+                            input.type = 'text';
+                            icon.innerText = 'visibility_off';
+                          } else {
+                            input.type = 'password';
+                            icon.innerText = 'visibility';
+                          }
+                        "
+                        type="button"
+                      >
+                        <span
+                          class="material-symbols-outlined text-[16px]"
+                          id="toggle-pwd-icon"
+                          >visibility</span
+                        >
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Checkbox: Session Retention -->
+                  <div class="flex items-center justify-between pt-space-xs">
+                    <label
+                      class="flex items-center gap-space-sm cursor-pointer select-none"
+                    >
+                      <input
+                        checked=""
+                        class="appearance-none w-3 h-3 border border-border-hairline rounded-[1px] bg-surface-container-lowest checked:bg-on-background checked:border-on-background focus:outline-none cursor-pointer relative"
+                        style="
+                          background-image: url(&quot;data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='%23f5f841' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13.485 3.515a1 1 0 0 1 0 1.414l-7.07 7.071a1 1 0 0 1-1.415 0L1.515 8.515a1 1 0 0 1 1.414-1.414l2.78 2.78 6.363-6.366a1 1 0 0 1 1.414 0z'/%3E%3C/svg%3E&quot;);
+                          background-size: 80% 80%;
+                          background-position: center;
+                          background-repeat: no-repeat;
+                        "
+                        type="checkbox"
+                      />
+                      <span class="font-body-sm text-body-sm text-on-surface"
+                        >Manter sessão segura neste terminal (30 dias)</span
+                      >
+                    </label>
+                    <span
+                      class="font-label-xs text-label-xs text-outline uppercase font-mono hidden sm:inline"
+                      >PERSISTENT_AUTH</span
+                    >
+                  </div>
+                  <!-- Action Primary Button -->
+                  <button
+                    class="w-full mt-space-sm bg-primary-container hover:bg-primary-container text-on-surface border border-border-hairline font-label-md text-label-md uppercase font-bold py-space-md px-space-lg flex items-center justify-center gap-space-sm shadow-[3px_3px_0px_#000000] hover:shadow-[1px_1px_0px_#000000] hover:translate-x-0.5 hover:translate-y-0.5 active:translate-x-1 active:translate-y-1 transition-all"
+                    id="submit-auth-btn"
+                    type="submit"
+                  >
+                    <span>ENTRAR NO VALORANT.COACH</span>
+                    <span class="material-symbols-outlined text-[16px]"
+                      >arrow_forward</span
+                    >
+                  </button>
+                </form>
+                <!-- Auth Status Feedback Banner (Simulated) -->
+                <div
+                  class="hidden mt-space-md p-space-sm bg-canvas-soft border border-border-hairline items-center justify-between"
+                  id="auth-notification"
+                >
+                  <div class="flex items-center gap-space-sm">
+                    <span
+                      class="w-2 h-2 bg-primary-container border border-border-hairline animate-ping"
+                    ></span>
+                    <span
+                      class="font-label-xs text-label-xs uppercase font-mono text-on-surface"
+                      >AUTENTICANDO CREDENCIAIS NO TELEMETRY PIPELINE...</span
+                    >
+                  </div>
+                  <span
+                    class="font-label-xs text-label-xs text-outline uppercase"
+                    >STAGE: HANDSHAKE</span
+                  >
+                </div>
+                <!-- Bottom Footer Navigation to Registration -->
+                <div
+                  class="mt-space-lg pt-space-md border-t border-border-hairline flex flex-col sm:flex-row items-center justify-between gap-space-sm"
+                >
+                  <span
+                    class="font-body-sm text-body-sm text-on-surface-variant text-center sm:text-left"
+                  >
+                    Ainda não possui credenciais telemétricas? Crie sua conta
+                    gratuitamente em segundos.
+                  </span>
+                  <a
+                    class="shrink-0 bg-surface-container-lowest hover:bg-canvas-soft border border-border-hairline px-space-md py-space-xs font-label-sm text-label-sm uppercase font-bold text-on-surface shadow-[1px_1px_0px_#000000] hover:shadow-none transition-all"
+                    data-path="cadastro"
+                    href="#"
+                  >
+                    REGISTRAR AGENTE
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Micro Diagnostic Bottom Telemetry Bar -->
+          <div
+            class="mt-gutter border-t border-border-hairline pt-space-sm flex flex-wrap items-center justify-between gap-space-md text-outline font-label-xs text-label-xs"
+          >
+            <div class="flex items-center gap-space-sm">
+              <span class="text-on-surface font-semibold uppercase"
+                >NODE: SA-BR-01</span
+              >
+              <span>/</span>
+              <span>RIOT API RATELIMIT: 99.8% HEALTHY</span>
+              <span>/</span>
+              <span class="hidden md:inline"
+                >VANGUARD COMPATIBLE LOG PARSER</span
+              >
+            </div>
+            <div class="flex items-center gap-space-sm font-mono">
+              <span>SESSION HASH: 0x9AF8...B12</span>
+              <span
+                class="w-1.5 h-1.5 bg-primary-container border border-border-hairline"
+              ></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script>
+        // Simple micro-interaction for login submission simulation
+        const authForm = document.getElementById("auth-form");
+        const notifyBox = document.getElementById("auth-notification");
+        const submitBtn = document.getElementById("submit-auth-btn");
+
+        if (authForm) {
+          authForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            if (notifyBox) {
+              notifyBox.classList.remove("hidden");
+              notifyBox.classList.add("flex");
+            }
+            submitBtn.classList.add("opacity-75", "cursor-wait");
+            submitBtn.innerHTML = `
+        <span class="w-3 h-3 border border-border-hairline border-t-transparent animate-spin inline-block"></span>
+        <span>VALIDANDO AUTENTICAÇÃO...</span>
+      `;
+
+            setTimeout(() => {
+              submitBtn.classList.remove("opacity-75", "cursor-wait");
+              submitBtn.innerHTML = `
+          <span class="material-symbols-outlined text-[16px]">check_circle</span>
+          <span>ACESSO CONCEDIDO // REDIRECIONANDO</span>
+        `;
+              notifyBox.innerHTML = `
+          <div class="flex items-center gap-space-sm">
+            <span class="w-2 h-2 bg-primary-container border border-border-hairline"></span>
+            <span class="font-label-xs text-label-xs uppercase font-mono text-on-surface">TOKEN GERADO COM SUCESSO. CONECTANDO AO RADAR DE TELEMETRIA...</span>
+          </div>
+          <span class="font-label-xs text-label-xs bg-primary-container text-on-surface px-1 border border-border-hairline uppercase font-bold">200 OK</span>
+        `;
+            }, 1200);
+          });
+        }
+      </script>
+    </main>
+    <footer
+      class="w-full bg-surface-container-lowest border-t border-border-hairline py-space-xl"
+    >
+      <div
+        class="w-full px-margin flex flex-col md:flex-row items-center justify-between gap-space-md"
+      >
+        <div class="flex items-center gap-gutter">
+          <span
+            class="font-label-xs text-label-xs uppercase text-on-surface-variant"
+            >CONSOLE_BUILD: 2024.11.08-PROD</span
+          ><span class="font-label-xs text-label-xs text-outline">//</span
+          ><span class="font-label-xs text-label-xs text-on-surface-variant"
+            >© 2024 VALORANT.COACH TELEMETRY SYSTEMS. RIOT GAMES AFFILIATE
+            PROTOCOL.</span
+          >
+        </div>
+        <div class="flex items-center gap-gutter">
+          <a
+            class="font-label-xs text-label-xs uppercase text-on-surface-variant hover:text-on-surface hover:underline"
+            data-path="termos-de-servico"
+            href="#"
+            >Termos de Serviço</a
+          ><span class="font-label-xs text-label-xs text-outline">/</span
+          ><a
+            class="font-label-xs text-label-xs uppercase text-on-surface-variant hover:text-on-surface hover:underline"
+            data-path="politica-de-privacidade"
+            href="#"
+            >Privacidade &amp; Telemetria</a
+          ><span class="font-label-xs text-label-xs text-outline">/</span
+          ><a
+            class="font-label-xs text-label-xs uppercase text-on-surface-variant hover:text-on-surface hover:underline"
+            data-path="api-status"
+            href="#"
+            >Status do Sistema</a
+          >
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

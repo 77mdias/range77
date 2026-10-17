@@ -23,7 +23,7 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
-import { DashboardContent } from '@/app/dashboard/page';
+import { DashboardContent } from '@/app/(app)/dashboard/page';
 
 const trackedPlayer = {
   id: 'tp-1',

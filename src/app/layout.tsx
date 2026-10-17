@@ -1,10 +1,6 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
 import type { ReactNode } from 'react';
 import localFont from 'next/font/local';
-import { AppShell } from '@/components/layout/app-shell';
-import { NavUser } from '@/components/layout/nav-user';
-import { Skeleton } from '@/components/ui/skeleton';
 import './globals.css';
 
 /**
@@ -54,17 +50,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       lang="pt-BR"
       className={`${spaceGrotesk.variable} ${jetBrainsMono.variable} ${geist.variable}`}
     >
-      <body className="font-body">
-        <AppShell
-          user={
-            <Suspense fallback={<Skeleton width={168} height={32} />}>
-              <NavUser />
-            </Suspense>
-          }
-        >
-          {children}
-        </AppShell>
-      </body>
+      <body className="font-body">{children}</body>
     </html>
   );
 }

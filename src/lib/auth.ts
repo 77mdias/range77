@@ -7,6 +7,7 @@ import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
 } from '@/lib/validation/credentials';
+import { SESSION_TTL_SECONDS } from '@/lib/session-policy';
 import { schema } from '@/lib/db/schema';
 
 /**
@@ -73,6 +74,9 @@ export function createAuth(db: AuthDatabase, authEnv: ResolvedAuthEnv) {
       maxPasswordLength: PASSWORD_MAX_LENGTH,
       requireNameAndEmail: true,
     },
+    // 30 dias é a promessa do checkbox "manter sessão" (Stitch tela 7).
+    // Better Auth aceita SEGUNDOS; default da lib: 7 dias.
+    session: { expiresIn: SESSION_TTL_SECONDS },
     plugins: [nextCookies()],
   });
 }

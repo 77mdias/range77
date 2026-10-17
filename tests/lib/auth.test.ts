@@ -20,6 +20,7 @@ vi.mock('better-auth/next-js', () => ({ nextCookies: vi.fn(() => 'NEXT_COOKIES')
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createAuth, resolveAuthEnv } from '@/lib/auth';
+import { SESSION_TTL_SECONDS } from '@/lib/session-policy';
 
 const fakeDb = { select: async () => [] } as never;
 
@@ -28,6 +29,7 @@ interface CapturedOptions {
   baseURL?: string;
   socialProviders?: Record<string, unknown>;
   emailAndPassword?: Record<string, unknown>;
+  session?: Record<string, unknown>;
   plugins?: unknown[];
 }
 
@@ -113,6 +115,11 @@ describe('createAuth', () => {
       maxPasswordLength: 128,
       requireNameAndEmail: true,
     });
+  });
+
+  it('configura a sessão persistente em 30 dias', () => {
+    createAuth(fakeDb, { secret: 's', baseURL: 'u' });
+    expect(lastOptions().session).toEqual({ expiresIn: SESSION_TTL_SECONDS });
   });
 
   it('omite socialProviders quando nenhum provedor está configurado', () => {

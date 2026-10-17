@@ -30,7 +30,7 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
-import { SettingsContent } from '@/app/dashboard/settings/page';
+import { SettingsContent } from '@/app/(app)/dashboard/settings/page';
 
 const session = { user: { id: 'user-1', name: 'Jane', email: 'jane@x.com', image: null } };
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MatchView } from '@/app/matches/[matchId]/match-view';
+import { MatchView } from '@/app/(app)/matches/[matchId]/match-view';
 import type { MatchDetail } from '@/contracts/tracker';
 
 /**

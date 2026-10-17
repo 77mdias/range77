@@ -22,7 +22,7 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
-import { SettingsContent } from '@/app/dashboard/settings/page';
+import { SettingsContent } from '@/app/(app)/dashboard/settings/page';
 
 describe('SettingsContent (conteúdo dinâmico)', () => {
   it('redireciona para /login sem sessão', async () => {

@@ -18,7 +18,7 @@ vi.mock('@/lib/cache/tracker', () => ({
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 import { HenrikDevApiError } from '@/services/henrikdev/client';
-import MatchPage, { MatchDetailData } from '@/app/matches/[matchId]/page';
+import MatchPage, { MatchDetailData } from '@/app/(app)/matches/[matchId]/page';
 
 const MATCH_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
 
