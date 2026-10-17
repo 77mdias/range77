@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { EmailLoginForm } from './email-auth-forms';
 import { SocialLoginButtons } from './social-login-buttons';
+import { resolveCallbackPath } from '@/components/auth/resolve-callback-path';
 
 /**
  * PÁGINA: /login
@@ -14,13 +15,6 @@ export const instant = false;
 
 interface PageProps {
   searchParams: Promise<{ next?: string | string[] }>;
-}
-
-function resolveCallbackPath(next: string | string[] | undefined): string {
-  if (typeof next !== 'string' || !next.startsWith('/')) {
-    return '/dashboard';
-  }
-  return next;
 }
 
 export default async function LoginPage({ searchParams }: PageProps) {

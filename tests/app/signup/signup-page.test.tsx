@@ -13,7 +13,7 @@ vi.mock('@/lib/auth-client', () => ({
   },
 }));
 
-import SignupPage from '@/app/signup/page';
+import SignupPage from '@/app/(auth)/signup/page';
 
 const render = async (next?: string): Promise<string> => {
   const element = await SignupPage({

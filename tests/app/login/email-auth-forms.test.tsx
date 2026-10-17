@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { EmailLoginForm, SignupForm } from '@/app/login/email-auth-forms';
+import { EmailLoginForm, SignupForm } from '@/app/(auth)/login/email-auth-forms';
 
 /**
  * SUITE TDD — formulários manuais de auth (login/signup email+senha).

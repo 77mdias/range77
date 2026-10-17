@@ -10,7 +10,7 @@ vi.mock('@/lib/auth-client', () => ({
   authClient: { signIn: { social: vi.fn(async () => ({ error: null })) } },
 }));
 
-import LoginPage from '@/app/login/page';
+import LoginPage from '@/app/(auth)/login/page';
 
 const render = async (next?: string): Promise<string> => {
   const element = await LoginPage({

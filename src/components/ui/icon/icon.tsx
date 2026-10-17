@@ -25,7 +25,9 @@ export type IconName =
   | 'chevron-down'
   | 'target'
   | 'grid'
-  | 'history';
+  | 'history'
+  | 'eye'
+  | 'eye-off';
 
 const PATHS: Record<IconName, React.ReactNode> = {
   search: (
@@ -96,6 +98,18 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M8 4.5V8l2.5 1.5" />
       <path d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9" />
       <path d="M2.5 2.5V6H6" />
+    </>
+  ),
+  eye: (
+    <>
+      <path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z" />
+      <circle cx={8} cy={8} r={2} />
+    </>
+  ),
+  'eye-off': (
+    <>
+      <path d="M6.2 3.8A6.6 6.6 0 0 1 8 3.5C12 3.5 14.5 8 14.5 8a12 12 0 0 1-1.9 2.4M4 5.2A12.5 12.5 0 0 0 1.5 8S4 12.5 8 12.5c.7 0 1.3-.1 1.9-.3" />
+      <path d="M2.5 2.5l11 11" />
     </>
   ),
 };

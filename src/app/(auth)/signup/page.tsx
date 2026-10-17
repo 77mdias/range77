@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { SignupForm } from '../login/email-auth-forms';
+import { resolveCallbackPath } from '@/components/auth/resolve-callback-path';
 
 /**
  * PÁGINA: /signup
@@ -13,13 +14,6 @@ export const instant = false;
 
 interface PageProps {
   searchParams: Promise<{ next?: string | string[] }>;
-}
-
-function resolveCallbackPath(next: string | string[] | undefined): string {
-  if (typeof next !== 'string' || !next.startsWith('/')) {
-    return '/dashboard';
-  }
-  return next;
 }
 
 export default async function SignupPage({ searchParams }: PageProps) {
