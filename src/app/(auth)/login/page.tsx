@@ -33,7 +33,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
   return (
     <div
       data-login-page
-      className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center gap-3 px-4 py-3"
+      className="flex w-full flex-1 flex-col justify-center gap-3 px-4 py-3"
     >
       <TelemetryStrip
         items={[

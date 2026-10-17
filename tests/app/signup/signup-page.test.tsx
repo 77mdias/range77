@@ -71,4 +71,10 @@ describe('SignupPage', () => {
   it('não quebra com o parâmetro ?next= presente', async () => {
     expect(await render('/dashboard')).toContain('data-signup-page');
   });
+
+  it('ocupa 100% da largura da tela (sem cap max-w-7xl)', async () => {
+    const html = await render();
+    expect(html).toContain('w-full');
+    expect(html).not.toContain('max-w-7xl');
+  });
 });

@@ -59,7 +59,7 @@ export default async function SignupPage({ searchParams }: PageProps) {
   return (
     <div
       data-signup-page
-      className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3"
+      className="flex w-full flex-col gap-3 px-4 py-3"
     >
       <TelemetryStrip
         variant="bar"
