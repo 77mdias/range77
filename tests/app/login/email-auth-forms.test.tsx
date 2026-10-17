@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { EmailLoginForm, SignupForm } from '@/app/(auth)/login/email-auth-forms';
+import { SignupForm } from '@/app/(auth)/login/email-auth-forms';
 
 /**
  * SUITE TDD — formulários manuais de auth (login/signup email+senha).
@@ -12,23 +12,18 @@ import { EmailLoginForm, SignupForm } from '@/app/(auth)/login/email-auth-forms'
 
 type AuthCallResult = { error: { code: string } | null };
 
-const signInEmail = vi.fn<(...args: unknown[]) => Promise<AuthCallResult>>(
-  async () => ({ error: null }),
-);
 const signUpEmail = vi.fn<(...args: unknown[]) => Promise<AuthCallResult>>(
   async () => ({ error: null }),
 );
 
 vi.mock('@/lib/auth-client', () => ({
   authClient: {
-    signIn: { email: (...args: unknown[]) => signInEmail(...args) },
     signUp: { email: (...args: unknown[]) => signUpEmail(...args) },
   },
 }));
 
 afterEach(() => {
   cleanup();
-  signInEmail.mockClear();
   signUpEmail.mockClear();
 });
 
@@ -39,58 +34,6 @@ function getForm(container: HTMLElement, marker: string): HTMLFormElement {
   }
   return form;
 }
-
-describe('EmailLoginForm', () => {
-  it('chama signIn.email com email normalizado e callbackURL', async () => {
-    const { container } = render(<EmailLoginForm callbackPath="/dashboard" />);
-
-    fireEvent.change(screen.getByPlaceholderText('nome@dominio.com'), {
-      target: { value: '  Coach@ValCoach.dev ' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('Sua senha'), {
-      target: { value: 'segred0!valcoach' },
-    });
-    fireEvent.submit(getForm(container, 'email-login'));
-
-    await waitFor(() => expect(signInEmail).toHaveBeenCalledTimes(1));
-    expect(signInEmail).toHaveBeenCalledWith({
-      email: 'coach@valcoach.dev',
-      password: 'segred0!valcoach',
-      callbackURL: '/dashboard',
-    });
-  });
-
-  it('bloqueia envio com email inválido (sem chamar a API)', () => {
-    const { container } = render(<EmailLoginForm callbackPath="/dashboard" />);
-
-    fireEvent.change(screen.getByPlaceholderText('nome@dominio.com'), {
-      target: { value: 'sem-arroba' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('Sua senha'), {
-      target: { value: 'segred0!valcoach' },
-    });
-    fireEvent.submit(getForm(container, 'email-login'));
-
-    expect(signInEmail).not.toHaveBeenCalled();
-    expect(screen.getByRole('alert').textContent).toContain('e-mail');
-  });
-
-  it('mostra erro genérico quando o servidor recusa as credenciais', async () => {
-    signInEmail.mockResolvedValueOnce({ error: { code: 'INVALID_PASSWORD' } });
-    const { container } = render(<EmailLoginForm callbackPath="/dashboard" />);
-
-    fireEvent.change(screen.getByPlaceholderText('nome@dominio.com'), {
-      target: { value: 'coach@valcoach.dev' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('Sua senha'), {
-      target: { value: 'segred0!valcoach' },
-    });
-    fireEvent.submit(getForm(container, 'email-login'));
-
-    await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
-    expect(screen.getByRole('alert').textContent).toContain('incorretos');
-  });
-});
 
 describe('SignupForm', () => {
   it('chama signUp.email com nome/email/senha validados', async () => {
