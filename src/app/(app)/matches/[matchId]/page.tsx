@@ -7,6 +7,7 @@ import { describeUpstreamError, mappedToApiErrorBody } from '@/lib/http/api-erro
 import { parseMatchRouteParams } from '@/lib/validation/match-params';
 import { parseRiotId } from '@/lib/validation/riot-id';
 import { selectMatchMvp } from '@/services/analytics/match-breakdown';
+import { BackButton } from './back-button';
 import { MatchView, type MatchViewer } from './match-view';
 
 /**
@@ -94,8 +95,17 @@ export default async function MatchPage({ params, searchParams }: PageProps) {
   const viewer: MatchViewer | null =
     parsedPlayer !== null && parsedPlayer.ok ? parsedPlayer.value : null;
 
+  // Sem histórico no navegador, "Voltar" cai no perfil da perspectiva (ou home).
+  const backHref =
+    viewer === null
+      ? '/'
+      : `/players/${parsed.region}/${encodeURIComponent(viewer.name)}/${encodeURIComponent(viewer.tag)}`;
+
   return (
     <PageFrame>
+      <div className="mb-4">
+        <BackButton fallbackHref={backHref} label="Voltar" />
+      </div>
       <Suspense fallback={<MatchSkeleton />}>
         <MatchDetailData region={parsed.region} matchId={parsed.matchId} viewer={viewer} />
       </Suspense>

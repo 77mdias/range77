@@ -19,6 +19,7 @@ import { agentIconSrc } from '@/lib/valorant-assets';
 import type { MatchSummary } from '@/contracts/tracker';
 import type { PlayerOverview } from '@/services/tracker/player-overview';
 import { ProfileAiSandbox } from './ai-sandbox';
+import { RecentRankSync } from './recent-rank-sync';
 
 /**
  * PlayerProfileView — tela VISÃO GERAL do jogador (Stitch
@@ -194,6 +195,12 @@ export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewP
 
   return (
     <div data-player-profile className="flex flex-col">
+      <RecentRankSync
+        riotId={`${player.name}#${player.tag}`}
+        region={player.region}
+        rank={rankTier}
+        rr={rrInTier ?? undefined}
+      />
       {/* ── Faixa de contexto (só o que é real do ambiente) ─────────── */}
       <div
         data-context-strip

@@ -20,6 +20,7 @@ export type IconName =
   | 'download'
   | 'shield'
   | 'bot'
+  | 'arrow-left'
   | 'arrow-right'
   | 'filter'
   | 'chevron-down'
@@ -76,6 +77,7 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M8 5V2.5M5.5 9v.1M10.5 9v.1M5.5 11h5" />
     </>
   ),
+  'arrow-left': <path d="M14 8H3m0 0 4-4M3 8l4 4" />,
   'arrow-right': <path d="M2 8h11m0 0-4-4m4 4-4 4" />,
   filter: <path d="M2 3.5h12l-4.5 5v4l-3 1.5v-5.5L2 3.5Z" />,
   'chevron-down': <path d="m3.5 6 4.5 4.5L12.5 6" />,

@@ -8,6 +8,11 @@ import { HENRIKDEV_AFFINITIES, type HenrikDevAffinity } from '@/contracts/henrik
  * back-end aqui — histórico é POR NAVEGADOR e a grade da home cai para os
  * perfis catalogados quando a lista está vazia.
  *
+ * Rank/RR são um SNAPSHOT opcional: a busca grava só `riotId`+região e o
+ * perfil do jogador, ao carregar, completa a entrada com o elo real
+ * (`updateRecentPlayerRank`). Nada é inventado — sem snapshot o card mostra
+ * só o nome.
+ *
  * Fail-soft em toda a cadeia: SSR (`window` ausente), storage indisponível
  * (modo privado) e JSON corrompido devolvem lista vazia — nunca lançam.
  */
@@ -16,6 +21,10 @@ export interface RecentPlayer {
   /** Riot ID canônico `Nome#Tag` (aparência preservada para exibição). */
   readonly riotId: string;
   readonly region: HenrikDevAffinity;
+  /** Snapshot do elo na última visita ao perfil (ex.: "Ascendant 3"). */
+  readonly rank?: string;
+  /** Snapshot do RR dentro do tier (0–100; Radiant/Immortal podem passar). */
+  readonly rr?: number;
 }
 
 /** Capacidade da grade da home (uma linha em `sm`, 2 colunas no mobile). */
@@ -30,7 +39,7 @@ function parseEntry(item: unknown): RecentPlayer | null {
   if (typeof item !== 'object' || item === null) {
     return null;
   }
-  const { riotId, region } = item as Record<string, unknown>;
+  const { riotId, region, rank, rr } = item as Record<string, unknown>;
   if (typeof riotId !== 'string' || typeof region !== 'string') {
     return null;
   }
@@ -39,7 +48,12 @@ function parseEntry(item: unknown): RecentPlayer | null {
   if (!isAffinity || !RIOT_ID_PATTERN.test(riotId.trim())) {
     return null;
   }
-  return { riotId: riotId.trim(), region: normalizedRegion as HenrikDevAffinity };
+  return {
+    riotId: riotId.trim(),
+    region: normalizedRegion as HenrikDevAffinity,
+    ...(typeof rank === 'string' && rank.trim() !== '' ? { rank: rank.trim() } : {}),
+    ...(typeof rr === 'number' && Number.isInteger(rr) && rr >= 0 ? { rr } : {}),
+  };
 }
 
 function samePlayer(a: RecentPlayer, b: RecentPlayer): boolean {
@@ -64,7 +78,10 @@ export function parseRecentPlayers(raw: unknown): RecentPlayer[] {
   return out;
 }
 
-/** Puro: move o jogador para a frente (dedupe case-insensitive) e limita. */
+/**
+ * Puro: move o jogador para a frente (dedupe case-insensitive) e limita. Uma
+ * busca nova (sem elo) preserva o snapshot de rank/RR já conhecido.
+ */
 export function addRecentPlayer(
   list: readonly RecentPlayer[],
   entry: RecentPlayer,
@@ -73,9 +90,41 @@ export function addRecentPlayer(
   if (parsed === null) {
     return [...list];
   }
-  return [parsed, ...list.filter((existing) => !samePlayer(existing, parsed))].slice(
+  const previous = list.find((existing) => samePlayer(existing, parsed));
+  const merged: RecentPlayer =
+    previous !== undefined && parsed.rank === undefined && parsed.rr === undefined
+      ? { ...parsed, ...pickRank(previous) }
+      : parsed;
+  return [merged, ...list.filter((existing) => !samePlayer(existing, parsed))].slice(
     0,
     MAX_RECENT_PLAYERS,
+  );
+}
+
+function pickRank(player: RecentPlayer): Pick<RecentPlayer, 'rank' | 'rr'> {
+  return {
+    ...(player.rank !== undefined ? { rank: player.rank } : {}),
+    ...(player.rr !== undefined ? { rr: player.rr } : {}),
+  };
+}
+
+/**
+ * Puro: substitui o snapshot de rank/RR de um jogador JÁ presente na lista,
+ * sem reordenar (visitar um perfil não é uma busca). Jogador ausente ou
+ * entrada inválida → lista inalterada.
+ */
+export function withRecentPlayerRank(
+  list: readonly RecentPlayer[],
+  entry: RecentPlayer,
+): RecentPlayer[] {
+  const parsed = parseEntry(entry);
+  if (parsed === null) {
+    return [...list];
+  }
+  return list.map((existing) =>
+    samePlayer(existing, parsed)
+      ? { riotId: existing.riotId, region: existing.region, ...pickRank(parsed) }
+      : existing,
   );
 }
 
@@ -97,18 +146,33 @@ export function readRecentPlayers(): RecentPlayer[] {
   }
 }
 
+function persist(list: readonly RecentPlayer[]): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    window.localStorage.setItem(STORAGE_KEY, serializeRecentPlayers(list));
+  } catch {
+    // Modo privado/quota cheia: a lista em memória ainda é devolvida.
+  }
+}
+
 /**
  * Registra um perfil buscado (fail-soft: storage indisponível não lança) e
  * devolve a lista atualizada. Entradas inválidas são ignoradas.
  */
 export function saveRecentPlayer(entry: RecentPlayer): RecentPlayer[] {
   const updated = addRecentPlayer(readRecentPlayers(), entry);
-  if (typeof window !== 'undefined') {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, serializeRecentPlayers(updated));
-    } catch {
-      // Modo privado/quota cheia: a lista em memória ainda é devolvida.
-    }
-  }
+  persist(updated);
+  return updated;
+}
+
+/**
+ * Completa o snapshot de rank/RR de um perfil recente (fail-soft). Só toca
+ * jogadores que já estão no histórico — visitas diretas não entram na lista.
+ */
+export function saveRecentPlayerRank(entry: RecentPlayer): RecentPlayer[] {
+  const updated = withRecentPlayerRank(readRecentPlayers(), entry);
+  persist(updated);
   return updated;
 }

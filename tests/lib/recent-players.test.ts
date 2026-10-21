@@ -5,7 +5,9 @@ import {
   parseRecentPlayers,
   readRecentPlayers,
   saveRecentPlayer,
+  saveRecentPlayerRank,
   serializeRecentPlayers,
+  withRecentPlayerRank,
   type RecentPlayer,
 } from '@/lib/recents/recent-players';
 
@@ -117,6 +119,60 @@ describe('addRecentPlayer', () => {
   it('entrada inválida devolve a lista inalterada', () => {
     const list: RecentPlayer[] = [{ riotId: 'a#aaa', region: 'br' }];
     expect(addRecentPlayer(list, { riotId: 'invalida', region: 'xx' as 'br' })).toEqual(list);
+  });
+});
+
+describe('snapshot de rank/RR', () => {
+  it('parse preserva rank/RR válidos e descarta inválidos', () => {
+    expect(
+      parseRecentPlayers([
+        { riotId: 'nexus#BR1', region: 'br', rank: ' Ascendant 3 ', rr: 78 },
+        { riotId: 'aspas#LEV', region: 'latam', rank: '', rr: -5 },
+        { riotId: 'mwzera#FUR', region: 'br', rank: 42, rr: 12.5 },
+      ]),
+    ).toEqual([
+      { riotId: 'nexus#BR1', region: 'br', rank: 'Ascendant 3', rr: 78 },
+      { riotId: 'aspas#LEV', region: 'latam' },
+      { riotId: 'mwzera#FUR', region: 'br' },
+    ]);
+  });
+
+  it('nova busca (sem elo) preserva o snapshot conhecido', () => {
+    const list: RecentPlayer[] = [
+      { riotId: 'old#one', region: 'br' },
+      { riotId: 'nexus#BR1', region: 'br', rank: 'Ascendant 3', rr: 78 },
+    ];
+    expect(addRecentPlayer(list, { riotId: 'NEXUS#BR1', region: 'br' })[0]).toEqual({
+      riotId: 'NEXUS#BR1',
+      region: 'br',
+      rank: 'Ascendant 3',
+      rr: 78,
+    });
+  });
+
+  it('withRecentPlayerRank atualiza no lugar, sem reordenar nem inserir', () => {
+    const list: RecentPlayer[] = [
+      { riotId: 'old#one', region: 'br' },
+      { riotId: 'Nexus#BR1', region: 'br', rank: 'Diamond 1', rr: 10 },
+    ];
+    expect(
+      withRecentPlayerRank(list, { riotId: 'nexus#br1', region: 'br', rank: 'Ascendant 3', rr: 78 }),
+    ).toEqual([
+      { riotId: 'old#one', region: 'br' },
+      { riotId: 'Nexus#BR1', region: 'br', rank: 'Ascendant 3', rr: 78 },
+    ]);
+    expect(withRecentPlayerRank(list, { riotId: 'outro#x', region: 'br', rr: 1 })).toEqual(list);
+    expect(withRecentPlayerRank(list, { riotId: 'invalida', region: 'br' })).toEqual(list);
+  });
+
+  it('saveRecentPlayerRank persiste o snapshot', () => {
+    STORE['valcoach.recent-players.v1'] = serializeRecentPlayers([
+      { riotId: 'nexus#BR1', region: 'br' },
+    ]);
+    saveRecentPlayerRank({ riotId: 'nexus#BR1', region: 'br', rank: 'Ascendant 3', rr: 78 });
+    expect(JSON.parse(STORE['valcoach.recent-players.v1'])).toEqual([
+      { riotId: 'nexus#BR1', region: 'br', rank: 'Ascendant 3', rr: 78 },
+    ]);
   });
 });
 

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Icon } from '@/components/ui/icon';
 import { StatusDot } from '@/components/ui/status-dot';
+import { BrandLogo } from './brand-logo';
 import { NavSearch } from './nav-search';
 import { cx } from '@/lib/cx';
 
@@ -9,7 +10,8 @@ import { cx } from '@/lib/cx';
  * TopNav — header global (Stitch "Protocol Precision", pixel-fiel): barra
  * FIXA no topo, fundo branco opaco com hairline preta (sem blur), altura
  * `h-14` e margem de página `px-margin`. Três clusters:
- *   - esquerda: marca (logo + wordmark) + status pill do pipeline;
+ *   - esquerda: marca (`BrandLogo`: escudo Range77 + wordmark) + status
+ *     pill do pipeline;
  *   - centro: abas full-height com divisórias verticais — a ativa ganha
  *     fundo acento + `border-b-2` preta (assinatura do design);
  *   - direita: busca rápida (ilha `NavSearch`), notificações e slot de
@@ -57,22 +59,14 @@ export function TopNav({
           <Link
             href="/"
             aria-label="ValCoach — início"
-            className="flex items-center gap-2"
+            className="flex items-center rounded-md pr-1 outline-offset-2"
           >
-            <span
-              aria-hidden="true"
-              className="flex size-8 items-center justify-center rounded-md border border-line bg-accent font-display text-heading-sm leading-none text-text-primary"
-            >
-              V
-            </span>
-            <span className="hidden font-display text-heading-sm uppercase leading-none tracking-tight text-text-primary sm:inline-block">
-              VALORANT.COACH
-            </span>
+            <BrandLogo compact />
           </Link>
           {statusText !== undefined ? (
             <span
               data-top-nav-status
-              className="hidden items-center gap-0.75 rounded-md border border-line bg-surface-raised px-1.5 py-0.75 font-hud text-label-xs uppercase text-text-primary md:inline-flex"
+              className="ml-1 hidden items-center gap-0.75 rounded-full border border-line bg-surface-raised px-1.5 py-0.75 font-hud text-label-xs uppercase text-text-primary md:inline-flex"
             >
               <StatusDot variant="live" className="border border-line" />
               {statusText}
@@ -84,7 +78,7 @@ export function TopNav({
         {items.length > 0 ? (
           <nav
             aria-label="Principal"
-            className="hidden h-full items-center xl:flex"
+            className="hidden h-full items-center border-l border-line xl:flex"
             data-top-nav-items
           >
             {items.map((item) => {

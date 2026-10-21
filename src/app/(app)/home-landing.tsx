@@ -51,12 +51,14 @@ const FALLBACK_PROFILES: readonly DemoProfile[] = [
   { riotId: 'next to nothing#NOWAY', region: 'na', regionChip: 'NA' },
 ];
 
-/** RecentPlayer → card da grade (sem rank/RR: o histórico não carrega elo). */
+/** RecentPlayer → card da grade (rank/RR só com snapshot do perfil visitado). */
 function toDemoProfile(recent: RecentPlayer): DemoProfile {
   return {
     riotId: recent.riotId,
     region: recent.region,
     regionChip: recent.region.toUpperCase(),
+    ...(recent.rank !== undefined ? { rank: recent.rank } : {}),
+    ...(recent.rr !== undefined ? { rr: `${recent.rr} RR` } : {}),
   };
 }
 

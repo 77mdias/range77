@@ -25,7 +25,8 @@ describe('TopNav', () => {
       <TopNav items={ITEMS} activeHref="/" statusText="API Pipeline: Active (3-Layer Mode)" />,
     );
     expect(html).toContain('data-component="top-nav"');
-    expect(html).toContain('VALORANT.COACH');
+    expect(html).toContain('data-brand-logo');
+    expect(html).toContain('logo-accent.png');
     expect(html).toContain('API Pipeline: Active (3-Layer Mode)');
     expect(html).toContain('Visão geral');
   });

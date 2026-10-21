@@ -27,7 +27,8 @@ describe('AppShell', () => {
   it('renderiza o header global com a marca ValCoach', () => {
     const html = renderShell();
     expect(html).toContain('data-component="top-nav"');
-    expect(html).toContain('VALORANT.COACH');
+    expect(html).toContain('data-brand-logo');
+    expect(html).toContain('logo-accent.png');
     expect(html).toContain('aria-label="ValCoach — início"');
   });
 

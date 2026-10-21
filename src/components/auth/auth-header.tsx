@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { AuthTabs } from './auth-tabs';
+import { BrandLogo } from '@/components/layout/brand-logo';
 import { Icon } from '@/components/ui/icon';
 import { StatusDot } from '@/components/ui/status-dot';
 
@@ -16,15 +17,7 @@ export function AuthHeader() {
     >
       <div className="flex h-14 w-full items-center justify-between gap-2 px-4">
         <Link href="/" className="flex shrink-0 items-center gap-2">
-          <span
-            aria-hidden="true"
-            className="flex size-3 items-center justify-center border border-line bg-accent"
-          >
-            <span className="size-1.5 bg-text-primary" />
-          </span>
-          <span className="font-display text-headline-md uppercase tracking-tighter text-text-primary">
-            VALORANT<span className="text-text-secondary">.COACH</span>
-          </span>
+          <BrandLogo />
           <span className="border border-line bg-surface-pressed px-1 py-0.5 font-hud text-label-xs uppercase text-text-secondary">
             SYS_AUTH
           </span>
