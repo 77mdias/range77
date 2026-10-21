@@ -16,6 +16,7 @@ import { buildAgentCardProfiles } from '@/services/analytics/agent-map-profiles'
 import { computeFirstBloodRate, computeWinrate } from '@/services/analytics/tracker-aggregations';
 import { computeRrNet, indexRrDeltaByMatchId } from '@/services/analytics/rr-trend';
 import { agentIconSrc } from '@/lib/valorant-assets';
+import { rankSnapshotFromOverview } from '@/lib/recents/recent-players';
 import type { MatchSummary } from '@/contracts/tracker';
 import type { PlayerOverview } from '@/services/tracker/player-overview';
 import { ProfileAiSandbox } from './ai-sandbox';
@@ -198,8 +199,7 @@ export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewP
       <RecentRankSync
         riotId={`${player.name}#${player.tag}`}
         region={player.region}
-        rank={rankTier}
-        rr={rrInTier ?? undefined}
+        {...rankSnapshotFromOverview(overview)}
       />
       {/* ── Faixa de contexto (só o que é real do ambiente) ─────────── */}
       <div

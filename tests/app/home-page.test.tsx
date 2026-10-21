@@ -46,10 +46,13 @@ describe('HomePage', () => {
     expect(output).toContain('Buscar');
   });
 
-  it('renderiza o perfil demo catalogado apontando para um jogador real', () => {
+  it('SSR: grade de perfis em loading (histórico só existe no navegador)', () => {
+    // Sem placeholders o SSR pintava o catálogo e a hidratação trocava pelos
+    // recentes — o "flash" de perfis demo no F5.
     const output = html();
     expect(output).toContain('data-component="demo-profile-grid"');
-    expect(output).toContain('twmz#tower');
+    expect(output).toContain('aria-busy="true"');
+    expect(output).not.toContain('Perfis demo catalogados');
     expect(output).not.toContain('NEXUS#BR1');
   });
 

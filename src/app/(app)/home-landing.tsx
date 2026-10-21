@@ -18,8 +18,12 @@ import { SearchBar, type SearchQuery } from '@/components/ui/search-bar';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/ui/section-header';
 import {
+  rankSnapshotFromOverview,
   readRecentPlayers,
+  recentPlayersMissingRank,
   saveRecentPlayer,
+  saveRecentPlayerRank,
+  type RankSource,
   type RecentPlayer,
 } from '@/lib/recents/recent-players';
 import { parseRiotId } from '@/lib/validation/riot-id';
@@ -60,6 +64,39 @@ function toDemoProfile(recent: RecentPlayer): DemoProfile {
     ...(recent.rank !== undefined ? { rank: recent.rank } : {}),
     ...(recent.rr !== undefined ? { rr: `${recent.rr} RR` } : {}),
   };
+}
+
+/** Amostra mínima do overview: o backfill só precisa do elo, não das partidas. */
+const RANK_BACKFILL_SIZE = 1;
+
+/**
+ * Busca o elo de um recente sem snapshot (cache compartilhado com o perfil).
+ * Fail-soft: qualquer falha (404, 429, rede, abort) devolve `null`.
+ */
+async function fetchRankSnapshot(
+  player: RecentPlayer,
+  signal: AbortSignal,
+): Promise<RecentPlayer | null> {
+  const parsed = parseRiotId(player.riotId);
+  if (!parsed.ok) {
+    return null;
+  }
+  const { name, tag } = parsed.value;
+  try {
+    const response = await fetch(
+      `/api/players/${player.region}/${encodeURIComponent(name)}/${encodeURIComponent(tag)}/overview?size=${RANK_BACKFILL_SIZE}`,
+      { signal },
+    );
+    if (!response.ok) {
+      return null;
+    }
+    const snapshot = rankSnapshotFromOverview((await response.json()) as RankSource);
+    return snapshot.rank === undefined && snapshot.rr === undefined
+      ? null
+      : { riotId: player.riotId, region: player.region, ...snapshot };
+  } catch {
+    return null;
+  }
 }
 
 const STEP_DELAYS_MS = [600, 1400, 2200];
@@ -154,13 +191,28 @@ export function HomeLanding() {
   const [target, setTarget] = useState<string>(DEMO_RIOT_ID);
   const [route, setRoute] = useState<string | null>(null);
   const [stepStates, setStepStates] = useState<readonly IngestionStepState[]>(INITIAL_STEPS);
-  // Histórico só existe no navegador: SSR pinta o fallback (catálogo) e a
-  // hidratação troca pelos recentes quando há buscas prévias.
-  const [recents, setRecents] = useState<readonly RecentPlayer[]>([]);
+  // Histórico só existe no navegador: `null` = ainda não lido (SSR e 1º
+  // render da hidratação pintam placeholders, nunca o catálogo — evita o
+  // flash catálogo → recentes). Recentes sem elo ganham o snapshot via
+  // overview (uma vez: depois fica persistido).
+  const [recents, setRecents] = useState<readonly RecentPlayer[] | null>(null);
 
   useEffect(() => {
-    setRecents(readRecentPlayers());
+    const stored = readRecentPlayers();
+    setRecents(stored);
+
+    const controller = new AbortController();
+    for (const player of recentPlayersMissingRank(stored)) {
+      void fetchRankSnapshot(player, controller.signal).then((snapshot) => {
+        if (snapshot !== null && !controller.signal.aborted) {
+          setRecents(saveRecentPlayerRank(snapshot));
+        }
+      });
+    }
+    return () => controller.abort();
   }, []);
+
+  const hasRecents = recents !== null && recents.length > 0;
 
   const doneCount = stepStates.filter((state) => state === 'done').length;
   const progress = (doneCount / INITIAL_STEPS.length) * 100;
@@ -266,7 +318,7 @@ export function HomeLanding() {
               hardShadow
               statusChip="STATUS: AGUARDANDO INPUT"
               helperText={
-                recents.length > 0
+                hasRecents
                   ? 'Pipeline 3-layer pronto — pressione Enter ou escolha um perfil recente'
                   : 'Pipeline 3-layer pronto — pressione Enter ou escolha um perfil demo'
               }
@@ -275,12 +327,9 @@ export function HomeLanding() {
             </SearchConsole>
 
             <DemoProfileGrid
-              profiles={
-                recents.length > 0 ? recents.map(toDemoProfile) : FALLBACK_PROFILES
-              }
-              label={
-                recents.length > 0 ? 'Perfis recentes buscados' : 'Perfis demo catalogados'
-              }
+              loading={recents === null}
+              profiles={hasRecents ? recents.map(toDemoProfile) : FALLBACK_PROFILES}
+              label={hasRecents ? 'Perfis recentes buscados' : 'Perfis demo catalogados'}
               onSelect={(profile) => startIngestion(profile.riotId, profile.region ?? DEMO_REGION)}
             />
           </div>

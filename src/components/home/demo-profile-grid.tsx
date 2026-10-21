@@ -1,11 +1,15 @@
 import { Icon } from '@/components/ui/icon';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cx } from '@/lib/cx';
 
 /**
  * DemoProfileGrid — perfis do hero da home: card-botão por perfil (nome +
  * chip de região; rank • RR quando disponíveis). Perfil destacado usa
  * acento. Serve tanto aos perfis catalogados quanto aos buscados
- * recentemente (esses, sem rank/RR — nada inventado).
+ * recentemente (rank/RR só quando há snapshot — nada inventado).
+ *
+ * `loading` pinta placeholders do mesmo tamanho enquanto a home ainda não
+ * leu o histórico do navegador (SSR/hidratação) — sem o flash do catálogo.
  */
 
 export interface DemoProfile {
@@ -24,15 +28,44 @@ export interface DemoProfileGridProps {
   readonly profiles: readonly DemoProfile[];
   readonly onSelect?: (profile: DemoProfile) => void;
   readonly label?: string;
+  /** Histórico ainda não lido: placeholders no lugar dos cards. */
+  readonly loading?: boolean;
   readonly className?: string;
 }
+
+const LOADING_SLOTS = 4;
 
 export function DemoProfileGrid({
   profiles,
   onSelect,
   label = 'Perfis demo catalogados',
+  loading = false,
   className,
 }: DemoProfileGridProps) {
+  if (loading) {
+    return (
+      <div
+        data-component="demo-profile-grid"
+        data-loading=""
+        aria-busy="true"
+        className={cx('w-full', className)}
+      >
+        <p className="mb-1.5 flex items-center justify-center gap-1.5 font-hud text-label uppercase text-text-secondary">
+          <Icon name="target" />
+          Carregando perfis
+        </p>
+        <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+          {Array.from({ length: LOADING_SLOTS }, (_, index) => (
+            <li key={index}>
+              {/* Altura de um card com rank/RR (2 linhas) — sem layout shift. */}
+              <Skeleton height={48} className="w-full" />
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
   return (
     <div
       data-component="demo-profile-grid"

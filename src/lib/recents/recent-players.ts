@@ -128,6 +128,33 @@ export function withRecentPlayerRank(
   );
 }
 
+/** Fatia do overview (`/api/players/.../overview`) que carrega o elo. */
+export interface RankSource {
+  readonly rank: { readonly tier: string | null; readonly rrInTier: number | null } | null;
+  readonly rrHistory: readonly { readonly tier: string; readonly rr: number }[];
+}
+
+/**
+ * Puro: snapshot de rank/RR a partir do overview — mesma regra do header do
+ * perfil (mmr v2 primeiro; sem ele, o último ponto do mmr-history).
+ */
+export function rankSnapshotFromOverview(
+  source: RankSource,
+): Pick<RecentPlayer, 'rank' | 'rr'> {
+  const last = source.rrHistory[source.rrHistory.length - 1];
+  const rank = source.rank?.tier ?? last?.tier ?? undefined;
+  const rr = source.rank?.rrInTier ?? last?.rr ?? undefined;
+  return {
+    ...(rank !== undefined ? { rank } : {}),
+    ...(rr !== undefined ? { rr } : {}),
+  };
+}
+
+/** Puro: recentes ainda sem snapshot de elo (candidatos ao backfill). */
+export function recentPlayersMissingRank(list: readonly RecentPlayer[]): RecentPlayer[] {
+  return list.filter((player) => player.rank === undefined && player.rr === undefined);
+}
+
 /** Puro: serializa para persistência. */
 export function serializeRecentPlayers(list: readonly RecentPlayer[]): string {
   return JSON.stringify(list);

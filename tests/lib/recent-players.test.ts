@@ -3,7 +3,9 @@ import {
   MAX_RECENT_PLAYERS,
   addRecentPlayer,
   parseRecentPlayers,
+  rankSnapshotFromOverview,
   readRecentPlayers,
+  recentPlayersMissingRank,
   saveRecentPlayer,
   saveRecentPlayerRank,
   serializeRecentPlayers,
@@ -163,6 +165,30 @@ describe('snapshot de rank/RR', () => {
     ]);
     expect(withRecentPlayerRank(list, { riotId: 'outro#x', region: 'br', rr: 1 })).toEqual(list);
     expect(withRecentPlayerRank(list, { riotId: 'invalida', region: 'br' })).toEqual(list);
+  });
+
+  it('rankSnapshotFromOverview: mmr v2 primeiro, mmr-history como fallback', () => {
+    const history = [
+      { tier: 'Diamond 1', rr: 10 },
+      { tier: 'Diamond 2', rr: 24 },
+    ];
+    expect(
+      rankSnapshotFromOverview({ rank: { tier: 'Ascendant 3', rrInTier: 78 }, rrHistory: history }),
+    ).toEqual({ rank: 'Ascendant 3', rr: 78 });
+    expect(
+      rankSnapshotFromOverview({ rank: { tier: null, rrInTier: null }, rrHistory: history }),
+    ).toEqual({ rank: 'Diamond 2', rr: 24 });
+    expect(rankSnapshotFromOverview({ rank: null, rrHistory: [] })).toEqual({});
+  });
+
+  it('recentPlayersMissingRank: só quem não tem rank nem RR', () => {
+    expect(
+      recentPlayersMissingRank([
+        { riotId: 'a#aaa', region: 'br' },
+        { riotId: 'b#bbb', region: 'br', rank: 'Gold 1' },
+        { riotId: 'c#ccc', region: 'br', rr: 0 },
+      ]),
+    ).toEqual([{ riotId: 'a#aaa', region: 'br' }]);
   });
 
   it('saveRecentPlayerRank persiste o snapshot', () => {

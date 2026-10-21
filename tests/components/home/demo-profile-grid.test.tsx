@@ -17,6 +17,14 @@ describe('DemoProfileGrid', () => {
     expect(html).toContain('840 RR');
   });
 
+  it('loading: placeholders no lugar dos cards (sem flash do catálogo)', () => {
+    const html = renderToStaticMarkup(<DemoProfileGrid profiles={PROFILES} loading />);
+    expect(html).toContain('data-loading=""');
+    expect(html).toContain('aria-busy="true"');
+    expect(html.match(/data-skeleton/g)?.length).toBe(4);
+    expect(html).not.toContain('NEXUS#BR1');
+  });
+
   it('perfil destacado usa acento', () => {
     const html = renderToStaticMarkup(<DemoProfileGrid profiles={PROFILES} />);
     expect(html).toContain('data-highlighted=""');
