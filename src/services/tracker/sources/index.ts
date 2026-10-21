@@ -19,6 +19,19 @@ export function getTrackerSourceKind(env: AppEnv = loadAppEnv()): TrackerSourceK
   return env.TRACKER_DATA_SOURCE;
 }
 
+/**
+ * Fail-safe para slots de UI (layout/páginas): env inválido NUNCA derruba a
+ * página — loga e assume simulado (melhor exibir o aviso do que afirmar dado real).
+ */
+export function isSimulatedDataSource(): boolean {
+  try {
+    return getTrackerSourceKind() === 'mock';
+  } catch (error) {
+    console.error('[tracker] TRACKER_DATA_SOURCE inválida; assumindo dados simulados.', error);
+    return true;
+  }
+}
+
 export function getTrackerSource(env: AppEnv = loadAppEnv()): TrackerSource {
   const kind = getTrackerSourceKind(env);
   switch (kind) {

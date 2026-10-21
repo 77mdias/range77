@@ -9,7 +9,7 @@ import {
   mappedToApiErrorBody,
 } from '@/lib/http/api-error';
 import { parsePlayerPageParams } from '@/lib/validation/player-params';
-import { getTrackerSourceKind } from '@/services/tracker/sources';
+import { isSimulatedDataSource } from '@/services/tracker/sources';
 import { BreakdownView } from '../breakdown-view';
 
 /**
@@ -59,7 +59,7 @@ export async function BreakdownData({
 }) {
   try {
     const overview = await getCachedBreakdownOverview(region, name, tag);
-    return <BreakdownView overview={overview} simulated={getTrackerSourceKind() === 'mock'} />;
+    return <BreakdownView overview={overview} simulated={isSimulatedDataSource()} />;
   } catch (error) {
     if (hasErrorName(error, 'PlayerNoMatchesError')) {
       return (

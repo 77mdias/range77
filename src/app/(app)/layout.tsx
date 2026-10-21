@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { NavUser } from '@/components/layout/nav-user';
-import { getTrackerSourceKind } from '@/services/tracker/sources';
+import { isSimulatedDataSource } from '@/services/tracker/sources';
 import { Skeleton } from '@/components/ui/skeleton';
 
 /**
@@ -16,7 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function AppGroupLayout({ children }: { children: ReactNode }) {
   return (
     <AppShell
-      simulated={getTrackerSourceKind() === 'mock'}
+      simulated={isSimulatedDataSource()}
       user={
         <Suspense fallback={<Skeleton width={168} height={32} />}>
           <NavUser />

@@ -40,7 +40,11 @@ import {
   getCachedPlayerCard,
   getCachedPlayerOverview,
 } from '@/lib/cache/tracker';
-import { getTrackerSource, getTrackerSourceKind } from '@/services/tracker/sources';
+import {
+  getTrackerSource,
+  getTrackerSourceKind,
+  isSimulatedDataSource,
+} from '@/services/tracker/sources';
 
 const fetchSpy = vi.fn(async () => {
   throw new Error('rede proibida no caminho mock');
@@ -79,6 +83,21 @@ describe('getTrackerSourceKind', () => {
   it('sem env explícito lê process.env', () => {
     vi.stubEnv('TRACKER_DATA_SOURCE', 'henrikdev');
     expect(getTrackerSourceKind()).toBe('henrikdev');
+  });
+});
+
+describe('isSimulatedDataSource', () => {
+  it('mock/ausente → true; real → false; inválida → true sem lançar', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.stubEnv('TRACKER_DATA_SOURCE', 'henrikdev');
+    expect(isSimulatedDataSource()).toBe(false);
+    vi.stubEnv('TRACKER_DATA_SOURCE', 'xpto');
+    expect(() => isSimulatedDataSource()).not.toThrow();
+    expect(isSimulatedDataSource()).toBe(true);
+    expect(spy).toHaveBeenCalled();
+    vi.stubEnv('TRACKER_DATA_SOURCE', 'mock');
+    expect(isSimulatedDataSource()).toBe(true);
+    spy.mockRestore();
   });
 });
 

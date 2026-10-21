@@ -13,7 +13,7 @@ import {
 import { getSession } from '@/lib/session';
 import { parsePlayerPageParams } from '@/lib/validation/player-params';
 import { FollowButton } from './follow-button';
-import { getTrackerSourceKind } from '@/services/tracker/sources';
+import { isSimulatedDataSource } from '@/services/tracker/sources';
 import { PlayerProfileView } from './profile-view';
 
 /**
@@ -106,7 +106,7 @@ export async function PlayerProfileData({
       <PlayerProfileView
         overview={overview}
         headerAction={headerAction}
-        simulated={getTrackerSourceKind() === 'mock'}
+        simulated={isSimulatedDataSource()}
       />
     );
   } catch (error) {

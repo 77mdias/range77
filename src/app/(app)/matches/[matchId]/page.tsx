@@ -8,7 +8,7 @@ import { parseMatchRouteParams } from '@/lib/validation/match-params';
 import { parseRiotId } from '@/lib/validation/riot-id';
 import { selectMatchMvp } from '@/services/analytics/match-breakdown';
 import { BackButton } from './back-button';
-import { getTrackerSourceKind } from '@/services/tracker/sources';
+import { isSimulatedDataSource } from '@/services/tracker/sources';
 import { MatchView, type MatchViewer } from './match-view';
 
 /**
@@ -55,7 +55,7 @@ export async function MatchDetailData({
   readonly matchId: string;
   readonly viewer: MatchViewer | null;
 }) {
-  const simulated = getTrackerSourceKind() === 'mock';
+  const simulated = isSimulatedDataSource();
   try {
     // O jogador em foco (`?player=`) vai junto: a fonte simulada regenera a
     // partida a partir dele (fontes reais o ignoram).

@@ -193,4 +193,13 @@ describe('MatchView', () => {
     expect(html).toContain('Time Red');
     expect(html).toContain('Time Blue');
   });
+
+  it('selo DADOS SIMULADOS só com simulated', () => {
+    expect(renderToStaticMarkup(<MatchView detail={detail} simulated />)).toContain(
+      'data-simulated-badge',
+    );
+    expect(renderToStaticMarkup(<MatchView detail={detail} />)).not.toContain(
+      'data-simulated-badge',
+    );
+  });
 });
