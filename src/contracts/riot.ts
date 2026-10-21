@@ -248,3 +248,24 @@ export interface MockRankSnapshot {
   readonly rankedRating: number;
   readonly seasonId: string;
 }
+
+/**
+ * Um ponto do histórico de RR (uma partida competitiva) — EXCLUSIVO DO MOCK.
+ *
+ * SEM EQUIVALENTE OFICIAL — SOME QUANDO A CHAVE CHEGAR. A API oficial não
+ * expõe variação de RR por partida. A grafia segue os nomes comunitários do
+ * endpoint de cliente `competitiveupdates` (TierAfterUpdate,
+ * RankedRatingEarned...) em camelCase, só para facilitar a troca futura.
+ */
+export interface MockRrPoint {
+  readonly matchId: string;
+  /** Igual a `RiotMatchlistEntryDto.gameStartTimeMillis` da mesma partida. */
+  readonly matchStartMillis: number;
+  /** Tier antes da partida (= `competitiveTier` do jogador na partida). */
+  readonly tierBeforeUpdate: number;
+  readonly tierAfterUpdate: number;
+  /** RR dentro do tier após a partida (0–99). */
+  readonly rankedRatingAfterUpdate: number;
+  /** Variação de RR (positiva na vitória, negativa na derrota). */
+  readonly rankedRatingEarned: number;
+}

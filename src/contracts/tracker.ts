@@ -225,3 +225,19 @@ export interface RrHistoryPoint {
   readonly result: RrOutcome;
   readonly date: string;
 }
+
+/** Ponto em coordenadas de MUNDO do jogo (mesma forma do `LocationDto` da Riot). */
+export interface MapPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+/**
+ * Zona jogável de um mapa (site, entrada, mid), desenhada à mão como
+ * polígono em coordenadas de mundo. `side` indica quem costuma ocupá-la.
+ */
+export interface MapZone {
+  readonly label: string;
+  readonly side: 'attack' | 'defense' | 'any';
+  readonly polygon: readonly MapPoint[];
+}
