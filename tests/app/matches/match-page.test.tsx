@@ -75,4 +75,33 @@ describe('MatchDetailData', () => {
     expect(html).toContain('data-state="rate-limit"');
     expect(html).toContain('30s');
   });
+
+  it('repassa o jogador em foco (?player=) à fonte; sem ele, foco ausente', async () => {
+    mocks.getCachedMatchDetail.mockReturnValue(new Promise(() => undefined));
+
+    void MatchDetailData({
+      region: 'br',
+      matchId: MATCH_ID,
+      viewer: { name: 'ValCoachDemo', tag: 'DEMO' },
+    });
+    void MatchDetailData({ region: 'br', matchId: MATCH_ID, viewer: null });
+
+    expect(mocks.getCachedMatchDetail).toHaveBeenNthCalledWith(1, 'br', MATCH_ID, {
+      name: 'ValCoachDemo',
+      tag: 'DEMO',
+    });
+    expect(mocks.getCachedMatchDetail).toHaveBeenNthCalledWith(2, 'br', MATCH_ID, undefined);
+  });
+
+  it('partida simulada inexistente (TrackerNotFoundError) → MATCH_NOT_FOUND', async () => {
+    const notFound = new Error('sem foco');
+    notFound.name = 'TrackerNotFoundError';
+    mocks.getCachedMatchDetail.mockRejectedValueOnce(notFound);
+
+    const html = renderToStaticMarkup(
+      await MatchDetailData({ region: 'br', matchId: MATCH_ID, viewer: null }),
+    );
+
+    expect(html).toContain('MATCH_NOT_FOUND');
+  });
 });

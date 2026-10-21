@@ -7,10 +7,18 @@ import { HenrikDevApiError } from '@/services/henrikdev/client';
 
 vi.mock('next/cache', () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }));
 
-vi.mock('@/services/tracker/match-detail', () => ({ getMatchDetail: vi.fn() }));
+// A rota consome a porta `TrackerSource`: uma fonte falsa isola o HTTP.
+const getMatchDetail = vi.hoisted(() => vi.fn());
+vi.mock('@/services/tracker/sources', () => ({
+  getTrackerSource: () => ({
+    kind: 'henrikdev',
+    getMatchDetail,
+    getPlayerSample: vi.fn(),
+    getPlayerCard: vi.fn(),
+  }),
+}));
 
 import { GET } from '@/app/api/matches/[region]/[matchId]/route';
-import { getMatchDetail } from '@/services/tracker/match-detail';
 
 const MATCH_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
 
@@ -49,7 +57,43 @@ describe('GET /api/matches/[region]/[matchId]', () => {
 
     expect(response.status).toBe(200);
     expect(body.matchId).toBe(MATCH_ID);
-    expect(vi.mocked(getMatchDetail)).toHaveBeenCalledWith({ region: 'na', matchId: MATCH_ID });
+    expect(vi.mocked(getMatchDetail)).toHaveBeenCalledWith('na', MATCH_ID, undefined);
+  });
+
+  it('repassa ?player=Nome#Tag como foco da partida', async () => {
+    vi.mocked(getMatchDetail).mockResolvedValueOnce(detailMock as never);
+
+    const response = await GET(
+      new Request('http://localhost/api/matches/br/x?player=ValCoachDemo%23DEMO'),
+      context('br', MATCH_ID),
+    );
+
+    expect(response.status).toBe(200);
+    expect(vi.mocked(getMatchDetail)).toHaveBeenCalledWith('br', MATCH_ID, {
+      name: 'ValCoachDemo',
+      tag: 'DEMO',
+    });
+  });
+
+  it('?player= inválido → 400 INVALID_PARAMS', async () => {
+    const response = await GET(
+      new Request('http://localhost/api/matches/br/x?player=sem-tag'),
+      context('br', MATCH_ID),
+    );
+    expect(response.status).toBe(400);
+    expect(vi.mocked(getMatchDetail)).not.toHaveBeenCalled();
+  });
+
+  it('não encontrado na fonte simulada (TrackerNotFoundError) → 404 MATCH_NOT_FOUND', async () => {
+    const notFound = new Error('sem foco');
+    notFound.name = 'TrackerNotFoundError';
+    vi.mocked(getMatchDetail).mockRejectedValueOnce(notFound);
+
+    const response = await GET(new Request('http://localhost'), context());
+    const body = (await response.json()) as { error: { code: string } };
+
+    expect(response.status).toBe(404);
+    expect(body.error.code).toBe('MATCH_NOT_FOUND');
   });
 
   it('rejeita região inválida (400)', async () => {

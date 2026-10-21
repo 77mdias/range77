@@ -4,8 +4,8 @@ import type { ApiErrorBody } from '@/contracts/coach';
 import { hasErrorName } from '@/lib/http/api-error';
 import { parsePlayerRouteParams } from '@/lib/validation/player-params';
 import { buildPlayerCombatInsight } from '@/services/coaching/player-combat';
-import { createCachedHenrikDevClient } from '@/services/henrikdev/cached-client';
 import { henrikDevErrorStatus } from '@/services/henrikdev/client';
+import { getTrackerSource } from '@/services/tracker/sources';
 
 /**
  * ROTA: GET /api/players/[region]/[name]/[tag]
@@ -13,8 +13,8 @@ import { henrikDevErrorStatus } from '@/services/henrikdev/client';
  * Next 16 (App Router): `params` é uma Promise e DEVE ser aguardada.
  * Cache Components: o envelope é cacheado via helper `'use cache'` com
  * `cacheLife`/`cacheTag` (stale 5min / revalidate 25min / expire 6h),
- * protegendo nossos limites da HenrikDev contra o tráfego do chatbot. O client
- * injetado adiciona o cache POR RECURSO (`henrikdev:*`).
+ * protegendo os limites upstream contra o tráfego do chatbot. Os dados vêm da
+ * `TrackerSource` de `TRACKER_DATA_SOURCE` (padrão `mock`); o `kind` entra na tag.
  */
 
 const MIN_SAMPLE = 1;
@@ -34,14 +34,11 @@ async function getCachedInsight(
 ) {
   'use cache';
   cacheLife({ stale: 300, revalidate: 1500, expire: 21600 });
-  cacheTag(`player-combat:${region}:${name.toLowerCase()}:${tag.toLowerCase()}:${size}`);
-  return buildPlayerCombatInsight({
-    region,
-    name,
-    tag,
-    size,
-    client: createCachedHenrikDevClient(),
-  });
+  const source = getTrackerSource();
+  cacheTag(
+    `player-combat:${source.kind}:${region}:${name.toLowerCase()}:${tag.toLowerCase()}:${size}`,
+  );
+  return buildPlayerCombatInsight({ region, name, tag, size, source });
 }
 
 function errorResponse(

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { ApiErrorBody } from '@/contracts/coach';
 import { henrikDevErrorStatus, henrikDevRetryAfterSeconds } from '@/services/henrikdev/client';
+import { TRACKER_NOT_FOUND_ERROR_NAME } from '@/services/tracker/source';
 
 /**
  * Mapeamento HTTP compartilhado (Route Handlers) — traduz erros das camadas
@@ -113,6 +114,18 @@ export function describeUpstreamError(
         error instanceof Error ? error.message : String(error)
       }`,
       detail,
+    };
+  }
+
+  // Recurso inexistente na fonte do tracker (ex.: partida simulada sem foco
+  // ou fora do histórico do foco) — mesmo 404 rotulado da rota.
+  if (hasErrorName(error, TRACKER_NOT_FOUND_ERROR_NAME)) {
+    return {
+      status: 404,
+      code: labels.notFoundCode,
+      message: labels.notFoundMessage,
+      ...(labels.notFoundHint !== undefined ? { hint: labels.notFoundHint } : {}),
+      detail: `${error.name}: ${error.message}`,
     };
   }
 

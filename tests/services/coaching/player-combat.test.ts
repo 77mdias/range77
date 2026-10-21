@@ -7,6 +7,7 @@ import {
   buildPlayerCombatInsight,
   PlayerNoMatchesError,
 } from '@/services/coaching/player-combat';
+import { createHenrikDevSource } from '@/services/tracker/sources/henrikdev-source';
 
 /**
  * SUITE TDD — orquestração de coaching (HenrikDev → normalização → analytics
@@ -122,15 +123,21 @@ describe('buildPlayerCombatInsight', () => {
     ).rejects.toBe(upstream);
   });
 
-  it('sem client injetado e sem HENRIKDEV_API_KEY → falha de configuração explicativa', async () => {
+  it('fonte henrikdev sem client injetado e sem HENRIKDEV_API_KEY → falha de configuração explicativa', async () => {
     vi.stubEnv('HENRIKDEV_API_KEY', ''); // vazio conta como ausente
 
     await expect(
-      buildPlayerCombatInsight({ region: 'br', name: 'Player', tag: 'BR1' }),
+      buildPlayerCombatInsight({
+        region: 'br',
+        name: 'Player',
+        tag: 'BR1',
+        source: createHenrikDevSource(),
+        snapshotStore: null,
+      }),
     ).rejects.toBeInstanceOf(EnvironmentValidationError);
   });
 
-  it('sem client injetado com key válida: cria client real e completa o fluxo', async () => {
+  it('fonte henrikdev sem client injetado com key válida: cria client real e completa o fluxo', async () => {
     vi.stubEnv('HENRIKDEV_API_KEY', 'HDEV-flow');
     const fetchMock = vi.fn(async () =>
       new Response(JSON.stringify({ status: 200, data: [rawMatch] }), {
@@ -143,12 +150,29 @@ describe('buildPlayerCombatInsight', () => {
       region: 'br',
       name: 'Player',
       tag: 'BR1',
+      source: createHenrikDevSource(),
       snapshotStore: null,
     });
 
-    expect(fetchMock).toHaveBeenCalledOnce();
+    // 1 chamada de partidas (+ complementos best-effort da amostra da fonte).
+    const urls = fetchMock.mock.calls.map((call) => String((call as unknown[])[0]));
+    expect(urls.filter((url) => url.includes('/matches/'))).toHaveLength(1);
     expect(insight.player.region).toBe('br');
     expect(insight.raw_metrics.kdr).toBe(2);
+  });
+});
+
+describe('buildPlayerCombatInsight — fonte padrão (simulada)', () => {
+  it('sem fonte nem client: usa a fonte mock, sem chave, sem rede e sem snapshot', async () => {
+    vi.stubEnv('HENRIKDEV_API_KEY', '');
+    vi.stubEnv('DATABASE_URL', '');
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const insight = await buildPlayerCombatInsight({ region: 'br', name: 'ValCoachDemo', tag: 'DEMO' });
+
+    expect(insight.raw_metrics.matches).toBe(5);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

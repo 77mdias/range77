@@ -3,6 +3,7 @@ import type { HenrikDevMatchV4 } from '@/contracts/henrikdev';
 import type { CombatSnapshotStore } from '@/lib/db/combat-snapshot-store';
 import { PlayerNoMatchesError } from '@/services/coaching/player-combat';
 import { buildPlayerOverview } from '@/services/tracker/player-overview';
+import { createHenrikDevSource } from '@/services/tracker/sources/henrikdev-source';
 
 /**
  * SUITE TDD — visão geral do jogador (um único fetch → envelope + agregações).
@@ -159,7 +160,7 @@ describe('buildPlayerOverview', () => {
       name: 'Player',
       tag: 'BR1',
       size: 5,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: store as CombatSnapshotStore,
     });
 
@@ -237,7 +238,7 @@ describe('buildPlayerOverview', () => {
       region: 'br',
       name: 'Player',
       tag: 'BR1',
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -258,7 +259,7 @@ describe('buildPlayerOverview', () => {
       region: 'br',
       name: 'Player',
       tag: 'BR1',
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -278,7 +279,7 @@ describe('buildPlayerOverview', () => {
       region: 'br',
       name: 'Player',
       tag: 'BR1',
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -299,7 +300,7 @@ describe('buildPlayerOverview', () => {
         region: 'br',
         name: 'Player',
         tag: 'BR1',
-        client: client as never,
+        source: createHenrikDevSource(client as never),
         snapshotStore: null,
       }),
     ).rejects.toBeInstanceOf(PlayerNoMatchesError);
@@ -334,7 +335,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
       name: 'Player',
       tag: 'BR1',
       actSample: ACT_OPTS,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -404,7 +405,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
       name: 'Player',
       tag: 'BR1',
       actSample: ACT_OPTS,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -428,7 +429,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
       name: 'Player',
       tag: 'BR1',
       actSample: ACT_OPTS,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -453,7 +454,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
       name: 'Player',
       tag: 'BR1',
       actSample: ACT_OPTS,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -478,7 +479,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
       name: 'Player',
       tag: 'BR1',
       actSample: ACT_OPTS,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -503,7 +504,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
       name: 'Player',
       tag: 'BR1',
       actSample: ACT_OPTS,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -520,7 +521,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
         name: 'Player',
         tag: 'BR1',
         actSample: ACT_OPTS,
-        client: client as never,
+        source: createHenrikDevSource(client as never),
         snapshotStore: null,
       });
       expect(overview.matches).toHaveLength(15);
@@ -536,7 +537,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
         name: 'Player',
         tag: 'BR1',
         actSample: ACT_OPTS,
-        client: client as never,
+        source: createHenrikDevSource(client as never),
         snapshotStore: null,
       }),
     ).rejects.toBeInstanceOf(PlayerNoMatchesError);
@@ -555,7 +556,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
       name: 'Player',
       tag: 'BR1',
       actSample: ACT_OPTS,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: store as CombatSnapshotStore,
     });
 

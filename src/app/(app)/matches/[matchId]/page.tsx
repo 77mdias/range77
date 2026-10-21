@@ -55,7 +55,13 @@ export async function MatchDetailData({
   readonly viewer: MatchViewer | null;
 }) {
   try {
-    const detail = await getCachedMatchDetail(region, matchId);
+    // O jogador em foco (`?player=`) vai junto: a fonte simulada regenera a
+    // partida a partir dele (fontes reais o ignoram).
+    const detail = await getCachedMatchDetail(
+      region,
+      matchId,
+      viewer === null ? undefined : { name: viewer.name, tag: viewer.tag },
+    );
     const mvp = selectMatchMvp(detail.scoreboard);
     const mvpCardSrc =
       mvp === null || mvp.tag === '' ? null : await getCachedPlayerCard(mvp.name, mvp.tag);

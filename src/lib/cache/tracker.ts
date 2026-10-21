@@ -1,9 +1,8 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import type { MatchDetail } from '@/contracts/tracker';
 import { ACT_SAMPLE_CAP, ACT_SAMPLE_FALLBACK } from '@/services/analytics/act-window';
-import { createCachedHenrikDevClient } from '@/services/henrikdev/cached-client';
-import { getMatchDetail } from '@/services/tracker/match-detail';
-import { getPlayerCard } from '@/services/tracker/player-card';
+import type { MatchFocus } from '@/services/tracker/source';
+import { getTrackerSource } from '@/services/tracker/sources';
 import {
   buildPlayerOverview,
   type PlayerOverview,
@@ -12,12 +11,14 @@ import {
 /**
  * Camada de cache Data (`'use cache'`) compartilhada entre Route Handlers e
  * páginas — a MESMA entrada de cache é reaproveitada, então abrir o perfil
- * esquenta a API e vice-versa. Protege nosso limite na HenrikDev.
+ * esquenta a API e vice-versa.
+ *
+ * Os dados vêm da `TrackerSource` escolhida por `TRACKER_DATA_SOURCE` (padrão
+ * `mock`); o `kind` entra na `cacheTag` para invalidar por fonte. Com a
+ * HenrikDev, a fonte usa o `cached-client` (camada POR RECURSO `henrikdev:*`).
  *
  * `revalidate: 1500` (25min): uma partida ranqueada dura ~30–50min, então a
- * janela não muda entre navegações. O client injetado é o `cached-client`, que
- * adiciona uma SEGUNDA camada POR RECURSO (`henrikdev:*`) para perfil e
- * Breakdown compartilharem conta/MMR/histórico em vez de repetir upstream.
+ * janela não muda entre navegações.
  */
 
 export async function getCachedPlayerOverview(
@@ -28,14 +29,11 @@ export async function getCachedPlayerOverview(
 ): Promise<PlayerOverview> {
   'use cache';
   cacheLife({ stale: 300, revalidate: 1500, expire: 21600 });
-  cacheTag(`player-overview:${region}:${name.toLowerCase()}:${tag.toLowerCase()}:${size}`);
-  return buildPlayerOverview({
-    region,
-    name,
-    tag,
-    size,
-    client: createCachedHenrikDevClient(),
-  });
+  const source = getTrackerSource();
+  cacheTag(
+    `player-overview:${source.kind}:${region}:${name.toLowerCase()}:${tag.toLowerCase()}:${size}`,
+  );
+  return buildPlayerOverview({ region, name, tag, size, source });
 }
 
 /**
@@ -50,34 +48,48 @@ export async function getCachedBreakdownOverview(
 ): Promise<PlayerOverview> {
   'use cache';
   cacheLife({ stale: 300, revalidate: 1500, expire: 21600 });
-  cacheTag(`player-breakdown:${region}:${name.toLowerCase()}:${tag.toLowerCase()}`);
+  const source = getTrackerSource();
+  cacheTag(`player-breakdown:${source.kind}:${region}:${name.toLowerCase()}:${tag.toLowerCase()}`);
   return buildPlayerOverview({
     region,
     name,
     tag,
     actSample: { cap: ACT_SAMPLE_CAP, fallback: ACT_SAMPLE_FALLBACK },
-    client: createCachedHenrikDevClient(),
+    source,
   });
 }
 
+/**
+ * Detalhe da partida. `focus` (Riot ID do `?player=`) é exigido pela fonte
+ * simulada — o `matchId` deriva do foco — e entra na `cacheTag`. Na HenrikDev
+ * o cache durável (Neon) é consultado no miss do cache Data.
+ */
 export async function getCachedMatchDetail(
   region: string,
   matchId: string,
+  focus?: MatchFocus,
 ): Promise<MatchDetail> {
   'use cache';
   cacheLife({ stale: 300, revalidate: 3600, expire: 86400 });
-  cacheTag(`match:${region.toLowerCase()}:${matchId}`);
-  // O cache durável (Neon) é consultado no miss do cache Data.
-  return getMatchDetail({ region, matchId });
+  const source = getTrackerSource();
+  const focusKey =
+    focus === undefined ? '' : `:${focus.name.toLowerCase()}#${focus.tag.toLowerCase()}`;
+  cacheTag(`match:${source.kind}:${region.toLowerCase()}:${matchId}${focusKey}`);
+  return source.getMatchDetail(
+    region,
+    matchId,
+    focus === undefined ? undefined : { name: focus.name, tag: focus.tag },
+  );
 }
 
 /**
- * Cartão de jogador (in-game player card) para o destaque de MVP, via v1
- * account. Cacheado por Riot ID — best-effort: `null` quando indisponível.
+ * Cartão de jogador (in-game player card) para o destaque de MVP (o mock
+ * devolve `null`). Cacheado por Riot ID — best-effort: `null` quando indisponível.
  */
 export async function getCachedPlayerCard(name: string, tag: string): Promise<string | null> {
   'use cache';
   cacheLife({ stale: 300, revalidate: 3600, expire: 86400 });
-  cacheTag(`player-card:${name.toLowerCase()}:${tag.toLowerCase()}`);
-  return getPlayerCard({ name, tag });
+  const source = getTrackerSource();
+  cacheTag(`player-card:${source.kind}:${name.toLowerCase()}:${tag.toLowerCase()}`);
+  return source.getPlayerCard(name, tag);
 }

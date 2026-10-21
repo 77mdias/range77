@@ -1,5 +1,3 @@
-import { loadAppEnv, requireEnv } from '@/config/env';
-import { COMPETITIVE_QUEUE_ID, type HenrikDevMatchV4 } from '@/contracts/henrikdev';
 import type {
   AgentStat,
   MapStat,
@@ -8,45 +6,31 @@ import type {
   StreakSummary,
   TrendSummary,
 } from '@/contracts/tracker';
-import {
-  type ActSampleOptions,
-  resolveActMatchSample,
-} from '@/services/analytics/act-window';
-import { buildRrHistory } from '@/services/analytics/rr-trend';
+import type { ActSampleOptions } from '@/services/analytics/act-window';
 import { buildTrackerAggregations } from '@/services/analytics/tracker-aggregations';
 import {
-  buildCombatInsightFromMatches,
+  buildCombatInsightFromCombatStats,
   DEFAULT_MATCH_SAMPLE_SIZE,
   PlayerNoMatchesError,
+  resolveSnapshotStore,
   type PlayerCombatInsight,
 } from '@/services/coaching/player-combat';
-import {
-  createHenrikDevClient,
-  type HenrikDevClient,
-} from '@/services/henrikdev/client';
-import {
-  normalizeMatchesToSummaries,
-  resolveAccountCard,
-  resolveAccountLevel,
-  resolveRankSummary,
-  type PlayerRankSummary,
-} from '@/services/henrikdev/normalize-tracker';
-import {
-  createCombatSnapshotStore,
-  type CombatSnapshotStore,
-} from '@/lib/db/combat-snapshot-store';
+import type { PlayerRankSummary } from '@/services/henrikdev/normalize-tracker';
+import type { CombatSnapshotStore } from '@/lib/db/combat-snapshot-store';
+import type { TrackerSource } from '@/services/tracker/source';
+import { getTrackerSource } from '@/services/tracker/sources';
 
 /**
- * PASSO 3 — IMPLEMENTAÇÃO: visão geral do jogador em UM fetch (ou, no modo
- * "por ato" do Breakdown, em páginas de 10).
+ * PASSO 3 — IMPLEMENTAÇÃO: visão geral do jogador sobre UMA amostra da fonte.
  *
- * Busca a amostra de partidas e deriva, do MESMO payload:
+ * Pede a amostra normalizada à `TrackerSource` (padrão: simulada; HenrikDev
+ * guardada) e deriva, do MESMO conjunto:
  *   - o envelope de coaching existente (3 camadas + avaliação);
  *   - o histórico normalizado (MatchSummary[]);
  *   - agregações por agente/mapa, streaks e tendência de ACS.
  *
  * A persistência do snapshot de combate (`/history`) acontece aqui, de forma
- * best-effort, reaproveitando `buildCombatInsightFromMatches`.
+ * best-effort — só para fontes reais (o mock não grava snapshot).
  */
 
 export interface PlayerOverview {
@@ -55,9 +39,9 @@ export interface PlayerOverview {
     readonly name: string;
     readonly tag: string;
     readonly platform: 'pc';
-    /** Nível de conta (HenrikDev `account_level`); `null` se indisponível. */
+    /** Nível de conta (conta); `null` se indisponível. */
     readonly level: number | null;
-    /** Ícone do cartão de jogador (v1 account `card`); `null` se indisponível. */
+    /** Ícone do cartão de jogador ; `null` se indisponível. */
     readonly cardSrc: string | null;
   };
   /** Ranque atual (v2 mmr: tier + imagem do elo + RR no tier); `null` se falhou. */
@@ -78,155 +62,13 @@ export interface BuildPlayerOverviewParams {
   readonly tag: string;
   readonly size?: number;
   /**
-   * Amostra dinâmica por ATO (tela Breakdown): resolve quantas partidas buscar
-   * a partir do MMR v3 (`seasonal[].games` do ato da partida mais recente),
-   * com teto e fallback. Tem precedência sobre `size` e pagina a HenrikDev
-   * (máx. 10 por chamada).
+   * Amostra dinâmica por ATO (tela Breakdown): a fonte resolve quantas
+   * partidas trazer (teto + fallback). Tem precedência sobre `size`.
    */
   readonly actSample?: ActSampleOptions;
-  /** Client injetado (testes). Sem ele, cria um com HENRIKDEV_API_KEY do env. */
-  readonly client?: HenrikDevClient;
+  /** Fonte injetada (testes). Padrão: `getTrackerSource()`. */
+  readonly source?: TrackerSource;
   readonly snapshotStore?: CombatSnapshotStore | null;
-}
-
-/** Tamanho de página da HenrikDev v4: o endpoint devolve no máx. 10 por chamada. */
-export const MATCHES_PAGE_SIZE = 10;
-
-/**
- * Busca best-effort do histórico de MMR (v2 mmr-history). É COMPLEMENTAR:
- * se o endpoint falhar (premium/indisponível), omitimos a trajetória em vez
- * de derrubar o perfil ou fabricar pontos de RR.
- */
-async function loadRrHistory(
-  client: HenrikDevClient,
-  region: string,
-  name: string,
-  tag: string,
-): Promise<readonly RrHistoryPoint[]> {
-  try {
-    const history = await client.fetchMmrHistory({
-      affinity: region.toLowerCase(),
-      platform: 'pc',
-      name,
-      tag,
-    });
-    return buildRrHistory(history);
-  } catch {
-    return [];
-  }
-}
-
-/** Cartão de jogador (ícone) — best-effort: falha → `null`. */
-async function loadAccountCard(
-  client: HenrikDevClient,
-  name: string,
-  tag: string,
-): Promise<string | null> {
-  try {
-    return resolveAccountCard(await client.fetchAccount({ name, tag }));
-  } catch {
-    return null;
-  }
-}
-
-/** Ranque atual (tier + imagem + RR no tier) — best-effort: falha → `null`. */
-async function loadRank(
-  client: HenrikDevClient,
-  region: string,
-  name: string,
-  tag: string,
-): Promise<PlayerRankSummary | null> {
-  try {
-    return resolveRankSummary(
-      await client.fetchMmr({ affinity: region.toLowerCase(), platform: 'pc', name, tag }),
-    );
-  } catch {
-    return null;
-  }
-}
-
-/** Temporadas do MMR v3 (`seasonal`) — best-effort: falha → `null`. */
-async function loadSeasonalMmr(
-  client: HenrikDevClient,
-  region: string,
-  name: string,
-  tag: string,
-) {
-  try {
-    const mmr = await client.fetchMmrV3({
-      affinity: region.toLowerCase(),
-      platform: 'pc',
-      name,
-      tag,
-    });
-    return mmr.seasonal ?? null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Amostra "por ato" do Breakdown. Busca a 1ª página, deriva o ATO da partida
- * mais recente e quantas partidas o jogador tem nele (MMR v3 `seasonal`) e
- * pagina o restante — a HenrikDev v4 devolve no máximo 10 por chamada. Sem
- * contagem confiável, cai no fallback (ex.: 15 partidas mais recentes).
- */
-async function loadActSampleMatches(
-  client: HenrikDevClient,
-  region: string,
-  name: string,
-  tag: string,
-  options: ActSampleOptions,
-): Promise<readonly HenrikDevMatchV4[]> {
-  const base = {
-    affinity: region.toLowerCase(),
-    platform: 'pc',
-    name,
-    tag,
-    mode: COMPETITIVE_QUEUE_ID,
-  };
-
-  // O MMR v3 (necessário só para dimensionar a amostra) é independente da 1ª
-  // página — dispara junto, em vez de esperar a página para então começar.
-  const seasonalPromise = loadSeasonalMmr(client, region, name, tag);
-
-  const firstPage = await client.fetchPlayerMatches({
-    ...base,
-    size: MATCHES_PAGE_SIZE,
-    start: 0,
-  });
-  if (firstPage.length === 0) {
-    return firstPage;
-  }
-
-  const seasonal = await seasonalPromise;
-  const seasonId = firstPage[0]?.metadata?.season?.id ?? null;
-  const target = resolveActMatchSample(seasonId, seasonal, options);
-
-  const collected: HenrikDevMatchV4[] = [...firstPage];
-
-  // Páginas restantes são INDEPENDENTES entre si: buscamos todas em PARALELO.
-  // Antes eram sequenciais e dominavam a latência do Breakdown (30 partidas =
-  // 3 páginas de ~4MB em série). A ordenação dos `start` preserva a
-  // concatenação cronológica.
-  const remainingStarts: number[] = [];
-  for (let start = MATCHES_PAGE_SIZE; start < target; start += MATCHES_PAGE_SIZE) {
-    remainingStarts.push(start);
-  }
-  const remainingPages = await Promise.all(
-    remainingStarts.map((start) =>
-      client.fetchPlayerMatches({
-        ...base,
-        size: Math.min(MATCHES_PAGE_SIZE, target - start),
-        start,
-      }),
-    ),
-  );
-  for (const page of remainingPages) {
-    collected.push(...page);
-  }
-
-  return collected.slice(0, target);
 }
 
 export async function buildPlayerOverview(
@@ -234,54 +76,29 @@ export async function buildPlayerOverview(
 ): Promise<PlayerOverview> {
   const { region, name, tag, size = DEFAULT_MATCH_SAMPLE_SIZE } = params;
 
-  const store =
-    params.snapshotStore === null
-      ? null
-      : (params.snapshotStore ?? createCombatSnapshotStore());
+  const source = params.source ?? getTrackerSource();
+  // Fail fast de configuração (DATABASE_URL) ANTES do I/O da amostra.
+  const store = resolveSnapshotStore(source, params.snapshotStore);
 
-  const client =
-    params.client ??
-    createHenrikDevClient({ apiKey: requireEnv(loadAppEnv(), 'HENRIKDEV_API_KEY') });
-
-  // A amostra de partidas e os recursos complementares (MMR history, conta,
-  // ranque) são INDEPENDENTES. Disparamos os complementos em PARALELO com a
-  // amostra: antes a amostra era aguardada primeiro e só então os complementos
-  // começavam, SOMANDO as duas latências upstream (medido: ~3,2s + ~3,3s no
-  // caminho frio). Os três complementos nunca rejeitam (best-effort), então a
-  // promise agregada não deixa rejeição pendurada se a amostra falhar.
-  const matchesPromise: Promise<readonly HenrikDevMatchV4[]> =
-    params.actSample !== undefined
-      ? loadActSampleMatches(client, region, name, tag, params.actSample)
-      : client.fetchPlayerMatches({
-          affinity: region.toLowerCase(),
-          platform: 'pc',
-          name,
-          tag,
-          mode: COMPETITIVE_QUEUE_ID,
-          size,
-        });
-
-  const auxPromise = Promise.all([
-    loadRrHistory(client, region, name, tag),
-    loadAccountCard(client, name, tag),
-    loadRank(client, region, name, tag),
-  ]);
-
-  const rawMatches = await matchesPromise;
+  const sample = await source.getPlayerSample({
+    region,
+    name,
+    tag,
+    size,
+    ...(params.actSample !== undefined ? { actSample: params.actSample } : {}),
+  });
 
   // O envelope de combate/snapshot fica na janela padrão (5) mesmo no modo por
   // ato: a tela Breakdown exibe só as PARTIDAS (janela maior), e manter o
   // snapshot consistente com o perfil evita "ruído" na evolução (`/history`).
   // No modo fixo preserva o `size` pedido (comportamento histórico).
-  const combatMatches =
+  const combatStats =
     params.actSample !== undefined
-      ? rawMatches.slice(0, DEFAULT_MATCH_SAMPLE_SIZE)
-      : rawMatches;
-  const combatSampleSize = params.actSample !== undefined ? combatMatches.length : size;
+      ? sample.combat.slice(0, DEFAULT_MATCH_SAMPLE_SIZE)
+      : sample.combat;
+  const combatSampleSize = params.actSample !== undefined ? combatStats.length : size;
 
-  // Combate é puro (sem I/O) sobre a amostra já baixada; roda após a amostra,
-  // enquanto os complementos seguem em voo até o `await auxPromise` abaixo.
-  const combat = await buildCombatInsightFromMatches(combatMatches, {
+  const combat = await buildCombatInsightFromCombatStats(combatStats, {
     region,
     name,
     tag,
@@ -289,11 +106,9 @@ export async function buildPlayerOverview(
     snapshotStore: store,
   });
 
-  const [rrHistory, cardSrc, rank] = await auxPromise;
-
-  const matches = normalizeMatchesToSummaries(rawMatches, { name, tag }, region);
+  const { matches } = sample;
   if (matches.length === 0) {
-    // `buildCombatInsightFromMatches` já garante ≥1 partida válida; guarda extra.
+    // `buildCombatInsightFromCombatStats` já garante ≥1 partida válida; guarda extra.
     throw new PlayerNoMatchesError();
   }
 
@@ -305,16 +120,16 @@ export async function buildPlayerOverview(
       name,
       tag,
       platform: 'pc',
-      level: resolveAccountLevel(rawMatches, { name, tag }),
-      cardSrc,
+      level: sample.level,
+      cardSrc: sample.cardSrc,
     },
-    rank,
+    rank: sample.rank,
     combat,
     matches,
     agents,
     maps,
     streaks,
     trend,
-    rrHistory,
+    rrHistory: sample.rrHistory,
   };
 }
