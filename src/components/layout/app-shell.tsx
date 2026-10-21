@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { AppFooter } from './app-footer';
 import { AppTopNav } from './app-top-nav';
+import { SimulatedBanner } from './simulated-banner';
 
 /**
  * Shell da aplicação (Server Component): header global FIXO (`AppTopNav`,
@@ -13,14 +14,19 @@ export interface AppShellProps {
   readonly children: ReactNode;
   /** Slot de usuário (avatar/login) — preenchido quando houver sessão. */
   readonly user?: ReactNode;
+  /** Fonte de dados simulada → banner global (calculado no layout). */
+  readonly simulated?: boolean;
 }
 
-export function AppShell({ children, user }: AppShellProps) {
+export function AppShell({ children, user, simulated = false }: AppShellProps) {
   return (
     <div className="flex min-h-dvh flex-col">
       <AppTopNav user={user} />
-      <main className="flex-1 pt-14">{children}</main>
-      <AppFooter protocolText="VALCOACH // TELEMETRY MATRIX • DADOS HENRIKDEV" />
+      <main className="flex-1 pt-14">
+        <SimulatedBanner visible={simulated} />
+        {children}
+      </main>
+      <AppFooter protocolText={`VALCOACH // TELEMETRY MATRIX • ${simulated ? 'DADOS SIMULADOS' : 'DADOS HENRIKDEV'}`} />
     </div>
   );
 }

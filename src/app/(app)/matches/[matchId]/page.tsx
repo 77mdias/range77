@@ -8,6 +8,7 @@ import { parseMatchRouteParams } from '@/lib/validation/match-params';
 import { parseRiotId } from '@/lib/validation/riot-id';
 import { selectMatchMvp } from '@/services/analytics/match-breakdown';
 import { BackButton } from './back-button';
+import { getTrackerSourceKind } from '@/services/tracker/sources';
 import { MatchView, type MatchViewer } from './match-view';
 
 /**
@@ -54,6 +55,7 @@ export async function MatchDetailData({
   readonly matchId: string;
   readonly viewer: MatchViewer | null;
 }) {
+  const simulated = getTrackerSourceKind() === 'mock';
   try {
     // O jogador em foco (`?player=`) vai junto: a fonte simulada regenera a
     // partida a partir dele (fontes reais o ignoram).
@@ -65,12 +67,19 @@ export async function MatchDetailData({
     const mvp = selectMatchMvp(detail.scoreboard);
     const mvpCardSrc =
       mvp === null || mvp.tag === '' ? null : await getCachedPlayerCard(mvp.name, mvp.tag);
-    return <MatchView detail={detail} viewer={viewer} mvpCardSrc={mvpCardSrc} />;
+    return (
+      <MatchView
+        detail={detail}
+        viewer={viewer}
+        mvpCardSrc={mvpCardSrc}
+        simulated={simulated}
+      />
+    );
   } catch (error) {
     const mapped = describeUpstreamError(error, {
       notFoundCode: 'MATCH_NOT_FOUND',
-      notFoundMessage: 'Partida não encontrada na HenrikDev.',
-      notFoundHint: 'Confira o match ID e a região da partida.',
+      notFoundMessage: 'Partida não encontrada.',
+      notFoundHint: 'Abra a partida pelo histórico do jogador (o link inclui o jogador) e confira a região.',
     });
     return (
       <UpstreamErrorState

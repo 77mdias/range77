@@ -31,6 +31,7 @@ export { MatchRow, type MatchResult, type MatchRowProps } from './match-row';
 export { ProgressBar, type ProgressBarProps, type ProgressBarTone } from './progress-bar';
 export { SearchBar, type SearchBarProps, type SearchQuery } from './search-bar';
 export { SectionHeader, type SectionHeaderProps } from './section-header';
+export { SimulatedBadge } from './simulated-badge';
 export { Skeleton, type SkeletonProps } from './skeleton';
 export { Sparkline, type SparklineProps, type SparklineTrend } from './sparkline';
 export { StatCard, type StatCardProps } from './stat-card';

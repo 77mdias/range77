@@ -71,7 +71,7 @@ function describeError(error: unknown): MappedErrorDescriptor {
       return {
         status: 404,
         code: 'PLAYER_NOT_FOUND',
-        message: 'Jogador não encontrado na HenrikDev.',
+        message: 'Jogador não encontrado.',
         hint: 'Confira o Riot ID (nome#tag) e a região da conta.',
         detail,
       };

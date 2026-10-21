@@ -157,9 +157,11 @@ export interface PlayerProfileViewProps {
   readonly overview: PlayerOverview;
   /** Slot de ação do header (ex.: botão Seguir — injetado pela página). */
   readonly headerAction?: ReactNode;
+  /** Fonte simulada → selo DADOS SIMULADOS no header de identidade. */
+  readonly simulated?: boolean;
 }
 
-export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewProps) {
+export function PlayerProfileView({ overview, headerAction, simulated = false }: PlayerProfileViewProps) {
   const { player } = overview;
   const metrics = overview.combat.raw_metrics;
   const { current, longestWin, longestLoss } = overview.streaks;
@@ -216,7 +218,7 @@ export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewP
         <div className="flex flex-wrap items-center gap-x-4">
           <span className="inline-flex items-center gap-1.5 text-text-primary">
             <span aria-hidden="true" className="size-1.5 rounded-full bg-accent" />
-            HenrikDev API: OK
+            {simulated ? 'Fonte simulada: OK' : 'HenrikDev API: OK'}
           </span>
           <span>Sync: cache</span>
         </div>
@@ -239,6 +241,7 @@ export function PlayerProfileView({ overview, headerAction }: PlayerProfileViewP
           { label: 'Amostra', value: `${metrics.matches} partidas` },
         ]}
         actions={headerAction}
+        simulated={simulated}
       />
 
       {/* ── Strip de KPIs (3 linhas: label+meta, valor, trailing real) ─ */}

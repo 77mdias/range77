@@ -119,7 +119,7 @@ describe('GET /api/matches/[region]/[matchId]', () => {
 
     expect(response.status).toBe(404);
     expect(body.error.code).toBe('MATCH_NOT_FOUND');
-    expect(body.error.hint).toMatch(/match ID/i);
+    expect(body.error.hint).toMatch(/histórico do jogador/i);
   });
 
   it('mapeia erros upstream (429/401/rede)', async () => {

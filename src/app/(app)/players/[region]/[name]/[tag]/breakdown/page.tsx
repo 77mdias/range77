@@ -9,6 +9,7 @@ import {
   mappedToApiErrorBody,
 } from '@/lib/http/api-error';
 import { parsePlayerPageParams } from '@/lib/validation/player-params';
+import { getTrackerSourceKind } from '@/services/tracker/sources';
 import { BreakdownView } from '../breakdown-view';
 
 /**
@@ -58,7 +59,7 @@ export async function BreakdownData({
 }) {
   try {
     const overview = await getCachedBreakdownOverview(region, name, tag);
-    return <BreakdownView overview={overview} />;
+    return <BreakdownView overview={overview} simulated={getTrackerSourceKind() === 'mock'} />;
   } catch (error) {
     if (hasErrorName(error, 'PlayerNoMatchesError')) {
       return (
@@ -76,7 +77,7 @@ export async function BreakdownData({
 
     const mapped = describeUpstreamError(error, {
       notFoundCode: 'PLAYER_NOT_FOUND',
-      notFoundMessage: 'Jogador não encontrado na HenrikDev.',
+      notFoundMessage: 'Jogador não encontrado.',
       notFoundHint: 'Confira o Riot ID (nome#tag) e a região da conta.',
     });
     console.error(

@@ -24,6 +24,7 @@ import {
 } from '@/services/analytics/match-breakdown';
 import { computePerformanceRating } from '@/services/analytics/rating';
 import { agentArtSrc, agentIconSrc, mapMinimapSrc, rankIconSrc } from '@/lib/valorant-assets';
+import { SimulatedBadge } from '@/components/ui/simulated-badge';
 import { formatRelativeTime } from '@/lib/format/relative-time';
 
 /**
@@ -64,9 +65,11 @@ export interface MatchViewProps {
   readonly viewer?: MatchViewer | null;
   /** Card in-game do MVP (quadrado); ausente → fallback ao ícone do agente. */
   readonly mvpCardSrc?: string | null;
+  /** Fonte simulada → selo DADOS SIMULADOS junto à identidade da partida. */
+  readonly simulated?: boolean;
 }
 
-export function MatchView({ detail, viewer, mvpCardSrc }: MatchViewProps) {
+export function MatchView({ detail, viewer, mvpCardSrc, simulated = false }: MatchViewProps) {
   const teamIds =
     detail.teams.length > 0
       ? detail.teams.map((team) => team.teamId)
@@ -244,6 +247,11 @@ export function MatchView({ detail, viewer, mvpCardSrc }: MatchViewProps) {
 
   return (
     <div data-match-detail className="flex flex-col">
+      {simulated ? (
+        <div className="border-b border-line bg-surface px-4 py-2 md:px-6 xl:px-8">
+          <SimulatedBadge />
+        </div>
+      ) : null}
       <MatchMetaBar
         queue={detail.queue.toUpperCase()}
         map={detail.map}

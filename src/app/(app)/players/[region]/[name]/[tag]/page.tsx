@@ -13,6 +13,7 @@ import {
 import { getSession } from '@/lib/session';
 import { parsePlayerPageParams } from '@/lib/validation/player-params';
 import { FollowButton } from './follow-button';
+import { getTrackerSourceKind } from '@/services/tracker/sources';
 import { PlayerProfileView } from './profile-view';
 
 /**
@@ -101,7 +102,13 @@ export async function PlayerProfileData({
       getCachedPlayerOverview(region, name, tag, PROFILE_SAMPLE_SIZE),
       FollowSection({ region, name, tag }),
     ]);
-    return <PlayerProfileView overview={overview} headerAction={headerAction} />;
+    return (
+      <PlayerProfileView
+        overview={overview}
+        headerAction={headerAction}
+        simulated={getTrackerSourceKind() === 'mock'}
+      />
+    );
   } catch (error) {
     if (hasErrorName(error, 'PlayerNoMatchesError')) {
       return (
@@ -119,7 +126,7 @@ export async function PlayerProfileData({
 
     const mapped = describeUpstreamError(error, {
       notFoundCode: 'PLAYER_NOT_FOUND',
-      notFoundMessage: 'Jogador não encontrado na HenrikDev.',
+      notFoundMessage: 'Jogador não encontrado.',
       notFoundHint: 'Confira o Riot ID (nome#tag) e a região da conta.',
     });
     // Diagnóstico no servidor (o ErrorState não vaza a causa ao cliente).

@@ -48,8 +48,8 @@ export async function GET(
       error,
       {
         notFoundCode: 'MATCH_NOT_FOUND',
-        notFoundMessage: 'Partida não encontrada na HenrikDev.',
-        notFoundHint: 'Confira o match ID e a região da partida.',
+        notFoundMessage: 'Partida não encontrada.',
+        notFoundHint: 'Abra a partida pelo histórico do jogador (o link inclui o jogador) e confira a região.',
       },
       'api/matches',
     );

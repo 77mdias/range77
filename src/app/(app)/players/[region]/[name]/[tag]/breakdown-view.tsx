@@ -1,4 +1,5 @@
 import type { PlayerOverview } from '@/services/tracker/player-overview';
+import { SimulatedBadge } from '@/components/ui/simulated-badge';
 import { SectionHeader } from '@/components/ui/section-header';
 import { AgentsMapsExplorer } from './agents-maps-explorer';
 import { BreakdownTabs } from './breakdown-tabs';
@@ -14,7 +15,13 @@ import { MatchHistoryTab } from './match-history-tab';
  * A antiga lista "Últimas partidas jogadas" foi removida: virou a aba de
  * histórico. Apresentação PURA — dados prontos do overview.
  */
-export function BreakdownView({ overview }: { readonly overview: PlayerOverview }) {
+export function BreakdownView({
+  overview,
+  simulated = false,
+}: {
+  readonly overview: PlayerOverview;
+  readonly simulated?: boolean;
+}) {
   const eloBase =
     overview.rank?.tier ?? overview.rrHistory[overview.rrHistory.length - 1]?.tier ?? undefined;
 
@@ -28,9 +35,12 @@ export function BreakdownView({ overview }: { readonly overview: PlayerOverview 
         title="Partidas & Breakdown"
         annotation="TELEMETRY_PIPELINE"
         meta={
-          <span className="font-hud text-label uppercase text-text-secondary">
-            {overview.player.name}#{overview.player.tag} •{' '}
-            {overview.player.region.toUpperCase()}
+          <span className="flex items-center gap-2 font-hud text-label uppercase text-text-secondary">
+            {simulated ? <SimulatedBadge /> : null}
+            <span>
+              {overview.player.name}#{overview.player.tag} •{' '}
+              {overview.player.region.toUpperCase()}
+            </span>
           </span>
         }
       />

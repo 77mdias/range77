@@ -61,7 +61,7 @@ export async function GET(
       error,
       {
         notFoundCode: 'PLAYER_NOT_FOUND',
-        notFoundMessage: 'Jogador não encontrado na HenrikDev.',
+        notFoundMessage: 'Jogador não encontrado.',
         notFoundHint: 'Confira o Riot ID (nome#tag) e a região da conta.',
       },
       'api/players/overview',
