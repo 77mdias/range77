@@ -116,6 +116,8 @@ const overview: PlayerOverview = {
       date: '2026-10-03T00:00:00.000Z',
     },
   ],
+  tactical: null,
+  deathHeatmaps: [],
 };
 
 describe('PlayerProfileView', () => {

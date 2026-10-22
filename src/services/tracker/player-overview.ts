@@ -1,12 +1,18 @@
 import type {
   AgentStat,
   MapStat,
+  MatchDetail,
   MatchSummary,
   RrHistoryPoint,
   StreakSummary,
   TrendSummary,
 } from '@/contracts/tracker';
 import type { ActSampleOptions } from '@/services/analytics/act-window';
+import { computeDeathHeatmap } from '@/services/analytics/death-heatmap';
+import {
+  buildTacticalVectors,
+  type TacticalVectors,
+} from '@/services/analytics/tactical-vectors';
 import { buildTrackerAggregations } from '@/services/analytics/tracker-aggregations';
 import {
   buildCombatInsightFromCombatStats,
@@ -19,6 +25,8 @@ import type { PlayerRankSummary } from '@/services/henrikdev/normalize-tracker';
 import type { CombatSnapshotStore } from '@/lib/db/combat-snapshot-store';
 import type { TrackerSource } from '@/services/tracker/source';
 import { getTrackerSource } from '@/services/tracker/sources';
+import { minimapFor } from '@/lib/valorant-maps';
+import { MOCK_MAPS } from '@/services/riot/mock/map-zones';
 
 /**
  * PASSO 3 — IMPLEMENTAÇÃO: visão geral do jogador sobre UMA amostra da fonte.
@@ -54,6 +62,47 @@ export interface PlayerOverview {
   readonly trend: TrendSummary;
   /** Trajetória de RR (cronológica). Vazia se o MMR history não estiver disponível. */
   readonly rrHistory: readonly RrHistoryPoint[];
+  /** Vetores táticos (zonas de morte + disciplina econômica); `null` sem detalhes (HenrikDev). */
+  readonly tactical: TacticalVectors | null;
+  /** Heatmap de mortes (grade 16×16) por mapa com minimapa conhecido. */
+  readonly deathHeatmaps: readonly DeathHeatmapByMap[];
+}
+
+export interface DeathHeatmapByMap {
+  readonly mapId: string;
+  readonly mapName: string;
+  readonly grid: number[][];
+}
+
+// Zonas por callouts oficiais; o mock é a única tabela que temos hoje.
+const ZONES_BY_MAP = Object.fromEntries(MOCK_MAPS.map((m) => [m.mapId, m.zones]));
+
+/**
+ * Deriva SÓ os resultados táticos dos detalhes: os detalhes em si (~5MB para
+ * 30 partidas) não entram no overview, que cruza o `'use cache'` e o RSC.
+ */
+function buildTactical(
+  details: readonly MatchDetail[],
+  name: string,
+  tag: string,
+): Pick<PlayerOverview, 'tactical' | 'deathHeatmaps'> {
+  const riotId = `${name}#${tag}`.toLowerCase();
+  const puuid = details
+    .flatMap((d) => d.scoreboard)
+    .find((row) => `${row.name}#${row.tag}`.toLowerCase() === riotId)?.puuid;
+  if (puuid === undefined) return { tactical: null, deathHeatmaps: [] };
+
+  const deathHeatmaps: DeathHeatmapByMap[] = [];
+  for (const mapId of new Set(details.map((d) => d.mapId).filter((id) => id != null))) {
+    const minimap = minimapFor(mapId);
+    if (minimap === null) continue;
+    deathHeatmaps.push({
+      mapId,
+      mapName: details.find((d) => d.mapId === mapId)!.map,
+      grid: computeDeathHeatmap(details, puuid, mapId, minimap.transform),
+    });
+  }
+  return { tactical: buildTacticalVectors(details, puuid, ZONES_BY_MAP), deathHeatmaps };
 }
 
 export interface BuildPlayerOverviewParams {
@@ -131,5 +180,6 @@ export async function buildPlayerOverview(
     streaks,
     trend,
     rrHistory: sample.rrHistory,
+    ...buildTactical(sample.details, name, tag),
   };
 }

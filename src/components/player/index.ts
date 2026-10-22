@@ -10,3 +10,7 @@ export {
   type MatchHistoryEntry,
   type MatchHistoryTableProps,
 } from './match-history-table';
+export {
+  EconomyDisciplineCard,
+  type EconomyDisciplineCardProps,
+} from './economy-discipline-card';

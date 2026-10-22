@@ -565,3 +565,45 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
     expect(store.insertSnapshot).toHaveBeenCalledWith(expect.objectContaining({ sampleSize: 5 }));
   });
 });
+
+describe('buildPlayerOverview — vetores táticos (Riot/mock)', () => {
+  it('mock: calcula tactical e um heatmap 16×16 por mapa com minimapa, sem expor details', async () => {
+    const { createMockSource } = await import('@/services/tracker/sources/mock-source');
+    const overview = await buildPlayerOverview({
+      region: 'br',
+      name: 'valcoachdemo',
+      tag: 'demo',
+      size: 10,
+      source: createMockSource(),
+      snapshotStore: null,
+    });
+
+    expect(overview).not.toHaveProperty('details');
+    expect(overview.tactical).not.toBeNull();
+    expect(overview.tactical!.discipline.rounds).toBeGreaterThan(0);
+    expect(overview.tactical!.topDeathZones.length).toBeGreaterThan(0);
+    expect(overview.deathHeatmaps.length).toBeGreaterThan(0);
+    const ids = overview.deathHeatmaps.map((h) => h.mapId);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const heatmap of overview.deathHeatmaps) {
+      expect(heatmap.mapName).not.toBe('');
+      expect(heatmap.grid).toHaveLength(16);
+      expect(heatmap.grid.every((r) => r.length === 16)).toBe(true);
+    }
+    const deaths = overview.deathHeatmaps.flatMap((h) => h.grid.flat()).reduce((a, b) => a + b, 0);
+    expect(deaths).toBeGreaterThan(0);
+  });
+
+  it('henrikdev (details vazio): tactical null e sem heatmaps', async () => {
+    const client = makeClient([win, loss]);
+    const overview = await buildPlayerOverview({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      source: createHenrikDevSource(client as never),
+      snapshotStore: null,
+    });
+    expect(overview.tactical).toBeNull();
+    expect(overview.deathHeatmaps).toEqual([]);
+  });
+});

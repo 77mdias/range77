@@ -138,7 +138,11 @@ const overview: PlayerOverview = {
   streaks: { current: { result: 'win', length: 1 }, longestWin: 1, longestLoss: 0 },
   trend: { metric: 'acs', direction: 'up', first: 200, last: 250, delta: 50, perMatch: [200, 250] },
   rrHistory,
+  tactical: null,
+  deathHeatmaps: [],
 };
+
+const heatGrid = (): number[][] => Array.from({ length: 16 }, () => new Array<number>(16).fill(0));
 
 describe('BreakdownView', () => {
   it('renderiza as duas abas do Stitch e a matriz de agentes/mapas ativa por padrão', () => {
@@ -163,6 +167,49 @@ describe('BreakdownView', () => {
     );
     expect(html).toContain('data-breakdown-tabs');
     expect(html).toContain('Desempenho por agente &amp; mapa');
+  });
+});
+
+describe('BreakdownView — vetores táticos', () => {
+  it('tactical null (HenrikDev) → seções omitidas', () => {
+    const html = renderToStaticMarkup(<BreakdownView overview={overview} />);
+    expect(html).not.toContain('data-breakdown-tactical');
+    expect(html).not.toContain('data-component="economy-discipline"');
+    expect(html).not.toContain('data-chart="death-heatmap"');
+  });
+
+  it('com tactical → card de disciplina, zonas e heatmap sobre o minimapa', () => {
+    const grid = heatGrid();
+    grid[4]![5] = 3;
+    const html = renderToStaticMarkup(
+      <BreakdownView
+        overview={{
+          ...overview,
+          tactical: {
+            topDeathZones: [{ label: 'A Main', deaths: 3 }],
+            discipline: {
+              forcedWhileTeamSaved: 2,
+              savedWhileTeamBought: 1,
+              rounds: 40,
+              winRateByBuy: { pistol: 0.5, eco: 0.25, force: 0.4, full: 0.6 },
+            },
+          },
+          deathHeatmaps: [
+            { mapId: '/Game/Maps/Ascent/Ascent', mapName: 'Ascent', grid },
+            { mapId: '/Game/Maps/Duality/Duality', mapName: 'Bind', grid: heatGrid() },
+          ],
+        }}
+      />,
+    );
+    expect(html).toContain('data-breakdown-tactical');
+    expect(html).toContain('data-component="economy-discipline"');
+    expect(html).toContain('A Main');
+    expect(html).toContain('data-chart="death-heatmap"');
+    expect(html).toContain('/assets/images/minimaps/ascent.png');
+    // Seletor de mapa com os dois mapas; só o ativo (1º) é renderizado.
+    expect(html).toContain('aria-label="Mapa do heatmap de mortes"');
+    expect(html).toContain('>Bind<');
+    expect(html.match(/data-chart="death-heatmap"/g)).toHaveLength(1);
   });
 });
 
