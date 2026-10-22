@@ -13,9 +13,13 @@ import { createUserRiotStore, type UserRiotAccountRow } from '@/lib/db/user-riot
 
 /** Extrai os valores dos Params de uma condição SQL (`eq(coluna, valor)`). */
 function paramValues(condition: SQL): unknown[] {
-  return condition.queryChunks
-    .filter((chunk) => chunk?.constructor.name === 'Param')
-    .map((chunk) => (chunk as unknown as { value: unknown }).value);
+  return condition.queryChunks.flatMap((chunk) =>
+    chunk?.constructor.name === 'Param'
+      ? [(chunk as unknown as { value: unknown }).value]
+      : chunk?.constructor.name === 'SQL'
+        ? paramValues(chunk as SQL)
+        : [],
+  );
 }
 
 const row: UserRiotAccountRow = {
@@ -25,6 +29,9 @@ const row: UserRiotAccountRow = {
   nameKey: 'player one',
   tagKey: 'br1',
   displayName: 'Player One',
+  puuid: null,
+  linkedVia: 'legacy',
+  profilePublic: false,
   createdAt: new Date('2026-10-01T00:00:00.000Z'),
   updatedAt: new Date('2026-10-02T00:00:00.000Z'),
 };
@@ -34,6 +41,7 @@ interface FakeDbCalls {
   readonly insertedValues: unknown[];
   conflictConfig: unknown;
   readonly deletedWhere: SQL[];
+  readonly updated: { set: unknown; where: SQL }[];
   readonly limits: number[];
 }
 
@@ -43,6 +51,7 @@ function createFakeDb(rows: UserRiotAccountRow[] = []) {
     insertedValues: [],
     conflictConfig: null,
     deletedWhere: [],
+    updated: [],
     limits: [],
   };
 
@@ -75,6 +84,17 @@ function createFakeDb(rows: UserRiotAccountRow[] = []) {
             },
           };
         },
+      };
+    },
+    update: (table: unknown) => {
+      expect(table).toBe(userRiotAccounts);
+      return {
+        set: (set: unknown) => ({
+          where: (where: SQL) => {
+            calls.updated.push({ set, where });
+            return Promise.resolve();
+          },
+        }),
       };
     },
     delete: (table: unknown) => {
@@ -148,6 +168,7 @@ describe('createUserRiotStore', () => {
         nameKey: 'player one',
         tagKey: 'br1',
         displayName: 'Player One',
+        linkedVia: 'legacy',
       },
     ]);
 
@@ -161,6 +182,59 @@ describe('createUserRiotStore', () => {
       displayName: 'Player One',
     });
     expect(conflict.set.updatedAt).toBeInstanceOf(Date);
+    // Legado não mexe em puuid/consentimento.
+    expect(conflict.set).not.toHaveProperty('profilePublic');
+  });
+
+  it('upsert RSO grava puuid/linkedVia e zera profilePublic quando o puuid muda', async () => {
+    const { db, calls } = createFakeDb();
+
+    await createUserRiotStore(db).upsert({
+      userId: 'user-1',
+      region: 'br',
+      nameKey: 'player one',
+      tagKey: 'br1',
+      displayName: 'Player One',
+      puuid: 'puuid-2',
+      linkedVia: 'rso_mock',
+    });
+
+    expect(calls.insertedValues[0]).toMatchObject({ puuid: 'puuid-2', linkedVia: 'rso_mock' });
+    const set = (calls.conflictConfig as { set: Record<string, unknown> }).set;
+    expect(set).toMatchObject({ puuid: 'puuid-2', linkedVia: 'rso_mock' });
+    // CASE: mantém o flag se o puuid é o mesmo, senão volta a false.
+    const chunks = (set.profilePublic as SQL).queryChunks
+      .map((c) => (c as { value?: unknown }).value)
+      .flat()
+      .join('');
+    expect(chunks).toContain('CASE WHEN');
+    expect(chunks).toContain('ELSE false END');
+    expect((set.profilePublic as SQL).queryChunks).toContain('puuid-2');
+  });
+
+  it('getByRiotId busca por região + chaves em minúsculas (limit 1)', async () => {
+    const { db, calls } = createFakeDb([row]);
+
+    await expect(createUserRiotStore(db).getByRiotId('br', 'player one', 'br1')).resolves.toEqual(
+      row,
+    );
+    expect(paramValues(calls.selectedWhere[0]!)).toEqual(['br', 'player one', 'br1']);
+    expect(calls.limits).toEqual([1]);
+  });
+
+  it('getByRiotId retorna null sem dono', async () => {
+    const { db } = createFakeDb([]);
+
+    await expect(createUserRiotStore(db).getByRiotId('br', 'x', 'y')).resolves.toBeNull();
+  });
+
+  it('setProfilePublic atualiza o flag do usuário', async () => {
+    const { db, calls } = createFakeDb();
+
+    await createUserRiotStore(db).setProfilePublic('user-1', true);
+
+    expect(calls.updated[0]!.set).toMatchObject({ profilePublic: true });
+    expect(paramValues(calls.updated[0]!.where)).toEqual(['user-1']);
   });
 
   it('remove deleta o vínculo pelo userId', async () => {

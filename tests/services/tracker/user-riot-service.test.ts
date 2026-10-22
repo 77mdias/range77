@@ -19,6 +19,8 @@ const makeDeps = (options: { session: boolean } = { session: true }) => {
     get: vi.fn(async () => null),
     upsert: vi.fn(async () => {}),
     remove: vi.fn(async () => {}),
+    getByRiotId: vi.fn(async () => null),
+    setProfilePublic: vi.fn(async () => {}),
   };
   return {
     store,
