@@ -26,9 +26,8 @@ beforeEach(() => {
 });
 
 describe('authorizeRso', () => {
-  it('emite code assinado para o usuário da sessão e vai ao callback com o state', async () => {
-    const error = (await authorizeRso('st-1', 'br').catch((e: Error) => e)) as Error;
-    const url = new URL(error.message.replace('NEXT_REDIRECT: ', ''), 'http://localhost');
+  it('devolve a URL do callback com code assinado para o usuário da sessão e o state', async () => {
+    const url = new URL(await authorizeRso('st-1', 'br'), 'http://localhost');
     expect(url.pathname).toBe('/api/rso/callback');
     expect(url.searchParams.get('state')).toBe('st-1');
     const payload = verifyRsoCode(url.searchParams.get('code') ?? '', SECRET, Date.now());
@@ -39,13 +38,18 @@ describe('authorizeRso', () => {
     });
   });
 
-  it('sem sessão → rso=error', async () => {
+  it('sem sessão → URL de rso=error', async () => {
     session.getSessionFromHeaders.mockResolvedValue(null);
-    await expect(authorizeRso('st-1', 'br')).rejects.toThrow('NEXT_REDIRECT: /dashboard/settings?rso=error');
+    await expect(authorizeRso('st-1', 'br')).resolves.toBe('/dashboard/settings?rso=error');
   });
 
-  it('região inválida → rso=error', async () => {
-    await expect(authorizeRso('st-1', 'zz')).rejects.toThrow('NEXT_REDIRECT: /dashboard/settings?rso=error');
+  it('falha de auth → URL de rso=error', async () => {
+    session.getSessionFromHeaders.mockRejectedValue(new Error('db down'));
+    await expect(authorizeRso('st-1', 'br')).resolves.toBe('/dashboard/settings?rso=error');
+  });
+
+  it('região inválida → URL de rso=error', async () => {
+    await expect(authorizeRso('st-1', 'zz')).resolves.toBe('/dashboard/settings?rso=error');
   });
 });
 

@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { SimulatedBadge } from '@/components/ui';
 import { RSO_SCOPES, fictitiousAccountForUser, isRsoRegion } from '@/lib/rso/mock-provider';
-import { getViewerUserId } from '@/lib/session';
+import { getSessionFromHeaders } from '@/lib/session';
 import { ConsentForm } from './consent-form';
 
 /**
@@ -42,7 +42,13 @@ async function Consent({ searchParams }: PageProps) {
   if (typeof state !== 'string' || !state || !isRsoRegion(region)) {
     redirect('/dashboard/settings?rso=error');
   }
-  const userId = await getViewerUserId(resolvedHeaders);
+  let userId: string | null;
+  try {
+    userId = (await getSessionFromHeaders(resolvedHeaders))?.user.id ?? null;
+  } catch (error) {
+    console.error('[rso] falha ao ler a sessão no consentimento', error);
+    redirect('/dashboard/settings?rso=error');
+  }
   if (userId === null) {
     redirect(`/login?next=${encodeURIComponent(`/api/rso/authorize?region=${region}`)}`);
   }

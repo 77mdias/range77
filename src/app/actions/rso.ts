@@ -17,27 +17,33 @@ import { getSessionFromHeaders } from '@/lib/session';
  * devolve ao callback com o `state` intacto (quem confere é o callback).
  */
 
-export async function authorizeRso(state: string, region: string): Promise<never> {
+const RSO_ERROR_URL = '/dashboard/settings?rso=error';
+
+/**
+ * DEVOLVE a URL do callback (ou de erro) em vez de `redirect()`: o redirect
+ * de Server Action é resolvido no servidor (RSC), o que perderia o
+ * Set-Cookie que apaga o `state` e deixaria o `code` no histórico. O
+ * cliente navega com `window.location.assign` — GET real do navegador.
+ */
+export async function authorizeRso(state: string, region: string): Promise<string> {
   const resolvedHeaders = await headers();
-  let target = '/dashboard/settings?rso=error';
   try {
     const userId = (await getSessionFromHeaders(resolvedHeaders))?.user.id;
-    if (userId && isRsoRegion(region)) {
-      const code = signRsoCode(
-        {
-          userId,
-          puuid: fictitiousAccountForUser(userId, region).puuid,
-          region,
-          exp: Date.now() + RSO_CODE_TTL_MS,
-        },
-        requireEnv(loadAppEnv(), 'BETTER_AUTH_SECRET'),
-      );
-      target = `/api/rso/callback?${new URLSearchParams({ code, state })}`;
-    }
+    if (!userId || !isRsoRegion(region)) return RSO_ERROR_URL;
+    const code = signRsoCode(
+      {
+        userId,
+        puuid: fictitiousAccountForUser(userId, region).puuid,
+        region,
+        exp: Date.now() + RSO_CODE_TTL_MS,
+      },
+      requireEnv(loadAppEnv(), 'BETTER_AUTH_SECRET'),
+    );
+    return `/api/rso/callback?${new URLSearchParams({ code, state })}`;
   } catch (error) {
     console.error('[rso] falha ao autorizar', error);
+    return RSO_ERROR_URL;
   }
-  redirect(target);
 }
 
 export async function denyRso(): Promise<never> {
