@@ -182,8 +182,14 @@ describe('createUserRiotStore', () => {
       displayName: 'Player One',
     });
     expect(conflict.set.updatedAt).toBeInstanceOf(Date);
-    // Legado não mexe em puuid/consentimento.
-    expect(conflict.set).not.toHaveProperty('profilePublic');
+    // Relink legado anula puuid, volta a 'legacy' e o CASE reseta o consentimento.
+    expect(conflict.set).toMatchObject({ puuid: null, linkedVia: 'legacy' });
+    expect(
+      (conflict.set.profilePublic as SQL).queryChunks
+        .map((c) => (c as { value?: unknown }).value)
+        .flat()
+        .join(''),
+    ).toContain('CASE WHEN');
   });
 
   it('upsert RSO grava puuid/linkedVia e zera profilePublic quando o puuid muda', async () => {
@@ -218,7 +224,12 @@ describe('createUserRiotStore', () => {
     await expect(createUserRiotStore(db).getByRiotId('br', 'player one', 'br1')).resolves.toEqual(
       row,
     );
-    expect(paramValues(calls.selectedWhere[0]!)).toEqual(['br', 'player one', 'br1']);
+    expect(paramValues(calls.selectedWhere[0]!)).toEqual([
+      'br',
+      'player one',
+      'br1',
+      'legacy', // ne(linkedVia, 'legacy'): legado nunca concede acesso
+    ]);
     expect(calls.limits).toEqual([1]);
   });
 

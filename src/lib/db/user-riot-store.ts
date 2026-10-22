@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import { createDatabase, type ValCoachDatabase } from './index';
 import { userRiotAccounts } from './schema';
 
@@ -14,16 +14,18 @@ import { userRiotAccounts } from './schema';
 
 export type UserRiotAccountRow = typeof userRiotAccounts.$inferSelect;
 
-export interface UserRiotAccountInput {
+interface UserRiotAccountBase {
   readonly userId: string;
   readonly region: string;
   readonly nameKey: string;
   readonly tagKey: string;
   readonly displayName: string;
-  /** Padrão: vínculo legado, sem puuid. */
-  readonly puuid?: string;
-  readonly linkedVia?: UserRiotAccountRow['linkedVia'];
 }
+
+/** Legado (padrão) não tem puuid; vínculo RSO exige. */
+export type UserRiotAccountInput =
+  | (UserRiotAccountBase & { readonly puuid?: undefined; readonly linkedVia?: 'legacy' })
+  | (UserRiotAccountBase & { readonly puuid: string; readonly linkedVia: 'rso_mock' | 'rso' });
 
 export interface UserRiotStore {
   /** Riot ID vinculado ao usuário (ou `null` quando não há vínculo). */
@@ -58,6 +60,8 @@ export function createUserRiotStore(db: ValCoachDatabase = createDatabase()): Us
             eq(userRiotAccounts.region, region),
             eq(userRiotAccounts.nameKey, nameKey),
             eq(userRiotAccounts.tagKey, tagKey),
+            // Legado nunca concede acesso e pode "squatar" um Riot ID: fora da busca.
+            ne(userRiotAccounts.linkedVia, 'legacy'),
           ),
         )
         .limit(1);
@@ -73,15 +77,12 @@ export function createUserRiotStore(db: ValCoachDatabase = createDatabase()): Us
 
     async upsert(input) {
       const linkedVia = input.linkedVia ?? 'legacy';
-      // Vínculo RSO: trocar o puuid revoga o consentimento (volta a privado).
-      const rsoSet =
-        linkedVia === 'legacy'
-          ? {}
-          : {
-              puuid: input.puuid ?? null,
-              linkedVia,
-              profilePublic: sql`CASE WHEN ${userRiotAccounts.puuid} IS NOT DISTINCT FROM ${input.puuid ?? null} THEN ${userRiotAccounts.profilePublic} ELSE false END`,
-            };
+      // Trocar o puuid (inclusive relink legado -> null) revoga o consentimento.
+      const rsoSet = {
+        puuid: input.puuid ?? null,
+        linkedVia,
+        profilePublic: sql`CASE WHEN ${userRiotAccounts.puuid} IS NOT DISTINCT FROM ${input.puuid ?? null} THEN ${userRiotAccounts.profilePublic} ELSE false END`,
+      };
       await db
         .insert(userRiotAccounts)
         .values({
