@@ -60,6 +60,7 @@ const PLAYER_TITLE = 'd13e579c-435e-44d4-cec2-6eae5a3c5ed4';
 const BUY_PHASE_MILLIS = 30_000;
 const POST_ROUND_MILLIS = 7_000;
 const SPIKE_MILLIS = 45_000;
+const DEFUSE_MILLIS = 7_000;
 const KILL_MIN_MILLIS = 5_000;
 const KILL_MAX_MILLIS = 99_000;
 const DAY = 86_400_000;
@@ -291,14 +292,15 @@ export function generateMatch(matchId: string, focus: RiotAccountDto): RiotMatch
     // -------------------------------------------------------------- posições
     const site = rng.pick(sites);
     const siteZone = map.zones.find((z) => z.label === `${site} Site`) as MapZone;
-    const zoneOf = new Map<string, MapZone>();
+    // Uma posição por jogador no round; só muda numa troca de zona roteirizada (plant/defuse).
+    const posOf = new Map<string, RiotLocationDto>();
     for (const s of slots) {
-      zoneOf.set(s.puuid, rng.pick(zonesFor(map, s.teamId === attackers ? 'attack' : 'defense', site)));
+      posOf.set(s.puuid, pointIn(rng, rng.pick(zonesFor(map, s.teamId === attackers ? 'attack' : 'defense', site))));
     }
     const locate = (s: Slot): RiotPlayerLocationsDto => ({
       puuid: s.puuid,
       viewRadians: Number((rng.next() * 2 * Math.PI).toFixed(4)),
-      location: pointIn(rng, zoneOf.get(s.puuid) as MapZone),
+      location: posOf.get(s.puuid) as RiotLocationDto,
     });
 
     // ---------------------------------------------------------------- abates
@@ -318,8 +320,9 @@ export function generateMatch(matchId: string, focus: RiotAccountDto): RiotMatch
       const who = rng.pick(aliveOf(attackers));
       planter = who.puuid;
       const plantLocation = pointIn(rng, siteZone);
-      // Depois do plant, boa parte dos vivos converge para o site.
-      for (const s of slots) if (rng.next() < 0.6) zoneOf.set(s.puuid, siteZone);
+      // Depois do plant, boa parte dos vivos converge para o site; o planter fica na spike.
+      for (const s of slots) if (rng.next() < 0.6) posOf.set(s.puuid, pointIn(rng, siteZone));
+      posOf.set(who.puuid, plantLocation);
       plantInfo = {
         bombPlanter: who.puuid,
         plantRoundTime: plantTime,
@@ -329,7 +332,9 @@ export function generateMatch(matchId: string, focus: RiotAccountDto): RiotMatch
       };
     };
 
+    const aliveAt: Set<string>[] = [];
     tokens.forEach((token, step) => {
+      aliveAt.push(new Set(alive));
       if (step === plantAt) doPlant();
       const victimTeam = token === 'L' ? loser : winner;
       const victim = rng.pick(aliveOf(victimTeam));
@@ -345,7 +350,7 @@ export function generateMatch(matchId: string, focus: RiotAccountDto): RiotMatch
         timeSinceRoundStartMillis: t,
         killer: killer.puuid,
         victim: victim.puuid,
-        victimLocation: pointIn(rng, zoneOf.get(victim.puuid) as MapZone),
+        victimLocation: posOf.get(victim.puuid) as RiotLocationDto,
         assistants,
         playerLocations: slots.filter((s) => alive.has(s.puuid) && s.puuid !== victim.puuid).map(locate),
         finishingDamage: {
@@ -365,6 +370,7 @@ export function generateMatch(matchId: string, focus: RiotAccountDto): RiotMatch
       for (const a of assistants) roundAssists.set(a, (roundAssists.get(a) ?? 0) + 1);
       alive.delete(victim.puuid);
     });
+    aliveAt.push(new Set(alive));
     if (planted && plantAt === n) doPlant();
 
     let defuseInfo: Partial<RiotRoundResultDto> = {};
@@ -374,8 +380,9 @@ export function generateMatch(matchId: string, focus: RiotAccountDto): RiotMatch
     if (outcome === 'Defuse') {
       const who = rng.pick(aliveOf(defenders));
       defuser = who.puuid;
-      const defuseTime = Math.max(plantTime, lastKill) + rng.int(1000, 6500);
-      zoneOf.set(who.puuid, siteZone);
+      // Defuse completo leva 7s; o teto (lastKill ≤ plant+38s, +6,5s) fica antes da detonação.
+      const defuseTime = Math.max(plantTime + DEFUSE_MILLIS, lastKill + rng.int(1000, 6500));
+      posOf.set(who.puuid, plantInfo.plantLocation as RiotLocationDto);
       defuseInfo = {
         bombDefuser: who.puuid,
         defuseRoundTime: defuseTime,
@@ -385,10 +392,16 @@ export function generateMatch(matchId: string, focus: RiotAccountDto): RiotMatch
       endTime = defuseTime;
     }
 
-    // Dano não letal (chip) para dar textura ao scoreboard.
+    // Dano não letal (chip): num instante do round, entre jogadores vivos nele;
+    // no máximo um chip por alvo, para quem sobrevive nunca levar dano letal.
+    const chipped = new Set<string>();
     for (const s of slots) {
       if (rng.next() < 0.45) {
-        const target = rng.pick(teamOf(otherTeam(s.teamId)));
+        const aliveThen = at(aliveAt, rng.int(0, n));
+        const targets = teamOf(otherTeam(s.teamId)).filter((t) => aliveThen.has(t.puuid) && !chipped.has(t.puuid));
+        if (!aliveThen.has(s.puuid) || targets.length === 0) continue;
+        const target = rng.pick(targets);
+        chipped.add(target.puuid);
         pushDamage(s.puuid, { receiver: target.puuid, damage: rng.int(15, 85), legshots: 0, bodyshots: 1, headshots: rng.int(0, 1) });
       }
     }

@@ -193,6 +193,50 @@ describe('generateMatch', () => {
     }
   });
 
+  it('posição do jogador é estável entre eventos do mesmo round sem troca de zona', () => {
+    for (const m of sample) {
+      for (const r of m.roundResults) {
+        const kills = r.playerStats.flatMap((s) => s.kills);
+        const plantAt = r.plantRoundTime ?? Infinity;
+        // Única troca de zona antes do defuse: o plant (rotação para o site).
+        for (const phase of [kills.filter((k) => k.timeSinceRoundStartMillis < plantAt), kills.filter((k) => k.timeSinceRoundStartMillis > plantAt)]) {
+          const seen = new Map<string, string>();
+          const check = (puuid: string, p: RiotLocationDto) => {
+            const key = `${p.x},${p.y}`;
+            expect(seen.get(puuid) ?? key).toBe(key);
+            seen.set(puuid, key);
+          };
+          if (phase.length > 0 && phase[0]!.timeSinceRoundStartMillis > plantAt) {
+            for (const pl of r.plantPlayerLocations ?? []) check(pl.puuid, pl.location);
+          }
+          for (const k of phase) {
+            check(k.victim, k.victimLocation);
+            for (const pl of k.playerLocations) check(pl.puuid, pl.location);
+          }
+        }
+      }
+    }
+  });
+
+  it('dano só entre vivos: quem sobrevive ao round nunca recebeu dano letal (< 150)', () => {
+    for (const m of sample) {
+      for (const r of m.roundResults) {
+        const victims = new Set(r.playerStats.flatMap((s) => s.kills.map((k) => k.victim)));
+        const received = new Map<string, number>();
+        for (const d of r.playerStats.flatMap((s) => s.damage)) {
+          received.set(d.receiver, (received.get(d.receiver) ?? 0) + d.damage);
+        }
+        for (const [puuid, total] of received) if (!victims.has(puuid)) expect(total).toBeLessThan(150);
+      }
+    }
+  });
+
+  it('defuse ≥ 7s após o plant', () => {
+    const defuses = sample.flatMap((m) => m.roundResults.filter((r) => r.bombDefuser !== undefined));
+    expect(defuses.length).toBeGreaterThan(0);
+    for (const r of defuses) expect(r.defuseRoundTime! - r.plantRoundTime!).toBeGreaterThanOrEqual(7000);
+  });
+
   it('usa todos os mapas e varia os resultados do foco', () => {
     expect(new Set(sample.map((m) => m.matchInfo.mapId)).size).toBe(MOCK_MAPS.length);
     const wins = sample.filter((m) => {
