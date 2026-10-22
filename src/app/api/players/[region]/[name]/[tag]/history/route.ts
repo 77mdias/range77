@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { EnvironmentValidationError } from '@/config/env';
 import type { ApiErrorBody } from '@/contracts/coach';
+import { profileNotPublicResponse } from '@/lib/http/api-error';
+import { getViewerUserId } from '@/lib/session';
 import { parsePlayerRouteParams } from '@/lib/validation/player-params';
+import { resolveProfileAccess } from '@/services/access/profile-access';
 import {
   buildPlayerEvolutionInsight,
   PlayerNoHistoryError,
@@ -79,6 +82,12 @@ export async function GET(
       );
     }
     limit = parsedLimit;
+  }
+
+  // Consentimento ANTES da fonte: sem opt-in, nada de dado pessoal.
+  const viewerUserId = await getViewerUserId(request.headers);
+  if ((await resolveProfileAccess(viewerUserId, parsed)) === 'private') {
+    return profileNotPublicResponse();
   }
 
   try {

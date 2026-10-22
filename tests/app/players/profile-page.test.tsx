@@ -14,6 +14,25 @@ vi.mock('@/lib/cache/tracker', () => ({
 }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
+// Política de consentimento (sessão + vínculo) e espião da fonte: o perfil
+// privado não pode tocar o tracker.
+const access = vi.hoisted(() => ({
+  getByRiotId: vi.fn(),
+  viewer: vi.fn(),
+  getTrackerSource: vi.fn(),
+}));
+vi.mock('next/headers', () => ({ headers: async () => new Headers() }));
+vi.mock('@/lib/session', () => ({ getViewerUserId: access.viewer, getSession: async () => null }));
+vi.mock('@/lib/db/user-riot-store', () => ({
+  getUserRiotStore: () => ({ getByRiotId: access.getByRiotId }),
+}));
+vi.mock('@/services/tracker/sources', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/services/tracker/sources')>()),
+  getTrackerSource: access.getTrackerSource,
+}));
+const PRIVATE_LINK = { userId: 'u-owner', linkedVia: 'rso_mock', profilePublic: false };
+const PRIVATE_TEXT = 'Este jogador não tornou o perfil público.';
+
 import { HenrikDevApiError } from '@/services/henrikdev/client';
 import PlayerPage, { PlayerProfileData } from '@/app/(app)/players/[region]/[name]/[tag]/page';
 
@@ -25,10 +44,13 @@ const render = async (region: string, name: string, tag: string) => {
 };
 
 const renderData = async () =>
-  renderToStaticMarkup(await PlayerProfileData({ region: 'br', name: 'Player', tag: 'BR1' }));
+  renderToStaticMarkup(await PlayerProfileData({ region: 'br', name: 'ValCoachDemo', tag: 'DEMO' }));
 
 beforeEach(() => {
   mocks.getCachedPlayerOverview.mockReset();
+  access.getByRiotId.mockReset().mockResolvedValue(null);
+  access.viewer.mockReset().mockResolvedValue(null);
+  access.getTrackerSource.mockReset();
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
 });
 
@@ -71,5 +93,42 @@ describe('PlayerProfileData', () => {
 
     expect(html).toContain('PLAYER_NOT_FOUND');
     expect(html).not.toContain('data-state="rate-limit"');
+  });
+});
+
+describe('PlayerProfileData — consentimento', () => {
+  it('perfil privado → estado neutro, sem chamar a fonte', async () => {
+    access.getByRiotId.mockResolvedValueOnce(PRIVATE_LINK);
+    const html = renderToStaticMarkup(await PlayerProfileData({ region: 'br', name: 'Fulano', tag: 'BR1' }));
+
+    expect(html).toContain(PRIVATE_TEXT);
+    expect(mocks.getCachedPlayerOverview).not.toHaveBeenCalled();
+    expect(access.getTrackerSource).not.toHaveBeenCalled();
+  });
+
+  it('conta inexistente → o MESMO estado neutro', async () => {
+    const html = renderToStaticMarkup(await PlayerProfileData({ region: 'br', name: 'Fulano', tag: 'BR1' }));
+    expect(html).toContain(PRIVATE_TEXT);
+    expect(mocks.getCachedPlayerOverview).not.toHaveBeenCalled();
+  });
+
+  it('dono do perfil privado → renderiza os dados', async () => {
+    access.viewer.mockResolvedValueOnce('u-owner');
+    access.getByRiotId.mockResolvedValueOnce(PRIVATE_LINK);
+    mocks.getCachedPlayerOverview.mockRejectedValueOnce(new HenrikDevApiError(404, 'not found'));
+
+    const html = renderToStaticMarkup(await PlayerProfileData({ region: 'br', name: 'Fulano', tag: 'BR1' }));
+
+    expect(html).not.toContain(PRIVATE_TEXT);
+    expect(mocks.getCachedPlayerOverview).toHaveBeenCalled();
+  });
+
+  it('conta demo → renderiza para o visitante anônimo', async () => {
+    mocks.getCachedPlayerOverview.mockRejectedValueOnce(new HenrikDevApiError(404, 'not found'));
+    const html = renderToStaticMarkup(
+      await PlayerProfileData({ region: 'br', name: 'ValCoachDemo', tag: 'DEMO' }),
+    );
+    expect(html).not.toContain(PRIVATE_TEXT);
+    expect(mocks.getCachedPlayerOverview).toHaveBeenCalledWith('br', 'ValCoachDemo', 'DEMO', 5);
   });
 });

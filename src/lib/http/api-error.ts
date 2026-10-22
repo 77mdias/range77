@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { PRIVATE_PROFILE_MESSAGE, PROFILE_NOT_PUBLIC_CODE } from '@/contracts/access';
 import type { ApiErrorBody } from '@/contracts/coach';
 import { henrikDevErrorStatus, henrikDevRetryAfterSeconds } from '@/services/henrikdev/client';
 import { TRACKER_NOT_FOUND_ERROR_NAME } from '@/services/tracker/source';
@@ -58,6 +59,11 @@ export function errorResponse(
     { error: { code, message, ...(hint !== undefined ? { hint } : {}) } },
     { status },
   );
+}
+
+/** 404 neutro: o mesmo corpo para perfil privado e conta inexistente. */
+export function profileNotPublicResponse(): NextResponse<ApiErrorBody> {
+  return errorResponse(404, PROFILE_NOT_PUBLIC_CODE, PRIVATE_PROFILE_MESSAGE);
 }
 
 export function describeUpstreamError(

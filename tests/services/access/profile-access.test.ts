@@ -46,4 +46,11 @@ describe('resolveProfileAccess', () => {
     expect(r).toBe('private');
     expect(err).toHaveBeenCalled();
   });
+
+  it('demo não depende do store (DB fora do ar continua mostrando a demo)', async () => {
+    const getByRiotId = vi.fn().mockRejectedValue(new Error('db'));
+    const r = await resolveProfileAccess(null, { region: 'br', name: 'ValCoachDemo', tag: 'DEMO' }, { store: store(getByRiotId) });
+    expect(r).toBe('demo');
+    expect(getByRiotId).not.toHaveBeenCalled();
+  });
 });

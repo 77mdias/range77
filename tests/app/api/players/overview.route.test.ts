@@ -19,6 +19,18 @@ vi.mock('@/services/coaching/player-combat', () => {
   return { PlayerNoMatchesError };
 });
 
+// Política de consentimento: por padrão o perfil é público (vínculo RSO com
+// opt-in) e o visitante é anônimo; cada teste de acesso sobrescreve.
+const access = vi.hoisted(() => ({ getByRiotId: vi.fn(), viewer: vi.fn() }));
+vi.mock('@/lib/db/user-riot-store', () => ({
+  getUserRiotStore: () => ({ getByRiotId: access.getByRiotId }),
+}));
+vi.mock('@/lib/session', () => ({ getViewerUserId: access.viewer }));
+const PUBLIC_LINK = { userId: 'u-owner', linkedVia: 'rso_mock', profilePublic: true };
+const PRIVATE_BODY = {
+  error: { code: 'PROFILE_NOT_PUBLIC', message: 'Este jogador não tornou o perfil público.' },
+};
+
 import { GET } from '@/app/api/players/[region]/[name]/[tag]/overview/route';
 import { PlayerNoMatchesError } from '@/services/coaching/player-combat';
 import { buildPlayerOverview } from '@/services/tracker/player-overview';
@@ -46,6 +58,8 @@ const context = (
 
 beforeEach(() => {
   vi.mocked(buildPlayerOverview).mockReset();
+  access.getByRiotId.mockReset().mockResolvedValue(PUBLIC_LINK);
+  access.viewer.mockReset().mockResolvedValue(null);
 });
 
 describe('GET /api/players/[region]/[name]/[tag]/overview', () => {
@@ -155,5 +169,29 @@ describe('GET /api/players/[region]/[name]/[tag]/overview', () => {
     expect(response.status).toBe(500);
     expect(body.error.code).toBe('INTERNAL_ERROR');
     expect(body.error.message).not.toMatch(/boom/);
+  });
+
+  it('perfil privado ou inexistente → mesmo 404 PROFILE_NOT_PUBLIC, sem chamar a fonte', async () => {
+    access.getByRiotId.mockResolvedValueOnce(null);
+    const missing = await GET(new Request('http://localhost/x'), context());
+    access.getByRiotId.mockResolvedValueOnce({ ...PUBLIC_LINK, profilePublic: false });
+    const optedOut = await GET(new Request('http://localhost/x'), context());
+
+    expect(missing.status).toBe(404);
+    expect(optedOut.status).toBe(404);
+    expect(await missing.json()).toEqual(PRIVATE_BODY);
+    expect(await optedOut.json()).toEqual(PRIVATE_BODY);
+    expect(vi.mocked(buildPlayerOverview)).not.toHaveBeenCalled();
+  });
+
+  it('dono do perfil privado e conta demo → passam pela política', async () => {
+    access.viewer.mockResolvedValueOnce('u-owner');
+    access.getByRiotId.mockResolvedValueOnce({ ...PUBLIC_LINK, profilePublic: false });
+    const owner = await GET(new Request('http://localhost/x'), context());
+    const demo = await GET(new Request('http://localhost/x'), context('br', 'ValCoachDemo', 'DEMO'));
+
+    expect(owner.status).not.toBe(404);
+    expect(demo.status).not.toBe(404);
+    expect(vi.mocked(buildPlayerOverview)).toHaveBeenCalledTimes(2);
   });
 });

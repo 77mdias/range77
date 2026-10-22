@@ -162,8 +162,9 @@ describe('camada de cache no caminho padrão (mock) — zero HenrikDev', () => {
       params: Promise.resolve({ region: 'br', matchId }),
     });
     expect(noFocus.status).toBe(404);
+    // Sem foco não há consentimento a verificar → 404 neutro (Task 14).
     expect(((await noFocus.json()) as { error: { code: string } }).error.code).toBe(
-      'MATCH_NOT_FOUND',
+      'PROFILE_NOT_PUBLIC',
     );
 
     const player = await getPlayer(new Request('http://localhost/api/players/br/ValCoachDemo/DEMO'), {

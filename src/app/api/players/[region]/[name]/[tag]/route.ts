@@ -1,7 +1,9 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import type { ApiErrorBody } from '@/contracts/coach';
-import { hasErrorName } from '@/lib/http/api-error';
+import { hasErrorName, profileNotPublicResponse } from '@/lib/http/api-error';
+import { getViewerUserId } from '@/lib/session';
+import { resolveProfileAccess } from '@/services/access/profile-access';
 import { parsePlayerRouteParams } from '@/lib/validation/player-params';
 import { buildPlayerCombatInsight } from '@/services/coaching/player-combat';
 import { henrikDevErrorStatus } from '@/services/henrikdev/client';
@@ -172,6 +174,12 @@ export async function GET(
       );
     }
     size = parsed;
+  }
+
+  // Consentimento ANTES da fonte: sem opt-in, nada de dado pessoal.
+  const viewerUserId = await getViewerUserId(request.headers);
+  if ((await resolveProfileAccess(viewerUserId, parsed)) === 'private') {
+    return profileNotPublicResponse();
   }
 
   try {

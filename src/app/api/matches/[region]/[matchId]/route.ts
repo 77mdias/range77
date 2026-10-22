@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getCachedMatchDetail } from '@/lib/cache/tracker';
-import { errorResponse, mapUpstreamError } from '@/lib/http/api-error';
+import { errorResponse, mapUpstreamError, profileNotPublicResponse } from '@/lib/http/api-error';
+import { getViewerUserId } from '@/lib/session';
 import { parseMatchRouteParams } from '@/lib/validation/match-params';
 import { parseRiotId } from '@/lib/validation/riot-id';
+import { resolveProfileAccess } from '@/services/access/profile-access';
 
 /**
  * ROTA: GET /api/matches/[region]/[matchId]
@@ -11,8 +13,9 @@ import { parseRiotId } from '@/lib/validation/riot-id';
  * Cache Data (`'use cache'`) + cache durável em Neon (`match_cache`, TTL 24h):
  * visitas repetidas não tocam o upstream. Next 16: `await params`.
  *
- * `?player=Nome#Tag` (opcional) informa o jogador em foco — exigido pela fonte
- * simulada (padrão), cujo `matchId` deriva do Riot ID do foco.
+ * `?player=Nome#Tag` informa o jogador em foco — exigido pela fonte simulada
+ * (padrão), cujo `matchId` deriva do Riot ID do foco — e é OBRIGATÓRIO: a
+ * partida só é servida se o perfil do foco não for privado (consentimento).
  */
 
 interface RouteContext {
@@ -38,6 +41,16 @@ export async function GET(
       return errorResponse(400, 'INVALID_PARAMS', `Parâmetro "player" inválido: ${player.message}`);
     }
     focus = { name: player.value.name, tag: player.value.tag };
+  }
+
+  // Consentimento ANTES da fonte: sem foco (ou foco privado) → 404 neutro.
+  if (focus === undefined) {
+    return profileNotPublicResponse();
+  }
+  const viewerUserId = await getViewerUserId(request.headers);
+  const access = await resolveProfileAccess(viewerUserId, { region: parsed.region, ...focus });
+  if (access === 'private') {
+    return profileNotPublicResponse();
   }
 
   try {

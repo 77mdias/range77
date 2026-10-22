@@ -35,6 +35,8 @@ export async function resolveProfileAccess(
   target: ProfileTarget,
   deps: { store?: UserRiotStore } = {},
 ): Promise<ProfileAccess> {
+  // A demo é pública por definição: não depende do DB (que pode estar fora).
+  if (decideProfileAccess({ viewerUserId, target, link: null }) === 'demo') return 'demo';
   try {
     const store = deps.store ?? getUserRiotStore();
     const link = await store.getByRiotId(
