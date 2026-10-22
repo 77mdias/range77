@@ -1,3 +1,4 @@
+import { RIOT_LEGAL_NOTICE } from '@/lib/legal';
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AppFooter } from '@/components/layout/app-footer';
@@ -6,7 +7,9 @@ describe('AppFooter', () => {
   it('renderiza protocolo padrão e copyright da Riot', () => {
     const html = renderToStaticMarkup(<AppFooter />);
     expect(html).toContain('data-component="app-footer"');
-    expect(html).toContain('Não afiliado à Riot Games');
+    expect(html).toContain(RIOT_LEGAL_NOTICE.replace(/'/g, '&#x27;'));
+    expect(html).toContain('href="/termos"');
+    expect(html).toContain('href="/privacidade"');
   });
 
   it('aceita protocolo customizado e métricas de telemetria', () => {
