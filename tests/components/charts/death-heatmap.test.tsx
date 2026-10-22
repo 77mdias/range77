@@ -5,7 +5,7 @@ import { DeathHeatmap } from '@/components/charts';
 const grid = (): number[][] => Array.from({ length: 16 }, () => new Array<number>(16).fill(0));
 
 describe('DeathHeatmap', () => {
-  it('grade 16×16 → 256 células, intensidade proporcional ao máximo', () => {
+  it('grade 16×16 → 256 células, intensidade linear no máximo, com piso para célula não vazia', () => {
     const g = grid();
     g[2]![3] = 4;
     g[10]![7] = 2;
@@ -16,8 +16,9 @@ describe('DeathHeatmap', () => {
     expect(html).toContain('src="/assets/images/minimaps/ascent.png"');
     const opacity = (count: number) =>
       Number(new RegExp(`data-count="${count}"[^>]*fill-opacity="([\\d.]+)"`).exec(html)![1]);
-    expect(opacity(4)).toBeCloseTo(2 * opacity(2), 5);
-    expect(opacity(4)).toBeGreaterThan(opacity(2));
+    // Linear com piso: máximo → 0,85; metade → 0,25 + 0,6 × 0,5.
+    expect(opacity(4)).toBeCloseTo(0.85, 5);
+    expect(opacity(2)).toBeCloseTo(0.55, 5);
     expect(opacity(0)).toBe(0);
     // <title> como string única (React 19).
     expect(html).toContain('<title>4 mortes</title>');

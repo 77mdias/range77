@@ -1,7 +1,7 @@
 /**
  * DeathHeatmap — grade pronta de `computeDeathHeatmap` sobre o minimapa
  * oficial. Escala sequencial de UM matiz (vermelho de derrota): opacidade
- * proporcional às mortes da célula sobre o máximo; célula sem morte fica
+ * linear nas mortes da célula sobre o máximo (piso 0,25 para célula não vazia); célula sem morte fica
  * transparente. Só renderiza — a contagem por célula vem da análise.
  */
 
@@ -13,6 +13,8 @@ export interface DeathHeatmapProps {
 }
 
 const MAX_OPACITY = 0.85;
+// Piso para células com morte: 1 morte contra um máximo alto continua visível.
+const MIN_OPACITY = 0.25;
 
 export function DeathHeatmap({ grid, mapName, minimapSrc }: DeathHeatmapProps) {
   const size = grid.length;
@@ -38,7 +40,9 @@ export function DeathHeatmap({ grid, mapName, minimapSrc }: DeathHeatmapProps) {
                 key={`${r}-${c}`}
                 data-cell={`${r}-${c}`}
                 data-count={count}
-                fillOpacity={max === 0 ? 0 : (MAX_OPACITY * count) / max}
+                fillOpacity={
+                  count === 0 ? 0 : MIN_OPACITY + ((MAX_OPACITY - MIN_OPACITY) * count) / max
+                }
                 x={c * cell}
                 y={r * cell}
                 width={cell}
@@ -62,7 +66,7 @@ export function DeathHeatmap({ grid, mapName, minimapSrc }: DeathHeatmapProps) {
               <span
                 className="h-2 w-20 border border-line"
                 style={{
-                  background: `linear-gradient(to right, transparent, color-mix(in srgb, var(--color-loss) ${MAX_OPACITY * 100}%, transparent))`,
+                  background: `linear-gradient(to right, color-mix(in srgb, var(--color-loss) ${MIN_OPACITY * 100}%, transparent), color-mix(in srgb, var(--color-loss) ${MAX_OPACITY * 100}%, transparent))`,
                 }}
               />
               {max}

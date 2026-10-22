@@ -74,8 +74,14 @@ export interface DeathHeatmapByMap {
   readonly grid: number[][];
 }
 
-// Zonas por callouts oficiais; o mock é a única tabela que temos hoje.
-const ZONES_BY_MAP = Object.fromEntries(MOCK_MAPS.map((m) => [m.mapId, m.zones]));
+// Zonas por callouts oficiais; o mock é a única tabela que temos hoje. O rótulo
+// leva o mapa ("Lotus · B Site") para a análise não fundir zonas homônimas.
+const ZONES_BY_MAP = Object.fromEntries(
+  MOCK_MAPS.map((m) => [
+    m.mapId,
+    m.zones.map((zone) => ({ ...zone, label: `${m.name} · ${zone.label}` })),
+  ]),
+);
 
 /**
  * Deriva SÓ os resultados táticos dos detalhes: os detalhes em si (~5MB para

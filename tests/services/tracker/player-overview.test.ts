@@ -582,6 +582,9 @@ describe('buildPlayerOverview — vetores táticos (Riot/mock)', () => {
     expect(overview.tactical).not.toBeNull();
     expect(overview.tactical!.discipline.rounds).toBeGreaterThan(0);
     expect(overview.tactical!.topDeathZones.length).toBeGreaterThan(0);
+    const labels = overview.tactical!.topDeathZones.map((z) => z.label);
+    expect(labels.every((label) => label.includes(' · '))).toBe(true);
+    expect(new Set(labels).size).toBe(labels.length);
     expect(overview.deathHeatmaps.length).toBeGreaterThan(0);
     const ids = overview.deathHeatmaps.map((h) => h.mapId);
     expect(new Set(ids).size).toBe(ids.length);
