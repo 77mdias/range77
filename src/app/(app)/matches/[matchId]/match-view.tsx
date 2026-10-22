@@ -1,8 +1,12 @@
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/states';
+import { minimapFor } from '@/lib/valorant-maps';
+import { MatchRoundSelector } from './round-selector';
 import {
+  KillMap,
   MatchMetaBar,
   MvpCallout,
+  RoundEconomy,
   RoundTimeline,
   ScoreBanner,
   ScoreboardTable,
@@ -245,6 +249,13 @@ export function MatchView({ detail, viewer, mvpCardSrc, simulated = false }: Mat
     };
   });
 
+  // Mapa de abates só com minimapa conhecido E posições reais nos abates.
+  const sortedRounds = [...detail.rounds].sort((a, b) => a.roundNumber - b.roundNumber);
+  const showKillMap =
+    sortedRounds.length > 0 &&
+    minimapFor(detail.mapId ?? detail.map) !== null &&
+    detail.kills.some((kill) => kill.victimLocation != null);
+
   return (
     <div data-match-detail className="flex flex-col">
       {simulated ? (
@@ -321,6 +332,43 @@ export function MatchView({ detail, viewer, mvpCardSrc, simulated = false }: Mat
             <RoundTimeline rounds={roundCells} summary={timeline?.summary} />
           )}
         </Card>
+
+        {/* Mapa de abates por round (só fontes com posições: Riot/mock) */}
+        {showKillMap ? (
+          <Card label="// Mapa de abates • posições no instante de cada abate">
+            <MatchRoundSelector
+              rounds={sortedRounds.map((round) => ({
+                id: String(round.roundNumber),
+                label: `R${round.roundNumber}`,
+              }))}
+              panels={sortedRounds.map((round) => (
+                <KillMap
+                  key={round.roundNumber}
+                  detail={detail}
+                  roundNumber={round.roundNumber}
+                  focusPuuid={viewerRow?.puuid}
+                />
+              ))}
+            />
+          </Card>
+        ) : null}
+
+        {/* Economia por round (só fontes com economia: Riot/mock) */}
+        {(detail.economy?.length ?? 0) > 0 ? (
+          <Card label="// Economia por round • loadout, gasto e sobra">
+            <div className="flex flex-col gap-6">
+              {teams.map((team, index) => (
+                <RoundEconomy
+                  key={orderedTeamIds[index]}
+                  detail={detail}
+                  teamId={orderedTeamIds[index] ?? ''}
+                  label={team.label}
+                  focusPuuid={viewerRow?.puuid}
+                />
+              ))}
+            </div>
+          </Card>
+        ) : null}
 
         {/* Eficiência de arsenal do jogador buscado (ou da partida, sem ele) */}
         {weapons.length > 0 ? (

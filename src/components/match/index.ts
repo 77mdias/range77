@@ -2,6 +2,14 @@
  * Barrel dos componentes de partida (detalhe).
  */
 export {
+  KillMap,
+  type KillMapProps,
+} from './kill-map';
+export {
+  RoundEconomy,
+  type RoundEconomyProps,
+} from './round-economy';
+export {
   MatchMetaBar,
   type MatchMetaBarProps,
 } from './match-meta-bar';

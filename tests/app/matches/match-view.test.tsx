@@ -194,6 +194,48 @@ describe('MatchView', () => {
     expect(html).toContain('Time Blue');
   });
 
+  it('sem posições/economia (fonte sem esses dados) omite mapa de abates e economia', () => {
+    const html = renderToStaticMarkup(<MatchView detail={detail} />);
+    expect(html).not.toContain('data-component="kill-map"');
+    expect(html).not.toContain('data-component="round-economy"');
+  });
+
+  it('com posições e economia renderiza mapa de abates (round 1) e economia dos dois times', () => {
+    const rich: MatchDetail = {
+      ...detail,
+      mapId: '/Game/Maps/Ascent/Ascent',
+      kills: [
+        {
+          roundNumber: 1,
+          timeInMatchMs: 10_000,
+          timeInRoundMs: 10_000,
+          killerPuuid: 'p1',
+          killerName: 'TenZ',
+          victimPuuid: 'p2',
+          victimName: 'Enemy',
+          assistantNames: [],
+          assistantPuuids: [],
+          weapon: 'Vandal',
+          victimLocation: { x: 1000, y: -2000 },
+          killerLocation: { x: 1500, y: -2500 },
+          playerLocations: [],
+        },
+      ],
+      economy: [1, 2].flatMap((roundNumber) => [
+        { roundNumber, puuid: 'p1', teamId: 'Red', loadoutValue: 4700, weapon: 'Vandal', armor: null, spent: 4700, remaining: 300 },
+        { roundNumber, puuid: 'p2', teamId: 'Blue', loadoutValue: 900, weapon: 'Sheriff', armor: null, spent: 800, remaining: 100 },
+      ]),
+    };
+    const html = renderToStaticMarkup(
+      <MatchView detail={rich} viewer={{ name: 'TenZ', tag: 'BR1' }} />,
+    );
+    expect(html).toContain('data-component="kill-map"');
+    expect(html).toContain('data-component="round-selector"');
+    expect(html.split('data-kill=').length - 1).toBe(1);
+    expect(html).toContain('data-focus="true"');
+    expect(html.split('data-component="round-economy"').length - 1).toBe(2);
+  });
+
   it('selo DADOS SIMULADOS só com simulated', () => {
     expect(renderToStaticMarkup(<MatchView detail={detail} simulated />)).toContain(
       'data-simulated-badge',
