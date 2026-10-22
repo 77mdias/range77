@@ -28,7 +28,7 @@ describe('SettingsContent (conteúdo dinâmico)', () => {
   it('redireciona para /login sem sessão', async () => {
     mocks.getSession.mockResolvedValueOnce(null);
 
-    await expect(SettingsContent()).rejects.toThrow(/login/i);
+    await expect(SettingsContent({ searchParams: Promise.resolve({}) })).rejects.toThrow(/login/i);
   });
 
   it('renderiza nome, email e logout (com avatar do provedor)', async () => {
@@ -36,7 +36,7 @@ describe('SettingsContent (conteúdo dinâmico)', () => {
       user: { id: 'user-1', name: 'Jane', email: 'jane@x.com', image: 'https://cdn/x.png' },
     });
 
-    const html = renderToStaticMarkup(await SettingsContent());
+    const html = renderToStaticMarkup(await SettingsContent({ searchParams: Promise.resolve({}) }));
 
     expect(html).toContain('data-settings-page');
     expect(html).toContain('Jane');
@@ -50,7 +50,7 @@ describe('SettingsContent (conteúdo dinâmico)', () => {
       user: { id: 'user-1', name: 'Bob', email: null, image: null },
     });
 
-    const html = renderToStaticMarkup(await SettingsContent());
+    const html = renderToStaticMarkup(await SettingsContent({ searchParams: Promise.resolve({}) }));
 
     expect(html).toContain('>B<');
     expect(html).toContain('—'); // email ausente

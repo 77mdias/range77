@@ -64,6 +64,14 @@ describe('SignupPage', () => {
     expect(html).toContain('data-sparkline');
   });
 
+  it('aponta o vínculo Riot para depois, em Configurações (sem Riot ID digitado)', async () => {
+    const html = await render();
+    expect(html).toContain('Configurações');
+    expect(html).toContain('Entrar com Riot');
+    expect(html).not.toContain('name="riotId"');
+    expect(html).not.toContain('TenZ');
+  });
+
   it('linka para o /login', async () => {
     expect(await render()).toContain('href="/login"');
   });

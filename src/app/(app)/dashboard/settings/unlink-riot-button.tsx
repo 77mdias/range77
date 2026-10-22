@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { unlinkRiotAccount } from '@/app/actions/user-riot';
 
 /**
- * Desvincular o Riot ID (Server Action via useTransition). A revalidação
+ * Desvincular a conta Riot (Server Action via useTransition): apaga o
+ * vínculo e o perfil volta a privado. A revalidação
  * das settings acontece no servidor (`revalidatePath`).
  */
 export function UnlinkRiotButton() {
@@ -24,7 +25,7 @@ export function UnlinkRiotButton() {
         });
       }}
     >
-      Desvincular
+      Desvincular conta Riot
     </Button>
   );
 }

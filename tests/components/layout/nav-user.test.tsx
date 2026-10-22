@@ -63,9 +63,12 @@ describe('NavUser', () => {
       id: 'riot-1',
       userId: 'user-1',
       region: 'br',
-      nameKey: 'twmz',
-      tagKey: 'tower',
-      displayName: 'twmz',
+      nameKey: 'kairo4821',
+      tagKey: 'br1',
+      displayName: 'Kairo4821',
+      puuid: 'puuid-1',
+      linkedVia: 'rso_mock',
+      profilePublic: false,
       createdAt: new Date('2026-10-01T00:00:00.000Z'),
       updatedAt: new Date('2026-10-01T00:00:00.000Z'),
     });
@@ -73,13 +76,39 @@ describe('NavUser', () => {
     const html = renderToStaticMarkup(await NavUser());
 
     expect(html).toContain('data-nav-player-chip');
-    expect(html).toContain('twmz');
-    expect(html).toContain('#tower');
-    expect(html).toContain('/players/br/twmz/tower');
+    expect(html).toContain('Kairo4821');
+    expect(html).toContain('#br1');
+    expect(html).toContain('/players/br/kairo4821/br1');
+    expect(html).not.toContain('Reconecte com Riot');
     // Linha secundária: ponto-live + região (sem rank inventado)
     expect(html).toContain('BR');
     // Avatar circular com a inicial do display name
-    expect(html).toContain('>T</span>');
+    expect(html).toContain('>K</span>');
+  });
+
+  it('vínculo legado → chip "Reconecte com Riot" apontando para as settings', async () => {
+    mocks.getSessionFromHeaders.mockResolvedValueOnce(SESSION);
+    mocks.get.mockResolvedValueOnce({
+      id: 'riot-1',
+      userId: 'user-1',
+      region: 'br',
+      nameKey: 'kairo4821',
+      tagKey: 'br1',
+      displayName: 'Kairo4821',
+      puuid: null,
+      linkedVia: 'legacy',
+      profilePublic: false,
+      createdAt: new Date('2026-10-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-10-01T00:00:00.000Z'),
+    });
+
+    const html = renderToStaticMarkup(await NavUser());
+
+    expect(html).toContain('data-nav-reconnect-riot');
+    expect(html).toContain('Reconecte com Riot');
+    expect(html).toContain('href="/dashboard/settings"');
+    expect(html).not.toContain('data-nav-player-chip');
+    expect(html).not.toContain('/players/');
   });
 
   it('FALHA ao ler a sessão (auth/env/DB) → chip neutro, sem lançar', async () => {

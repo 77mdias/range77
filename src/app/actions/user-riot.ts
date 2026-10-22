@@ -1,24 +1,22 @@
 'use server';
 
 import {
-  linkRiotAccount as linkRiotAccountCore,
+  setProfilePublic as setProfilePublicCore,
   unlinkRiotAccount as unlinkRiotAccountCore,
-  type LinkRiotAccountInput,
   type UserRiotResult,
 } from '@/services/tracker/user-riot-service';
 import { getSession } from '@/lib/session';
 
 /**
- * SERVER ACTIONS do Riot ID vinculado (self-tracking).
+ * SERVER ACTIONS da conta Riot vinculada (perfil público e desvínculo).
  *
  * Delegam para o serviço injetável com as dependências de produção
- * (getSession real). O import é barato: o store nasce lazy no primeiro uso.
+ * (getSession real — o usuário nunca vem do cliente). O import é barato: o
+ * store nasce lazy no primeiro uso.
  */
 
-export async function linkRiotAccount(
-  input: LinkRiotAccountInput,
-): Promise<UserRiotResult> {
-  return linkRiotAccountCore({ getSession }, input);
+export async function setProfilePublic(value: boolean): Promise<UserRiotResult> {
+  return setProfilePublicCore({ getSession }, value);
 }
 
 export async function unlinkRiotAccount(): Promise<UserRiotResult> {
