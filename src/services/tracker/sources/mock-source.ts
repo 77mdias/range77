@@ -14,6 +14,7 @@ import {
 } from '@/services/riot/mock';
 import { createRng, seedOf } from '@/services/riot/mock/rng';
 import {
+  isRiotCompetitiveCompleted,
   normalizeRiotMatchToCombat,
   normalizeRiotMatchToDetail,
   normalizeRiotMatchToSummary,
@@ -91,7 +92,7 @@ export function createMockSource(): TrackerSource {
       return {
         matches,
         combat,
-        details: [],
+        details: raw.filter(isRiotCompetitiveCompleted).map((match) => normalizeRiotMatchToDetail(match, region)),
         level: focusLevel(raw, account.puuid),
         cardSrc: null,
         rank: normalizeRiotRank(generateRankSnapshot(account)),

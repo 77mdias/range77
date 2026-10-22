@@ -69,6 +69,40 @@ export interface MatchRound {
   /** Time que plantou a spike (logo, o atacante do round); `null` sem plant. */
   readonly plantTeamId: string | null;
   readonly defused: boolean;
+  /** Plant com posição e tempo (só a fonte Riot traz); `null`/ausente sem plant. */
+  readonly plant?: SpikeEvent | null;
+  /** Defuse com posição e tempo (só a fonte Riot traz); `null`/ausente sem defuse. */
+  readonly defuse?: SpikeEvent | null;
+}
+
+/** Plant ou defuse da spike. `site` é o do plant (o defuse herda). */
+export interface SpikeEvent {
+  readonly playerPuuid: string;
+  readonly location: MapPoint;
+  readonly timeInRoundMs: number;
+  readonly site: string | null;
+}
+
+/** Posição + direção da mira de um jogador num instante (coordenadas de mundo). */
+export interface PlayerPosition {
+  readonly puuid: string;
+  readonly location: MapPoint;
+  readonly viewRadians: number;
+}
+
+/** Economia de um jogador num round (compra do round). */
+export interface RoundEconomy {
+  /** 1-based. */
+  readonly roundNumber: number;
+  readonly puuid: string;
+  readonly teamId: string;
+  readonly loadoutValue: number;
+  /** Nome da arma; `null` se o id não estiver no catálogo. */
+  readonly weapon: string | null;
+  /** Nome da armadura; `null` sem armadura ou id desconhecido. */
+  readonly armor: string | null;
+  readonly spent: number;
+  readonly remaining: number;
 }
 
 /**
@@ -140,6 +174,12 @@ export interface KillEvent {
   /** PUUIDs dos assistentes (para o cálculo de KAST por jogador). */
   readonly assistantPuuids: readonly string[];
   readonly weapon: string | null;
+  /** Posição da vítima no abate (só a fonte Riot traz). */
+  readonly victimLocation?: MapPoint | null;
+  /** Posição do killer, lida de `playerLocations`; `null` se ele não constar. */
+  readonly killerLocation?: MapPoint | null;
+  /** Posições dos jogadores vivos no instante do abate. */
+  readonly playerLocations?: readonly PlayerPosition[] | null;
 }
 
 /** Time normalizado no detalhe da partida. */
@@ -164,6 +204,10 @@ export interface MatchDetail {
   readonly scoreboard: readonly MatchScoreboardRow[];
   readonly rounds: readonly MatchRound[];
   readonly kills: readonly KillEvent[];
+  /** Economia por round × jogador (só a fonte Riot traz). */
+  readonly economy?: readonly RoundEconomy[] | null;
+  /** Id cru do mapa (`matchInfo.mapId`), para resolver minimapa/transform. */
+  readonly mapId?: string | null;
 }
 
 /** Agregação por agente ou por mapa (mesma forma). */

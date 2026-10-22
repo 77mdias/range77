@@ -226,8 +226,55 @@ describe('normalizeRiotMatchToDetail', () => {
       plantSite: null,
       plantTeamId: null,
       defused: false,
+      plant: null,
+      defuse: null,
     });
     expect(detail.rounds[3]).toMatchObject({ roundNumber: 4, plantSite: 'B', plantTeamId: 'Red', defused: true });
+  });
+
+  it('todo kill tem victimLocation e killerLocation (killer lido de playerLocations)', () => {
+    expect(detail.kills.length).toBeGreaterThan(0);
+    for (const kill of detail.kills) {
+      expect(kill.victimLocation).toEqual({ x: expect.any(Number), y: expect.any(Number) });
+      expect(kill.killerLocation).toEqual({ x: expect.any(Number), y: expect.any(Number) });
+      const killerEntry = kill.playerLocations!.find((p) => p.puuid === kill.killerPuuid)!;
+      expect(kill.killerLocation).toEqual(killerEntry.location);
+    }
+  });
+
+  it('round com plant tem plant.site e plant.timeInRoundMs > 0; defuse herda o site', () => {
+    const planted = detail.rounds.filter((r) => r.plantSite !== null);
+    expect(planted.length).toBeGreaterThan(0);
+    for (const round of planted) {
+      expect(round.plant!.site).toBe(round.plantSite);
+      expect(round.plant!.timeInRoundMs).toBeGreaterThan(0);
+    }
+    const defused = detail.rounds[3]!;
+    expect(defused.defuse).toMatchObject({ site: 'B', location: { x: expect.any(Number), y: expect.any(Number) } });
+    expect(defused.defuse!.timeInRoundMs).toBeGreaterThan(defused.plant!.timeInRoundMs);
+  });
+
+  it('economy tem rounds × 10 linhas, 1-based, com time e nomes de arma/armadura', () => {
+    expect(detail.economy).toHaveLength(match.roundResults.length * 10);
+    expect(detail.economy![0]).toMatchObject({ roundNumber: 1, teamId: expect.any(String), weapon: 'Classic', armor: 'Light Shields' });
+    expect(detail.mapId).toBe('/Game/Maps/Ascent/Ascent');
+  });
+
+  it('killer ausente de playerLocations → killerLocation null', () => {
+    const r = match.roundResults[0]!;
+    const kill = r.playerStats.flatMap((s) => s.kills)[0]!;
+    const without: RiotMatchDto = {
+      ...match,
+      roundResults: [
+        {
+          ...r,
+          playerStats: [
+            { ...r.playerStats[0]!, kills: [{ ...kill, playerLocations: kill.playerLocations.filter((p) => p.puuid !== kill.killer) }] },
+          ],
+        },
+      ],
+    };
+    expect(normalizeRiotMatchToDetail(without, 'br').kills[0]!.killerLocation).toBeNull();
   });
 
   it('observadores e jogadores sem stats ficam fora do scoreboard', () => {
@@ -265,7 +312,8 @@ describe('normalizeRiotMatchToDetail', () => {
     expect(d.season).toBeNull();
     const row = d.scoreboard[0]!;
     expect(row).toMatchObject({ agent: 'Desconhecido', tier: null, economy: null, abilityCasts: null });
-    expect(d.kills[0]).toMatchObject({ killerName: 'Desconhecido', weapon: null });
+    expect(d.kills[0]).toMatchObject({ killerName: 'Desconhecido', weapon: null, killerLocation: null });
+    expect(d.economy).toEqual([]);
   });
 });
 

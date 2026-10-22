@@ -28,7 +28,8 @@ describe('createMockSource', () => {
 
     expect(sample.matches).toHaveLength(5);
     expect(sample.combat).toHaveLength(5);
-    expect(sample.details).toEqual([]);
+    expect(sample.details.map((d) => d.matchId)).toEqual(sample.matches.map((m) => m.matchId));
+    expect(sample.details.every((d) => d.region === 'br' && (d.economy?.length ?? 0) > 0)).toBe(true);
     expect(sample.rank).not.toBeNull();
     expect(sample.rank?.tier).toEqual(expect.any(String));
     expect(sample.rrHistory.length).toBeGreaterThan(0);

@@ -79,6 +79,12 @@ const WEAPON_NAMES: Readonly<Record<string, string>> = {
   '2f59173c-4bed-b6c3-2191-dea9b58be9c7': 'Melee',
 };
 
+/** `EconomyDto.armor` → armadura (sem armadura = '' → `null`). */
+const ARMOR_NAMES: Readonly<Record<string, string>> = {
+  '4dec83d5-4902-9ab3-bed6-a7a390761157': 'Light Shields',
+  '822bcab2-40a2-324e-c137-e09195ad7692': 'Heavy Shields',
+};
+
 /**
  * `competitiveTier` (0–27) → nome no formato da HenrikDev. 1–2 são tiers
  * "Unused" do jogo e ficam sem nome (`null`).
@@ -135,6 +141,10 @@ export function agentNameById(characterId: string): string | null {
 
 export function weaponNameById(damageItem: string): string | null {
   return lookupLower(WEAPON_NAMES, damageItem);
+}
+
+export function armorNameById(armor: string): string | null {
+  return lookupLower(ARMOR_NAMES, armor);
 }
 
 export function tierNameById(competitiveTier: number): string | null {

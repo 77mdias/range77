@@ -4,6 +4,7 @@ import type {
   MockRrPoint,
   RiotMatchDto,
   RiotPlayerDto,
+  RiotLocationDto,
   RiotPlayerStatsDto,
 } from '@/contracts/riot';
 import type {
@@ -13,7 +14,9 @@ import type {
   MatchRound,
   MatchScoreboardRow,
   MatchSummary,
+  RoundEconomy,
   RrHistoryPoint,
+  SpikeEvent,
 } from '@/contracts/tracker';
 import { rankIconSrc } from '@/lib/valorant-assets';
 import { computePlayerKast, computeKastByPlayer, type KastInput } from '@/services/analytics/kast';
@@ -27,6 +30,7 @@ import { classifyRrDelta } from '@/services/analytics/rr-trend';
 import type { PlayerRankSummary } from '@/services/henrikdev/normalize-tracker';
 import {
   agentNameById,
+  armorNameById,
   mapNameById,
   seasonLabelById,
   tierNameById,
@@ -130,7 +134,44 @@ export function normalizeRiotRounds(match: RiotMatchDto): MatchRound[] {
     plantSite: round.plantSite ?? null,
     plantTeamId: round.bombPlanter === undefined ? null : (teams.get(round.bombPlanter) ?? null),
     defused: round.bombDefuser !== undefined,
+    plant: spikeEvent(round.bombPlanter, round.plantLocation, round.plantRoundTime, round.plantSite),
+    defuse: spikeEvent(round.bombDefuser, round.defuseLocation, round.defuseRoundTime, round.plantSite),
   }));
+}
+
+function spikeEvent(
+  playerPuuid: string | undefined,
+  location: RiotLocationDto | undefined,
+  timeInRoundMs: number | undefined,
+  site: string | undefined,
+): SpikeEvent | null {
+  if (playerPuuid === undefined || location === undefined || timeInRoundMs === undefined) {
+    return null;
+  }
+  return { playerPuuid, location: { x: location.x, y: location.y }, timeInRoundMs, site: site ?? null };
+}
+
+/** Economia por round × jogador (rounds 1-based; jogador sem `economy` fica fora). */
+export function normalizeRiotEconomy(match: RiotMatchDto): RoundEconomy[] {
+  const teams = teamByPuuid(match);
+  return match.roundResults.flatMap((round) =>
+    round.playerStats.flatMap((stats) =>
+      stats.economy === null
+        ? []
+        : [
+            {
+              roundNumber: round.roundNum + 1,
+              puuid: stats.puuid,
+              teamId: teams.get(stats.puuid) ?? '',
+              loadoutValue: stats.economy.loadoutValue,
+              weapon: weaponNameById(stats.economy.weapon),
+              armor: armorNameById(stats.economy.armor),
+              spent: stats.economy.spent,
+              remaining: stats.economy.remaining,
+            },
+          ],
+    ),
+  );
 }
 
 /** Timeline de abates (os KillDto vivem em `roundResults[].playerStats[].kills`), em ordem de partida. */
@@ -145,6 +186,8 @@ export function normalizeRiotKills(match: RiotMatchDto): KillEvent[] {
   for (const round of match.roundResults) {
     for (const stats of round.playerStats) {
       for (const kill of stats.kills) {
+        // A Riot não tem posição própria do killer; a doc não diz se a vítima consta em playerLocations.
+        const killerAt = kill.playerLocations.find((entry) => entry.puuid === kill.killer);
         kills.push({
           roundNumber: round.roundNum + 1,
           timeInMatchMs: kill.timeSinceGameStartMillis,
@@ -156,6 +199,13 @@ export function normalizeRiotKills(match: RiotMatchDto): KillEvent[] {
           assistantNames: kill.assistants.map(nameOf),
           assistantPuuids: [...kill.assistants],
           weapon: weaponNameById(kill.finishingDamage.damageItem),
+          victimLocation: { x: kill.victimLocation.x, y: kill.victimLocation.y },
+          killerLocation: killerAt === undefined ? null : { x: killerAt.location.x, y: killerAt.location.y },
+          playerLocations: kill.playerLocations.map((entry) => ({
+            puuid: entry.puuid,
+            location: { x: entry.location.x, y: entry.location.y },
+            viewRadians: entry.viewRadians,
+          })),
         });
       }
     }
@@ -300,6 +350,8 @@ export function normalizeRiotMatchToDetail(match: RiotMatchDto, region: string):
     scoreboard: normalizeRiotScoreboard(match, kills),
     rounds: normalizeRiotRounds(match),
     kills,
+    economy: normalizeRiotEconomy(match),
+    mapId: match.matchInfo.mapId,
   };
 }
 
