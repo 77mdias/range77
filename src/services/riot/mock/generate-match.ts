@@ -250,7 +250,9 @@ export function generateMatch(matchId: string, focus: RiotAccountDto): RiotMatch
     for (const team of ['Blue', 'Red'] as const) {
       const members = teamOf(team);
       const avg = members.reduce((sum, s) => sum + (credits.get(s.puuid) ?? 0), 0) / members.length;
-      const type = isPistol ? 'pistol' : buyTypeForCredits(avg);
+      // Quem perdeu o pistol (única derrota desde o reset) economiza no round seguinte.
+      const lostPistol = (r === 1 || r === 13) && lossStreak[team] === 1;
+      const type = isPistol ? 'pistol' : lostPistol ? 'eco' : buyTypeForCredits(avg);
       for (const s of members) {
         purchases.set(s.puuid, buyLoadout(credits.get(s.puuid) ?? 0, type, kept.get(s.puuid) ?? null, rng, s.sniper));
       }

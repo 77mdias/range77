@@ -150,23 +150,26 @@ export const MOCK_MAPS: readonly MockMap[] = [
   {
     mapId: '/Game/Maps/Juliett/Juliett',
     name: 'Sunset',
+    // Os callouts de Sunset ficam em paredes/quinas do minimapa: cada
+    // retângulo ainda contém o seu callout, mas o centro foi deslocado para
+    // o piso jogável (alfa do PNG oficial). Exceção: o callout "B Site"
+    // (-600, -5850) cai fora do minimapa; a zona fica sobre o site real.
     zones: zones([
-      ['A Lobby', 'attack', -1800, 2000],
-      ['A Main', 'attack', -400, 2200],
-      ['A Site', 'any', 1000, 3200],
-      ['A Elbow', 'any', 200, 4200],
-      ['A Link', 'defense', 2200, 3000],
-      ['A Alley', 'defense', 3400, 3600],
-      ['Mid Tiles', 'attack', -1800, 400],
-      ['Mid Courtyard', 'any', -600, -1200],
-      ['Mid Bottom', 'any', -1800, -2025],
-      ['Mid Top', 'defense', 2000, -2000],
-      ['B Lobby', 'attack', -3400, -2600],
-      ['B Main', 'attack', -2000, -5650],
-      ['B Market', 'any', -200, -3400],
-      // Site encostado na borda do minimapa: centro recuado e zona menor.
-      ['B Site', 'any', -600, -5600, 500],
-      ['B Boba', 'defense', 2200, -4800],
+      ['A Lobby', 'attack', -1400, 2400],
+      ['A Main', 'attack', -825, 2400],
+      ['A Site', 'any', 1650, 3850],
+      ['A Elbow', 'any', -200, 3800],
+      ['A Link', 'defense', 1775, 2600],
+      ['A Alley', 'defense', 3000, 4000],
+      ['Mid Tiles', 'attack', -1400, 0],
+      ['Mid Courtyard', 'any', -200, -800],
+      ['Mid Bottom', 'any', -2225, -1600],
+      ['Mid Top', 'defense', 2425, -1600],
+      ['B Lobby', 'attack', -2975, -2175],
+      ['B Main', 'attack', -1600, -5250],
+      ['B Market', 'any', 75, -3550, 300],
+      ['B Site', 'any', 1550, -5350, 500],
+      ['B Boba', 'defense', 1800, -5200],
     ]),
   },
 ];
