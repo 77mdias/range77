@@ -186,7 +186,7 @@ describe('createUserRiotStore', () => {
     expect(conflict.set).toMatchObject({ puuid: null, linkedVia: 'legacy' });
     expect(
       (conflict.set.profilePublic as SQL).queryChunks
-        .map((c) => (c as { value?: unknown }).value)
+        .map((c) => (c as { value?: unknown } | null)?.value)
         .flat()
         .join(''),
     ).toContain('CASE WHEN');
@@ -210,7 +210,7 @@ describe('createUserRiotStore', () => {
     expect(set).toMatchObject({ puuid: 'puuid-2', linkedVia: 'rso_mock' });
     // CASE: mantém o flag se o puuid é o mesmo, senão volta a false.
     const chunks = (set.profilePublic as SQL).queryChunks
-      .map((c) => (c as { value?: unknown }).value)
+      .map((c) => (c as { value?: unknown } | null)?.value)
       .flat()
       .join('');
     expect(chunks).toContain('CASE WHEN');
