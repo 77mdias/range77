@@ -9,6 +9,7 @@ import {
 } from '@/services/analytics/combat';
 import type { HenrikDevClient } from '@/services/henrikdev/client';
 import { normalizeMatchesToCombat } from '@/services/henrikdev/normalize';
+import type { TacticalVectors } from '@/services/analytics/tactical-vectors';
 import type { TrackerSource } from '@/services/tracker/source';
 import { createHenrikDevSource, getTrackerSource } from '@/services/tracker/sources';
 import {
@@ -52,6 +53,8 @@ export interface PlayerCombatInsight extends CoachInsight<CombatRawMetrics> {
     readonly aimClass: AimClass;
     readonly impactClass: ImpactClass;
   };
+  /** Vetores táticos (só rótulos/números); ausente quando a fonte não os fornece. */
+  readonly tactical?: TacticalVectors;
 }
 
 export interface BuildPlayerCombatInsightParams {
@@ -120,6 +123,7 @@ export interface FinalizeCombatInsightParams {
   readonly size: number;
   /** `null` desliga a persistência; implementação injetável nos testes. */
   readonly snapshotStore: CombatSnapshotStore | null;
+  readonly tactical?: TacticalVectors | null;
 }
 
 /**
@@ -144,7 +148,7 @@ export async function buildCombatInsightFromCombatStats(
   combatMatches: readonly MatchCombatStats[],
   params: FinalizeCombatInsightParams,
 ): Promise<PlayerCombatInsight> {
-  const { region, name, tag, size, snapshotStore } = params;
+  const { region, name, tag, size, snapshotStore, tactical } = params;
 
   if (combatMatches.length === 0) {
     throw new PlayerNoMatchesError();
@@ -162,6 +166,8 @@ export async function buildCombatInsightFromCombatStats(
       aimClass: metrics.evaluation.aimClass,
       impactClass: metrics.evaluation.impactClass,
     },
+    // Chave omitida sem tactical: payload idêntico ao anterior.
+    ...(tactical != null ? { tactical } : {}),
   };
 
   // Write-through best-effort: falhas de ESCRITA não derrubam o envelope.

@@ -579,6 +579,8 @@ describe('buildPlayerOverview — vetores táticos (Riot/mock)', () => {
     });
 
     expect(overview).not.toHaveProperty('details');
+    expect(overview.combat.tactical).toEqual(overview.tactical);
+    expect(overview.combat.tactical!.topDeathZones[0]!.label).toBe(overview.tactical!.topDeathZones[0]!.label);
     expect(overview.tactical).not.toBeNull();
     expect(overview.tactical!.discipline.rounds).toBeGreaterThan(0);
     expect(overview.tactical!.topDeathZones.length).toBeGreaterThan(0);
@@ -607,6 +609,7 @@ describe('buildPlayerOverview — vetores táticos (Riot/mock)', () => {
       snapshotStore: null,
     });
     expect(overview.tactical).toBeNull();
+    expect(overview.combat).not.toHaveProperty('tactical');
     expect(overview.deathHeatmaps).toEqual([]);
   });
 });

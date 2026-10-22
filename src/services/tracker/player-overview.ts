@@ -153,7 +153,10 @@ export async function buildPlayerOverview(
       : sample.combat;
   const combatSampleSize = params.actSample !== undefined ? combatStats.length : size;
 
+  const tacticalPart = buildTactical(sample.details, name, tag);
+
   const combat = await buildCombatInsightFromCombatStats(combatStats, {
+    tactical: tacticalPart.tactical,
     region,
     name,
     tag,
@@ -186,6 +189,6 @@ export async function buildPlayerOverview(
     streaks,
     trend,
     rrHistory: sample.rrHistory,
-    ...buildTactical(sample.details, name, tag),
+    ...tacticalPart,
   };
 }
