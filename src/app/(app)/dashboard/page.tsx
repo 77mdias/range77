@@ -6,6 +6,8 @@ import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/states';
 import { getTrackedPlayersStore } from '@/lib/db/tracked-players-store';
 import { getSession } from '@/lib/session';
+import { PRIVATE_PROFILE_MESSAGE } from '@/contracts/access';
+import { resolveProfileAccess } from '@/services/access/profile-access';
 import { UnfollowButton } from './unfollow-button';
 
 /**
@@ -39,7 +41,19 @@ export async function DashboardContent() {
     redirect('/login?next=%2Fdashboard');
   }
 
-  const players = await getTrackedPlayersStore().listByUser(session.user.id);
+  const tracked = await getTrackedPlayersStore().listByUser(session.user.id);
+  // Seguido pode ter fechado o perfil depois: resolve o acesso de todos em paralelo.
+  const players = await Promise.all(
+    tracked.map(async (player) => ({
+      ...player,
+      isPrivate:
+        (await resolveProfileAccess(session.user.id, {
+          region: player.region,
+          name: player.nameKey,
+          tag: player.tagKey,
+        })) === 'private',
+    })),
+  );
 
   return (
     <div data-dashboard-page className="w-full px-4 py-10 md:px-6 xl:px-8">
@@ -79,13 +93,23 @@ export async function DashboardContent() {
           {players.map((player) => (
             <Card key={player.id} label={player.region.toUpperCase()}>
               <div className="flex flex-col gap-4">
-                <Link
-                  href={`/players/${player.region}/${encodeURIComponent(player.nameKey)}/${player.tagKey}`}
-                  className="font-display text-heading-lg text-text-primary no-underline transition-colors duration-[var(--duration-fast)] ease-out-expo hover:underline"
-                >
-                  {player.displayName}
-                  <span className="text-text-secondary">#{player.tagKey}</span>
-                </Link>
+                {player.isPrivate ? (
+                  <div data-state="private-profile" className="flex flex-col gap-2">
+                    <p className="font-display text-heading-lg text-text-primary">
+                      {player.displayName}
+                      <span className="text-text-secondary">#{player.tagKey}</span>
+                    </p>
+                    <p className="text-body-sm text-text-secondary">{PRIVATE_PROFILE_MESSAGE}</p>
+                  </div>
+                ) : (
+                  <Link
+                    href={`/players/${player.region}/${encodeURIComponent(player.nameKey)}/${player.tagKey}`}
+                    className="font-display text-heading-lg text-text-primary no-underline transition-colors duration-[var(--duration-fast)] ease-out-expo hover:underline"
+                  >
+                    {player.displayName}
+                    <span className="text-text-secondary">#{player.tagKey}</span>
+                  </Link>
+                )}
                 <UnfollowButton region={player.region} name={player.nameKey} tag={player.tagKey} />
               </div>
             </Card>

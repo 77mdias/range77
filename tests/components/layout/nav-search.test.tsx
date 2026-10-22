@@ -16,7 +16,8 @@ describe('NavSearch', () => {
   it('renderiza campo com placeholder do Stitch e badge de região', () => {
     const html = renderToStaticMarkup(<NavSearch />);
     expect(html).toContain('data-nav-search');
-    expect(html).toContain('Player#Tag (ex: Tenz#0001)');
+    expect(html).toContain('Player#Tag (ex: ValCoachDemo#DEMO)');
+    expect(html).not.toContain('Tenz');
     expect(html).toContain('>BR</option>');
     expect(html).toContain('>LATAM</option>');
   });

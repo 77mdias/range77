@@ -13,6 +13,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 import HomePage from '@/app/(app)/page';
+import { FALLBACK_PROFILES } from '@/app/(app)/home-landing';
 
 const REGIONS = ['eu', 'na', 'ap', 'kr', 'latam', 'br'] as const;
 
@@ -98,5 +99,15 @@ describe('HomePage', () => {
     expect(output).toContain('data-component="live-status-strip"');
     expect(output).toContain('42.890+');
     expect(output).toContain('Testar perfil demo');
+  });
+
+  it('perfil demo é só o fictício ValCoachDemo#DEMO (nenhum Riot ID real)', () => {
+    const output = html();
+    expect(output).toContain('ValCoachDemo#DEMO');
+    expect(FALLBACK_PROFILES.map((p) => p.riotId)).toEqual(['ValCoachDemo#DEMO']);
+    expect(FALLBACK_PROFILES[0]?.region).toBe('br');
+    const all = output + JSON.stringify(FALLBACK_PROFILES);
+    expect(all).not.toContain('twmz#tower');
+    expect(all).not.toContain('NOWAY');
   });
 });

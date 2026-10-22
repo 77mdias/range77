@@ -39,20 +39,15 @@ import { parseRiotId } from '@/lib/validation/riot-id';
 
 const DEMO_REGION = 'br' as const;
 
-/** Perfil demo real (HenrikDev): nome verdadeiro — nada de Riot ID fictício. */
-const DEMO_RIOT_ID = 'twmz#tower' as const;
+/**
+ * Perfil demo FICTÍCIO (espelha `DEMO_ACCOUNT` do mock): o único sempre
+ * público. Nada de Riot ID real — perfis reais só com consentimento.
+ */
+const DEMO_RIOT_ID = 'ValCoachDemo#DEMO' as const;
 
 /** Fallback da grade: catálogo exibido quando NÃO há buscas recentes. */
-const FALLBACK_PROFILES: readonly DemoProfile[] = [
-  {
-    riotId: DEMO_RIOT_ID,
-    region: DEMO_REGION,
-    regionChip: 'BR',
-    rank: 'Diamond 2',
-    rr: '10 RR',
-    highlighted: true,
-  },
-  { riotId: 'next to nothing#NOWAY', region: 'na', regionChip: 'NA' },
+export const FALLBACK_PROFILES: readonly DemoProfile[] = [
+  { riotId: DEMO_RIOT_ID, region: DEMO_REGION, regionChip: 'BR', highlighted: true },
 ];
 
 /** RecentPlayer → card da grade (rank/RR só com snapshot do perfil visitado). */
