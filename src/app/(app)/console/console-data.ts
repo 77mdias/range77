@@ -21,12 +21,12 @@ export interface ConsoleLayer {
 export const CONSOLE_LAYERS: readonly ConsoleLayer[] = [
   {
     id: 'l1',
-    label: '1: Raw HenrikDev',
-    filename: 'raw_henrikdev.payload.json',
+    label: '1: Raw Riot API (simulada)',
+    filename: 'raw_riot_match.payload.json',
     badge: '420 KB • sem compressão',
     payload: `{
   "status": 200,
-  "source": "api.henrikdev.xyz/valorant/v3/matches/br/NEXUS/BR1",
+  "source": "VAL-MATCH-V1 /val/match/v1/matches/{matchId} (simulada)",
   "matches": [
     {
       "metadata": { "map": "Ascent", "game_length": 2410 },
@@ -74,7 +74,7 @@ export const CONSOLE_LAYERS: readonly ConsoleLayer[] = [
 
 export const PIPELINE_STAGES: readonly PipelineStage[] = [
   {
-    label: 'Camada 01: Raw HenrikDev',
+    label: 'Camada 01: Raw Riot API (simulada)',
     sizeChip: '420 KB',
     title: 'Raw Match JSON • eventos não comprimidos',
     meta: '18.420 linhas • round_events, kills, ticks',

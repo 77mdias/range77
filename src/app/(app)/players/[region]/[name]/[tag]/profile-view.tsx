@@ -404,7 +404,7 @@ export function PlayerProfileView({ overview, headerAction, simulated = false }:
       >
         <div className="flex flex-wrap items-center gap-x-4">
           <span className="font-bold text-text-primary">Match pipeline status:</span>
-          <span>Fontes: HenrikDev</span>
+          <span>{simulated ? 'Fontes: Riot API (simulada)' : 'Fontes: HenrikDev'}</span>
           <span>Cálculo: analytics local</span>
         </div>
         <div className="flex flex-wrap items-center gap-x-4">

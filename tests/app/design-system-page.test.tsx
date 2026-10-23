@@ -30,6 +30,20 @@ describe('DesignSystemPage', () => {
     }
   });
 
+  it('só Riot ID fictício, sem HenrikDev, e links de partida com ?player=', () => {
+    const html = renderToStaticMarkup(<DesignSystemPage />);
+    expect(html).toContain('ValCoachDemo#DEMO');
+    expect(html).not.toContain('twmz#tower');
+    expect(html).not.toContain('Raw HenrikDev');
+    expect(html).not.toContain('Ingestão HenrikDev');
+    expect(html).not.toContain('Handshake HenrikDev');
+    const matchLinks = html.match(/href="\/matches\/[^"]*"/g) ?? [];
+    expect(matchLinks.length).toBeGreaterThan(0);
+    for (const link of matchLinks) {
+      expect(link).toContain('?player=ValCoachDemo%23DEMO');
+    }
+  });
+
   it('bloqueia com notFound em produção', () => {
     const previous = process.env.APP_ENV;
     process.env.APP_ENV = 'prod';

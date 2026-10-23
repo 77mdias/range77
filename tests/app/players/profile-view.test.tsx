@@ -235,6 +235,12 @@ describe('PlayerProfileView', () => {
     expect(html).toContain('gargalo: Cypher');
   });
 
+  it('dado simulado: strip de pipeline não cita a HenrikDev', () => {
+    const html = renderToStaticMarkup(<PlayerProfileView overview={overview} simulated />);
+    expect(html).toContain('Fontes: Riot API (simulada)');
+    expect(html).not.toContain('HenrikDev');
+  });
+
   it('mostra "Sem sequência" quando não há streak atual', () => {
     const noStreak: PlayerOverview = {
       ...overview,
