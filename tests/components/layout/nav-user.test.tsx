@@ -54,7 +54,7 @@ describe('NavUser', () => {
     const html = renderToStaticMarkup(await NavUser());
 
     expect(html).toContain('data-nav-connect-riot');
-    expect(html).toContain('Conectar Riot ID');
+    expect(html).toContain('Entrar com Riot');
   });
 
   it('com vínculo → cluster de perfil do Stitch (NOME#TAG + região + avatar) apontando para o perfil', async () => {

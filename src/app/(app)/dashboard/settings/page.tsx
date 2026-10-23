@@ -67,7 +67,7 @@ function ConnectRiotForm() {
 /** Conteúdo dinâmico (sessão) — exportado para os testes. */
 export async function SettingsContent({ searchParams }: { searchParams: SearchParams }) {
   const { rso } = await searchParams;
-  const rsoStatus = typeof rso === 'string' ? RSO_MESSAGES[rso] : undefined;
+  const rsoStatus = typeof rso === 'string' && Object.hasOwn(RSO_MESSAGES, rso) ? RSO_MESSAGES[rso] : undefined;
 
   const session = await getSession();
   if (session === null) {

@@ -79,7 +79,7 @@ export async function NavUser() {
         data-nav-connect-riot
         className="rounded-md border border-line bg-surface-raised px-3 py-1.5 font-hud text-label uppercase text-text-secondary transition-colors duration-[var(--duration-fast)] hover:bg-surface-hover hover:text-text-primary"
       >
-        Conectar Riot ID
+        Entrar com Riot
       </Link>
     );
   }

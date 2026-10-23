@@ -18,4 +18,10 @@ describe('páginas legais', () => {
     expect(html).toContain('Desvincular conta Riot');
     expect(html).toContain('contato@');
   });
+
+  it('não aninham <main> (o AppShell já fornece o landmark)', () => {
+    for (const Page of [TermosPage, PrivacidadePage]) {
+      expect(renderToStaticMarkup(<Page />)).not.toContain('<main');
+    }
+  });
 });

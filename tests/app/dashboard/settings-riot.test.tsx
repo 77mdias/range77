@@ -104,9 +104,12 @@ describe('SettingsContent — Card Conta Riot', () => {
     expect(html).toContain(message);
   });
 
-  it('ignora ?rso= desconhecido', async () => {
-    const html = await render(null, { rso: 'x' });
+  it.each(['x', 'constructor', '__proto__', 'toString'])(
+    'ignora ?rso= desconhecido (%s), inclusive chaves do protótipo',
+    async (rso) => {
+      const html = await render(null, { rso });
 
-    expect(html).not.toContain('data-rso-status');
-  });
+      expect(html).not.toContain('data-rso-status');
+    },
+  );
 });

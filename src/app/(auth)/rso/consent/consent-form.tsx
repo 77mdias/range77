@@ -16,7 +16,11 @@ export function ConsentForm({ state, region }: { readonly state: string; readonl
         loading={pending}
         onClick={() =>
           startTransition(async () => {
-            window.location.assign(await authorizeRso(state, region));
+            // Falha de transporte não pode deixar o botão preso em pending.
+            const target = await authorizeRso(state, region).catch(
+              () => '/dashboard/settings?rso=error',
+            );
+            window.location.assign(target);
           })
         }
       >

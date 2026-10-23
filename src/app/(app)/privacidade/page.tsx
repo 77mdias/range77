@@ -8,7 +8,7 @@ const H2 = 'font-hud text-lg uppercase text-text-primary';
 /** Conteúdo estático: sem APIs dinâmicas, não precisa de Suspense. */
 export default function PrivacidadePage() {
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-5 px-4 py-10 text-text-secondary">
+    <article className="mx-auto w-full max-w-3xl space-y-5 px-4 py-10 text-text-secondary">
       <h1 className="font-hud text-2xl uppercase text-text-primary">Política de Privacidade</h1>
       <h2 className={H2}>O que guardamos</h2>
       <ul className="list-disc space-y-2 pl-5">
@@ -52,6 +52,6 @@ export default function PrivacidadePage() {
       <p>
         Não vendemos dados. Seu perfil só é visível a outras pessoas se você o tornar público.
       </p>
-    </main>
+    </article>
   );
 }

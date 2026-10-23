@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: 'Termos de Uso — ValCoach' };
 /** Conteúdo estático: sem APIs dinâmicas, não precisa de Suspense. */
 export default function TermosPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-5 px-4 py-10 text-text-secondary">
+    <article className="mx-auto w-full max-w-3xl space-y-5 px-4 py-10 text-text-secondary">
       <h1 className="font-hud text-2xl uppercase text-text-primary">Termos de Uso</h1>
       <p>
         O ValCoach é um projeto independente de análise de desempenho em VALORANT. Ao usar o
@@ -32,6 +32,6 @@ export default function TermosPage() {
       <p>{RIOT_LEGAL_NOTICE}</p>
       <h2 className="font-hud text-lg uppercase text-text-primary">Contato</h2>
       <p>{CONTACT_EMAIL}</p>
-    </main>
+    </article>
   );
 }

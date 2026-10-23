@@ -25,6 +25,15 @@ describe('ConsentForm', () => {
     expect(actions.authorizeRso).toHaveBeenCalledWith('s', 'br');
   });
 
+  it('falha de transporte na action → navega para ?rso=error (botão não fica preso)', async () => {
+    const assign = vi.fn();
+    vi.stubGlobal('location', { ...window.location, assign });
+    actions.authorizeRso.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    render(<ConsentForm state="s" region="br" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Autorizar' }));
+    await waitFor(() => expect(assign).toHaveBeenCalledWith('/dashboard/settings?rso=error'));
+  });
+
   it('Negar chama denyRso', async () => {
     render(<ConsentForm state="s" region="br" />);
     fireEvent.click(screen.getByRole('button', { name: 'Negar' }));
