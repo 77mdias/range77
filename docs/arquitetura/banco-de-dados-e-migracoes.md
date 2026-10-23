@@ -26,12 +26,13 @@ Colunas: `id` (uuid pk), `region`, `name`, `tag`, `name_key`, `tag_key`,
 `impact_class`, `contextual_rating` (jsonb), `coaching_hooks` (jsonb),
 `created_at`.
 Índice: `(region, name_key, tag_key, created_at)`.
-Campos nullable = métrica não computável (nunca `0` enganoso).
+Campos nullable = métrica não computável (nunca `0` enganoso). Só a fonte
+HenrikDev grava snapshots; a fonte simulada não persiste nada aqui.
 
 ### `match_cache` — cache durável de partidas
 
 Colunas: `match_id` (text pk), `region`, `payload` (jsonb), `fetched_at`,
-`expires_at`.
+`expires_at`. Usado só pela fonte HenrikDev guardada.
 Índice: `(expires_at)`. TTL de aplicação: **24h** (`MATCH_CACHE_TTL_MS` em
 `src/services/tracker/match-detail.ts`) — partidas concluídas são imutáveis.
 
@@ -47,11 +48,19 @@ FKs para `user` com `ON DELETE cascade`.
 `tag_key`, `display_name`, `created_at`.
 Unique `(user_id, region, name_key, tag_key)`; índice `(user_id, created_at)`.
 
-### `user_riot_account` — Riot ID vinculado ao usuário
+### `user_riot_account` — conta Riot vinculada ao usuário (consentimento)
 
 `id` (uuid pk), `user_id` (fk → `user`, cascade, **único**), `region`,
-`name_key`, `tag_key`, `display_name`, `created_at`, `updated_at`.
+`name_key`, `tag_key`, `display_name`, `puuid` (único, nulo nos legados),
+`linked_via` (`legacy` | `rso_mock` | `rso`, default `legacy`),
+`profile_public` (boolean, default `false`), `created_at`, `updated_at`.
 Índice `(region, name_key, tag_key)`.
+
+- Vínculo **`legacy`** (Riot ID digitado nas versões antigas) não dá acesso a
+  nada; `getByRiotId` o ignora.
+- `upsert` sempre grava `puuid`/`linked_via`; revincular **outro** `puuid`
+  zera `profile_public` (CASE no conflito) — consentimento não migra de conta.
+- `remove` apaga só esta linha (snapshots e `match_cache` não são por usuário).
 
 > Convenção: `name_key`/`tag_key` sempre em **minúsculas** para lookup
 > case-insensitive; `name`/`tag`/`display_name` preservam a forma exibida.
@@ -89,6 +98,7 @@ Migrações aplicadas (em `drizzle/`):
 | `0001` | `match_cache` + índice de expiração |
 | `0002` | `user`, `session`, `account`, `verification`, `tracked_players` |
 | `0003` | `user_riot_account` |
+| `0004` | `user_riot_account`: `puuid` (único, nulo), `linked_via` (default `legacy`), `profile_public` (default `false`) |
 
 > **Aplicar migração é tarefa do dono no host**:
 > `infisical run --env=dev -- npm run db:migrate`. O agente gera o SQL com

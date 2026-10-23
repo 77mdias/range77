@@ -15,7 +15,7 @@ design-stitch/         HTML de referência das telas Stitch
 drizzle/               migrações SQL + meta (drizzle-kit)
 src/                   código-fonte
 tests/                 suíte de testes
-public/assets/images/  ícones de agente, splash/minimapa, etc.
+public/assets/images/  ícones de agente, splash, minimaps/, brand/, etc.
 ```
 
 Configurações: `next.config.ts`, `vitest.config.ts`, `vitest.setup.ts`,
@@ -27,61 +27,74 @@ Configurações: `next.config.ts`, `vitest.config.ts`, `vitest.setup.ts`,
 ```
 src/
 ├── app/                          App Router (páginas, layouts, rotas de API)
-│   ├── layout.tsx                shell raiz + fontes self-hosted
+│   ├── layout.tsx                só html/body/fontes (sem shell)
 │   ├── globals.css               tokens (Protocol Precision)
-│   ├── page.tsx / home-landing   landing "/"
-│   ├── login/ signup/            autenticação
-│   ├── dashboard/                área protegida (+ settings/)
-│   ├── console/                  console API & IA
-│   ├── design-system/            styleguide viva (404 em prod)
-│   ├── matches/[matchId]/        detalhe de partida
-│   ├── players/[region]/[name]/[tag]/
-│   │   ├── page.tsx              Visão Geral
-│   │   ├── profile-view.tsx      apresentação do overview
-│   │   ├── breakdown/            Partidas & Breakdown (amostra por ato, até 30)
-│   │   ├── agents-maps-*.tsx     filtros + seções Agentes/Mapas
-│   │   ├── ai-sandbox.tsx        sandbox IA (demo rotulado)
-│   │   └── follow-button.tsx     seguir/deixar de seguir
-│   ├── actions/                  Server Actions (tracked-players, user-riot)
+│   ├── fonts/                    .woff2 self-hosted
+│   ├── (app)/                    grupo com AppShell (top-nav, NavUser, banner simulado)
+│   │   ├── page.tsx / home-landing   landing "/"
+│   │   ├── dashboard/            área protegida (+ settings/: RSO, perfil público)
+│   │   ├── console/              console API & IA
+│   │   ├── design-system/        styleguide viva (404 em prod)
+│   │   ├── matches/[matchId]/    detalhe de partida (+ mapa de abates, economia)
+│   │   ├── players/[region]/[name]/[tag]/
+│   │   │   ├── page.tsx          Visão Geral
+│   │   │   ├── profile-view.tsx  apresentação do overview
+│   │   │   ├── breakdown/        Partidas & Breakdown (disciplina econômica, heatmap)
+│   │   │   ├── agents-maps-*.tsx filtros + seções Agentes/Mapas
+│   │   │   ├── ai-sandbox.tsx    sandbox IA (simulado, rotulado)
+│   │   │   └── follow-button.tsx seguir/deixar de seguir
+│   │   ├── termos/ privacidade/  páginas legais
+│   │   └── error.tsx
+│   ├── (auth)/                   grupo com chrome próprio
+│   │   ├── login/ signup/        autenticação
+│   │   └── rso/consent/          Riot Sign-On (simulado)
+│   ├── actions/                  Server Actions (tracked-players, user-riot, rso)
 │   └── api/                      Route Handlers
 │       ├── health/               GET /api/health
 │       ├── auth/[...all]/        Better Auth
+│       ├── rso/authorize|callback/   fluxo RSO simulado
 │       ├── players/[region]/[name]/[tag]/         (combate)
 │       │   ├── overview/         overview do perfil
 │       │   └── history/          evolução entre snapshots
 │       └── matches/[region]/[matchId]/
 ├── components/                   apresentação (barrels por pasta)
-│   ├── ui/                       primitivas do design system
-│   ├── layout/                   shell, top-nav, nav-user, footer
+│   ├── ui/                       primitivas (inclui simulated-badge, states/private-profile-state)
+│   ├── layout/                   shell, top-nav, brand-logo, nav-user, footer, simulated-banner
 │   ├── home/                     landing
-│   ├── match/                    scoreboard, timeline, MVP, arsenal...
-│   ├── player/                   header, histórico
+│   ├── match/                    scoreboard, timeline, MVP, arsenal, kill-map, round-economy
+│   ├── player/                   header, histórico, economy-discipline-card
 │   ├── agents/                   cards de agente/mapa/benchmark
 │   ├── ai/                       terminal, chat, code viewer
-│   └── charts/                   visx + geometrias puras
-├── config/env.ts                 snapshot tipado do ambiente
-├── contracts/                    henrikdev.ts · tracker.ts · coach.ts
+│   └── charts/                   visx + geometrias puras (inclui death-heatmap)
+├── config/env.ts                 snapshot tipado do ambiente (inclui TRACKER_DATA_SOURCE)
+├── contracts/                    riot.ts · tracker.ts · access.ts · coach.ts · henrikdev.ts
 ├── lib/                          utilidades transversais
 │   ├── auth.ts / auth-client.ts  Better Auth (servidor/cliente)
-│   ├── session.ts                leitura de sessão server-side
+│   ├── session.ts                sessão server-side (getSession, getViewerUserId)
+│   ├── rso/mock-provider.ts      RSO simulado (conta fictícia, code HMAC, state)
+│   ├── legal.ts                  aviso legal da Riot + e-mail de contato
 │   ├── cache/tracker.ts          camada 'use cache' compartilhada
 │   ├── db/                       conexões + schema + stores
+│   ├── recents/                  perfis recentes (localStorage v2)
 │   ├── format/                   rank, relative-time
 │   ├── http/api-error.ts         mapa de erros → ApiErrorBody
 │   ├── validation/               riot-id, player/match-params, credentials
-│   └── valorant-assets.ts        resolução de ícones de agente/mapa
+│   ├── valorant-assets.ts        ícones de agente/mapa
+│   └── valorant-maps.ts          minimapas + transformações por mapa
 ├── proxy.ts                      proteção de /dashboard (sucessor do middleware)
 └── services/
-    ├── henrikdev/                client HTTP + cached-client + normalizadores
-    ├── tracker/                  orquestração + persistência
+    ├── riot/                     normalize-riot + catalog + mock/ (gerador simulado)
+    ├── tracker/                  orquestração + persistência + sources/ (TrackerSource)
+    ├── access/                   política de consentimento
     ├── analytics/                cálculo puro (cobertura 100%)
-    └── coaching/                 envelope de 3 camadas
+    ├── coaching/                 envelope de 3 camadas
+    └── henrikdev/                integração antiga (guardada, desligada)
 ```
 
 ## `tests/`
 
 Espelha `src/`: `tests/app/**` (páginas e API), `tests/components/**`,
-`tests/services/**` (analytics, coaching, tracker, henrikdev), `tests/lib/**`,
+`tests/services/**` (analytics, coaching, tracker, riot, access, henrikdev), `tests/lib/**`,
 `tests/config/**` e `tests/proxy.test.ts`. **Nenhum teste mora dentro de
 `src/`.** Ver [testes e cobertura](../desenvolvimento/testes-e-cobertura.md).
 

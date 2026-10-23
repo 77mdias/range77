@@ -1,12 +1,35 @@
 # Contratos
 
-Três arquivos definem os formatos de dados que atravessam o sistema.
-Localização: `src/contracts/`.
+Os formatos de dados que atravessam o sistema ficam em `src/contracts/`.
 
-## `henrikdev.ts` — espelho do payload externo
+## `riot.ts` — espelho do payload oficial da Riot
 
-Reflete o formato da API HenrikDev (v4/v2/v1) em `snake_case`, tolerando
-campos extras em runtime. **Não é usado diretamente pelas páginas.**
+Tipos crus de **VAL-MATCH-V1** e **ACCOUNT-V1**, com a grafia oficial e o
+prefixo `Riot`, conferidos no portal (tabela campo a campo em
+[`riot-val-match-v1.md`](../referencia/riot-val-match-v1.md)). **Só tipos**;
+nunca usado pelas páginas.
+
+- `RiotMatchDto` (`matchInfo`, `players`, `teams`, `roundResults`),
+  `RiotRoundResultDto` (`roundNum` **0-based**, plant/defuse com
+  `Location`/`PlayerLocations`), `RiotPlayerRoundStatsDto` (`kills`, `damage`,
+  `economy`, `ability`), `RiotKillDto` (`victimLocation`, `playerLocations`
+  com `viewRadians`), `RiotEconomyDto` (`loadoutValue`, `weapon`, `armor`,
+  `remaining`, `spent`), `RiotAccountDto`, `RiotMatchlistDto`.
+- `RiotAbilityDto` por round são 4 strings opacas — **não** há contagem nem
+  linha do tempo de habilidades por round; contagens só por partida.
+- `MockRankSnapshot` / `MockRrPoint` — **sem equivalente oficial** (a Riot não
+  expõe rank/RR atuais); existem só para o mock e somem com a chave.
+
+## `access.ts` — estado neutro de perfil
+
+`PRIVATE_PROFILE_MESSAGE` (`Este jogador não tornou o perfil público.`) e
+`PROFILE_NOT_PUBLIC_CODE`. Fica em `contracts/` para que componentes client
+importem a copy sem puxar o banco.
+
+## `henrikdev.ts` — espelho da HenrikDev (fonte guardada)
+
+Reflete o formato da API HenrikDev (v4/v2/v1) em `snake_case`. Usado só pela
+fonte `henrikdev`, que está desligada. **Não é usado pelas páginas.**
 
 - Constantes: `HENRIKDEV_AFFINITIES` (`eu | na | ap | kr | latam | br`),
   `HENRIKDEV_PLATFORMS` (`pc | console`), `COMPETITIVE_QUEUE_ID = 'competitive'`.
@@ -33,13 +56,18 @@ analytics e páginas.
 | `MatchDetail` | detalhe completo: `teams`, `scoreboard`, `rounds`, `kills` |
 | `MatchRound` | round independente de jogador (`winningTeamId`, `plantSite`, `plantTeamId`, `defused`) |
 | `RoundOutcome` | round relativo a um jogador (`won`, `playerTeamId`) |
-| `KillEvent` | abate com tempos, killer/victim, assistants, `weapon` |
+| `KillEvent` | abate com tempos, killer/victim, assistants, `weapon` + opcionais `victimLocation`, `killerLocation`, `playerLocations` |
+| `MapPoint` / `PlayerPosition` | coordenada de mundo `{x, y}` / posição de um jogador com `viewRadians` |
+| `MapZone` | zona jogável de um mapa (`label`, `side`, `polygon: MapPoint[]`) |
+| `SpikeEvent` | plant/defuse: `playerPuuid`, `location`, `timeInRoundMs`, `site` (em `MatchRound.plant`/`defuse`) |
+| `RoundEconomy` | economia de um jogador num round: `loadoutValue`, `weapon`, `armor`, `spent`, `remaining` (em `MatchDetail.economy`, com `MatchDetail.mapId`) |
 | `GroupedStat` (= `AgentStat`/`MapStat`) | agregação por agente/mapa (`matches, wins, losses, winrate, avgKills, avgDeaths, avgAssists, kda, avgAcs, avgHsPercentage`) |
 | `StreakSummary` / `TrendSummary` | sequências e tendência de ACS |
 | `RrHistoryPoint` | ponto de RR (`rr`, `delta`, `tier`, `tierId`, `result: win/loss/neutral`, `date`) |
 
 Valores derivados: `acs` (inteiro), `hsPercentage`, `kda`, `result`, `kastPercentage`
-(`null` sem timeline), `roundNumber` 1-based.
+(`null` sem timeline), `roundNumber` 1-based. Os campos de posição, spike e
+economia são **opcionais/anuláveis**: só a fonte com formato Riot os preenche.
 
 ## `coach.ts` — saída para o chatbot
 
@@ -81,7 +109,7 @@ contrato via `ErrorState`. A stack nunca vaza no body.
 ## Fluxo cru → normalizado
 
 ```
-HenrikDev (snake_case)  ──normalize*.ts──►  tracker.ts (camelCase)
+Riot (riot.ts)  ──normalize-riot.ts──►  tracker.ts (camelCase)
                                                 │
                                                 ├─ analytics/**  ──► métricas
                                                 └─ coaching/**   ──► CoachInsight

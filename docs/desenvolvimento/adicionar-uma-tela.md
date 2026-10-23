@@ -5,9 +5,16 @@ respeitando as regras do projeto.
 
 ## 1. Definir o contrato
 
-- Se o dado vem da HenrikDev, adicione o tipo cru em
-  `src/contracts/henrikdev.ts` e a forma normalizada em
-  `src/contracts/tracker.ts`.
+- Se o dado vem da fonte de partidas, confira se ele existe no formato
+  oficial (`src/contracts/riot.ts` e
+  [`riot-val-match-v1.md`](../referencia/riot-val-match-v1.md)) — dado que a
+  API oficial não entrega **não** é simulado. Adicione a forma normalizada em
+  `src/contracts/tracker.ts` (campo opcional), o mapeamento em
+  `src/services/riot/normalize-riot.ts` e a geração no mock
+  (`src/services/riot/mock/`).
+- Se a tela mostra dado de jogador, ela passa pela checagem de consentimento
+  (`resolveProfileAccess`) antes de buscar — ver
+  [consentimento e RSO](../arquitetura/consentimento-e-rso.md).
 - Se é saída para o chatbot, estenda o envelope em `src/contracts/coach.ts`.
 
 ## 2. Escrever o teste primeiro (RED)

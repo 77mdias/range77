@@ -16,7 +16,7 @@ implementação (sucesso, erro de serviço externo, dados nulos) → implementa�
 | `tests/app/api/**` | handlers HTTP puros (service mockado) |
 | `tests/components/**` | componentes (render puro e interação) |
 | `tests/services/analytics/**` | cálculo puro — **cobertura 100%** |
-| `tests/services/{coaching,tracker,henrikdev}/**` | orquestração/normalização/client |
+| `tests/services/{coaching,tracker,riot,access,henrikdev}/**` | orquestração, fontes, gerador/normalizador Riot, consentimento, client antigo |
 | `tests/lib/**` | utilidades, formatação, validação, stores |
 
 ## Cobertura — regra dura

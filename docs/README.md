@@ -27,7 +27,9 @@ Como o sistema é montado e por quê.
 
 - [Visão geral](./arquitetura/visao-geral.md) — stack, camadas, princípios
 - [Estrutura de pastas](./arquitetura/estrutura-de-pastas.md) — mapa de `src/` e `tests/`
-- [Fluxo de dados](./arquitetura/fluxo-de-dados.md) — HenrikDev → normalização → analytics → UI
+- [Fontes de dados](./arquitetura/fontes-de-dados.md) — `TrackerSource`, mock no formato Riot, `TRACKER_DATA_SOURCE`
+- [Fluxo de dados](./arquitetura/fluxo-de-dados.md) — fonte → normalização → analytics → UI
+- [Consentimento e RSO](./arquitetura/consentimento-e-rso.md) — quem vê o quê, perfil público, Riot Sign-On simulado
 - [Banco de dados e migrações](./arquitetura/banco-de-dados-e-migracoes.md) — Drizzle + Neon
 - [Cache e revalidação](./arquitetura/cache-e-revalidacao.md) — `use cache`, `cacheLife`, Neon
 - [Autenticação](./arquitetura/autenticacao.md) — Better Auth, proxy, sessão
@@ -37,8 +39,8 @@ Como o sistema é montado e por quê.
 
 As regras de negócio e os modelos de dados.
 
-- [Contratos](./dominio/contratos.md) — `henrikdev.ts`, `tracker.ts`, `coach.ts`
-- [Serviços](./dominio/servicos.md) — `henrikdev/`, `tracker/`, `coaching/`
+- [Contratos](./dominio/contratos.md) — `riot.ts`, `tracker.ts`, `access.ts`, `coach.ts` (+ `henrikdev.ts` guardado)
+- [Serviços](./dominio/servicos.md) — `riot/`, `tracker/`, `access/`, `analytics/`, `coaching/`
 - [Métricas derivadas](./dominio/metricas.md) — KAST, Rating, ADR, entry, consistência...
 - [Partida e rounds](./dominio/partida-e-rounds.md) — timeline, halves, perspectiva
 
@@ -59,11 +61,13 @@ As regras de negócio e os modelos de dados.
 ### ⚙️ [Operação](./operacao/deploy.md)
 
 - [Deploy](./operacao/deploy.md) — Dockerfile e Vercel
+- [Pedido da Production Key](./operacao/pedido-production-key.md) — roteiro do pedido + checklist antes de ligar dados reais
 
 ### 📚 [Referência](./referencia/rotas-api.md)
 
 - [Rotas de API](./referencia/rotas-api.md) — Route Handlers
 - [Rotas de página](./referencia/rotas-de-pagina.md) — App Router
+- [Riot VAL-MATCH-V1](./referencia/riot-val-match-v1.md) — campos oficiais conferidos no portal
 - [Glossário](./referencia/glossario.md) — termos e siglas
 
 ## Regras de ouro (leia antes de codar)
@@ -78,5 +82,8 @@ As regras de negócio e os modelos de dados.
 4. **Next 16**: `params`/`searchParams`/`cookies()`/`headers()` são `Promise`;
    middleware chama-se **proxy** (`src/proxy.ts`); conteúdo dinâmico vive
    dentro de `<Suspense>`.
-5. **TDD estrito**: teste antes da implementação; a suíte completa e o
+5. **Consentimento antes de dado.** Perfil, partida, API e seguir passam por
+   `resolveProfileAccess` antes de tocar a fonte; privado e inexistente
+   respondem igual. Ver [consentimento](./arquitetura/consentimento-e-rso.md).
+6. **TDD estrito**: teste antes da implementação; a suíte completa e o
    `typecheck` precisam passar antes de qualquer commit.

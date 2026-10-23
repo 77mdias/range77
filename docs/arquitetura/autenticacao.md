@@ -34,6 +34,13 @@ do Cache Components **antes** de qualquer custo de banco — e só então
 `getAuth()` + `auth.api.getSession({ headers })`. Achata o usuário
 (`email`/`image` nulos → `null`).
 
+Variantes que recebem os headers já resolvidos (o chamador faz o
+`await headers()` fora do try/catch):
+
+- `getSessionFromHeaders(headers)` — mesma leitura, lança em falha de infra;
+- `getViewerUserId(headers)` — id do viewer ou `null`; falha de auth/DB conta
+  como **anônimo** (fail-closed para as checagens de consentimento).
+
 ## Proteção de rotas — `src/proxy.ts` (sucessor do middleware)
 
 ```ts
@@ -53,6 +60,8 @@ export const config = { matcher: ['/dashboard/:path*'] };
    renderizam `SocialLoginButtons` e `EmailLoginForm`.
 2. O formulário valida com `src/lib/validation/credentials.ts` e chama
    `authClient.signIn.email` / `signUp.email` (email normalizado em minúsculas).
+   O cadastro **não** pede mais Riot ID: a conta Riot é vinculada depois, pelo
+   RSO, em Configurações.
 3. O handler Better Auth (`src/app/api/auth/[...all]/route.ts`) processa e
    seta o cookie.
 4. `/dashboard` passa pelo `proxy` (cookie) e revalida a sessão com
@@ -63,15 +72,21 @@ export const config = { matcher: ['/dashboard/:path*'] };
 - **Seguir jogador** — `tracked_players`; Server Actions `followPlayer` /
   `unfollowPlayer` (`src/app/actions/tracked-players.ts`), com
   `revalidatePath('/dashboard')`.
-- **Vincular Riot ID** — `user_riot_account`; Server Actions
-  `linkRiotAccount` / `unlinkRiotAccount`
-  (`src/app/actions/user-riot.ts`), com `revalidatePath('/dashboard/settings')`.
-  O `NavUser` mostra o chip do jogador conectado (Riot ID vinculado).
+- **Seguir** recusa perfil privado (`PROFILE_NOT_PUBLIC`); o dashboard mostra
+  card neutro para seguido que ficou privado.
+- **Vincular conta Riot** — só pelo **Riot Sign-On simulado**
+  (`/api/rso/authorize` → `/rso/consent` → `/api/rso/callback`), gravando
+  `user_riot_account` com `linked_via = 'rso_mock'`. Server Actions em
+  `src/app/actions/user-riot.ts`: `setProfilePublic(value)` (opt-in do perfil
+  público) e `unlinkRiotAccount()`. Fluxo completo em
+  [consentimento e RSO](./consentimento-e-rso.md).
+- **NavUser** (FAIL-SOFT): **Entrar com Riot** sem vínculo, **Reconecte com
+  Riot** para vínculo legado, chip do jogador para vínculo RSO.
 
 ## Variáveis
 
-`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (obrigatórias no boot do primeiro
-uso), `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`,
+`BETTER_AUTH_SECRET` (também assina o `code` do RSO simulado),
+`BETTER_AUTH_URL` (obrigatórias no boot do primeiro uso), `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`,
 `DISCORD_CLIENT_ID`/`DISCORD_CLIENT_SECRET` e o opcional `AUTH_DATABASE_URL`.
 Ver [variáveis de ambiente](../desenvolvimento/variaveis-de-ambiente.md).
 

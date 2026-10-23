@@ -37,8 +37,16 @@ Termos de domínio (Valorant + analytics do app) e termos técnicos.
 
 | Termo | Significado |
 | --- | --- |
-| **HenrikDev** | API externa pública de dados de Valorant (v4/v2/v1) |
-| **Payload cru** | resposta da HenrikDev (`snake_case`) em `contracts/henrikdev.ts` |
+| **VAL-MATCH-V1** | API oficial de partidas da Riot; seu formato cru está em `contracts/riot.ts` |
+| **Production API Key** | chave de produção da Riot (VALORANT não tem chave pessoal); sem ela os dados são simulados |
+| **RSO** | Riot Sign-On — OAuth da Riot para o jogador autorizar o app; aqui **simulado** |
+| **`TrackerSource`** | porta única de dados de jogador/partida (`mock` · `riot` · `henrikdev`) |
+| **Dados simulados** | partidas geradas no formato Riot, determinísticas e fictícias; sempre com o selo `DADOS SIMULADOS` |
+| **Perfil público** | opt-in do dono (`profile_public`); sem ele o perfil só aparece para o próprio dono |
+| **Vínculo legado** | Riot ID digitado nas versões antigas (`linked_via = 'legacy'`); não dá acesso |
+| **Foco** | jogador da perspectiva de uma partida (`?player=`) |
+| **HenrikDev** | API não oficial usada antes; integração guardada e desligada |
+| **Payload cru** | resposta da fonte antes da normalização (`contracts/riot.ts`) |
 | **Contrato interno** | forma normalizada (`camelCase`) em `contracts/tracker.ts` |
 | **`CoachInsight`** | envelope de 3 camadas para o chatbot |
 | **`raw_metrics`** | números exatos calculados |

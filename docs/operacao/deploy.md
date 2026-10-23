@@ -20,8 +20,8 @@ Imagem de **desenvolvimento** (`node:20-alpine`):
 ## Vercel (prod)
 
 1. Configurar as variáveis manualmente no painel (Settings → Environment
-   Variables): `APP_ENV=prod`, `DATABASE_URL`, `HENRIKDEV_API_KEY`,
-   `MINIMAX_API_KEY`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, provedores
+   Variables): `APP_ENV=prod`, `DATABASE_URL`, `TRACKER_DATA_SOURCE`
+   (opcional; ausente = `mock`), `MINIMAX_API_KEY` (reservada), `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, provedores
    sociais e, se aplicável, `AUTH_DATABASE_URL`.
 2. Build: `npm run build` (Next 16 com Turbopack). O build **não** exige
    credenciais — env/DB são resolvidos lazy no primeiro uso.

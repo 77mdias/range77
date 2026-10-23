@@ -56,10 +56,11 @@ tráfego real; o cliente deve respeitar os limites da chave (hoje sem rate limit
 ## Pré-requisitos antes de ligar dados reais
 
 - [ ] 1. Acesso a partida deve verificar que a partida pertence ao histórico do jogador em foco
-  (ruling R12). Hoje só o consentimento do perfil em foco é checado — seguro apenas com o mock.
+  (ver [consentimento e RSO](../arquitetura/consentimento-e-rso.md)). Hoje só o consentimento do perfil em foco é checado — seguro apenas com o mock.
 - [ ] 2. Revalidar os ids de catálogo (armas, armaduras, mapas, temporadas) de memória.
 - [ ] 3. Substituir rank/RR simulados (ver acima: sem endpoint oficial).
 - [ ] 4. Coach de IA: o repositório não tem cliente MiniMax hoje; o terminal do coach é simulado.
 - [ ] 5. Implementar a fonte `TRACKER_DATA_SOURCE=riot` e colocar a chave no Infisical (dev) e na Vercel (prod), seguindo a cadeia do `AGENTS.md` (`env.ts`, `docker-compose.yml`).
 - [ ] 6. Definir o e-mail de contato real (`CONTACT_EMAIL` em `src/lib/legal.ts`) antes de publicar.
-- [ ] 7. Rodar `npm run db:migrate` (migração `drizzle/0004`).
+- [x] 7. Rodar `npm run db:migrate` (migração `drizzle/0004`) — aplicada pelo dono em 2026-10-23.
+- [x] 8. Fluxo de ponta a ponta no app rodando (container) — validado pelo dono em 2026-10-23.

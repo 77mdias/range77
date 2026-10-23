@@ -64,6 +64,19 @@ Nunca criar arquivos `.env` (regra do projeto).
   seguida de trabalho no cliente faz o navegador sair ANTES do trabalho terminar.
   `signUp.email` do cadastro é chamado SEM `callbackURL`; a navegação é explícita
   no fim de `submit()`.
+- **Dados de jogador só com consentimento**: toda página/API/ação que mostra
+  dado de jogador chama `resolveProfileAccess` (`src/services/access/`) ANTES
+  da fonte e FORA de `'use cache'` (depende do viewer). Privado e inexistente
+  respondem igual (`PROFILE_NOT_PUBLIC`). Ver `docs/arquitetura/consentimento-e-rso.md`.
+- **Fonte de dados = `TrackerSource`** (`TRACKER_DATA_SOURCE`, default `mock`):
+  o mock gera DTOs no formato oficial Riot e passa pelo MESMO
+  `normalize-riot.ts` da API real. Nunca simular o que a API oficial não
+  entrega; nunca usar Riot ID real em mock/fixture/tela. Os `details` brutos
+  (~5 MB) não atravessam `'use cache'`/RSC — calcule no serviço.
+- **Server Action → Route Handler**: `redirect('/api/...')` dentro de uma
+  Server Action executa o handler NO SERVIDOR (o `Set-Cookie` se perde). Para
+  o navegador executar o handler (callback OAuth/RSO), devolva a URL e use
+  `window.location.assign`.
 - **Senha fora do Stitch**: força e confirmação são validação de UX em
   `src/lib/validation/credentials.ts`. O servidor só conhece
   `PASSWORD_MIN_LENGTH`/`PASSWORD_MAX_LENGTH`. A promessa de "30 dias" sai de

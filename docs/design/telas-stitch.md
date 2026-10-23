@@ -34,21 +34,22 @@ Tailwind config dos tokens).
 
 ## Onde o app se afasta do Stitch (e por quê)
 
-O Stitch é um dashboard de **um** jogador conectado; o app é público e
-per-jogador. Campos sem suporte na HenrikDev **não** são simulados.
+O Stitch é um dashboard de **um** jogador conectado; o app mostra a conta do
+próprio jogador (ou perfis públicos, com consentimento). Campos que a API
+oficial da Riot não entrega **não** são simulados.
 
 | Bloco do Stitch | Decisão no app |
 | --- | --- |
 | Replay telemétrico (scoreboard) | affordance **não** exibida como funcional |
-| Tags econômicas por round | omitidas (não deriváveis) |
+| Tags econômicas por round | agora derivadas da economia por round do formato Riot (pistol/eco/force/full) |
 | Probabilidade de vitória (pré/pós-lance) | sem cálculo → omitida |
 | ECON rating / ECON por jogador | `—` |
 | Narrativa de IA por round | omitida (sem backend) |
 | Benchmark por elo / médias / percentis | omitido |
 | Peak rank | omitido |
-| Perfis demo fictícios (4) | **1** perfil real (`twmz#tower`) por decisão do dono |
-| Nav "chip do jogador conectado" | só existe com sessão real (Riot vinculado) |
-| Fonte "FORMATO RIOT V3" | corrigida para a fonte real (**HenrikDev v4**) |
+| Perfis demo fictícios (4) | **1** perfil demo fictício (`ValCoachDemo#DEMO`) — nenhum Riot ID real |
+| Nav "chip do jogador conectado" | só existe com sessão real + vínculo RSO |
+| Fonte "FORMATO RIOT V3" | dados no formato oficial **VAL-MATCH-V1**, rotulados como simulados |
 
 ## Fases de implementação (histórico)
 

@@ -1,13 +1,19 @@
 # ValCoach AI
 
-Tracker & coach estatístico de **Valorant**: busca dados públicos na
-**HenrikDev**, normaliza-os para um contrato interno estável, calcula métricas
-derivadas (KAST, Rating ValCoach, ADR, entry, consistência, evolução...) e as
-apresenta numa interface teleétrica (design system **Protocol Precision**).
+Tracker & coach estatístico de **Valorant**. Os dados de partida chegam no
+**formato oficial da Riot (VAL-MATCH-V1)** — hoje **simulados**, enquanto a
+Production API Key não é aprovada —, são normalizados para um contrato interno
+estável, viram métricas derivadas (KAST, Rating ValCoach, ADR, entry,
+economia por round, posições no mapa...) e aparecem numa interface
+telemétrica (design system **Protocol Precision**).
 
-O backend faz todo o *heavy lifting* de cálculo e entrega ao chatbot (MiniMax)
-um JSON mastigado em três camadas — a IA de baixo custo nunca toca dados brutos
-da HenrikDev.
+Dados de um jogador só aparecem com o **consentimento** dele: Riot Sign-On
+(simulado) + perfil público opt-in. O backend faz todo o cálculo e prepara um
+envelope de coaching em três camadas (o terminal de coach da tela ainda é
+simulado).
+
+> Estado atual e checklist antes de ligar dados reais:
+> [`docs/operacao/pedido-production-key.md`](./docs/operacao/pedido-production-key.md).
 
 > 📚 **Documentação completa:** [`docs/`](./docs/README.md) — arquitetura,
 > domínio, design, desenvolvimento, operação e referência. O `README` aqui é a
@@ -51,9 +57,10 @@ Detalhes em [`docs/dominio/contratos.md`](./docs/dominio/contratos.md).
 | `APP_ENV` | Ambiente canônico (`dev` \| `test` \| `prod`). Precedência sobre `NODE_ENV` |
 | `NODE_ENV` | Derivado de `APP_ENV` quando ausente |
 | `DATABASE_URL` | Neon Postgres (Drizzle ORM, driver `neon-http`) |
-| `HENRIKDEV_API_KEY` | API externa de dados de Valorant |
-| `MINIMAX_API_KEY` | Chatbot MiniMax |
-| `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL` | Better Auth |
+| `TRACKER_DATA_SOURCE` | Fonte de dados: `mock` (padrão, simulada no formato Riot) · `riot` (reservada para a Production Key) · `henrikdev` (guardada) |
+| `HENRIKDEV_API_KEY` | Só com `TRACKER_DATA_SOURCE=henrikdev` (integração guardada) |
+| `MINIMAX_API_KEY` | Reservada para o chatbot (ainda sem cliente no código) |
+| `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL` | Better Auth (o secret também assina o `code` do RSO simulado) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Login Google (opcional) |
 | `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | Login Discord (opcional) |
 | `AUTH_DATABASE_URL` | Pooler dedicado do auth (opcional; fallback `DATABASE_URL`) |
@@ -128,18 +135,19 @@ src/
 ├── app/            # páginas (RSC), layouts, rotas de API e Server Actions
 ├── components/     # apresentação (ui, layout, match, player, agents, ai, charts)
 ├── config/env.ts   # ambientes (test|dev|prod) + requireEnv fail-fast
-├── contracts/      # henrikdev.ts · tracker.ts · coach.ts (envelope 3 camadas)
+├── contracts/      # riot.ts · tracker.ts · access.ts · coach.ts · henrikdev.ts
 ├── lib/            # auth, session, cache, db, validação, formatação, assets
 ├── proxy.ts        # proteção de /dashboard (sucessor do middleware)
-└── services/       # henrikdev (client) · tracker (orquestração) ·
-                    # analytics (cálculo puro, 100%) · coaching (envelope)
+└── services/       # riot (mock + normalizador) · tracker (fontes, orquestração) ·
+                    # access (consentimento) · analytics (cálculo puro, 100%) ·
+                    # coaching (envelope) · henrikdev (guardada)
 tests/              # espelha src/ 1:1 (nenhum teste mora em src/)
 ```
 
 Mapa detalhado em [`docs/arquitetura/estrutura-de-pastas.md`](./docs/arquitetura/estrutura-de-pastas.md).
 
-## Produção (futuro)
+## Produção
 
-Deploy na **Vercel** com variáveis configuradas manualmente no painel
+Deploy na **Vercel** (subdomínio do domínio próprio) com variáveis configuradas manualmente no painel
 (Settings → Environment Variables). Guia em
 [`docs/operacao/deploy.md`](./docs/operacao/deploy.md).

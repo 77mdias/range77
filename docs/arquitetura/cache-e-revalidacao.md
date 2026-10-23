@@ -1,8 +1,12 @@
 # Cache e revalidação
 
 ValCoach usa o modelo **Cache Components** do Next 16 (`cacheComponents: true`)
-e uma segunda camada durável no Neon. O objetivo é proteger a cota da
-HenrikDev e responder rápido sem servir dado velho por muito tempo.
+(e, só na fonte HenrikDev guardada, uma camada durável no Neon). O objetivo é
+responder rápido e proteger a cota da fonte externa sem servir dado velho por
+muito tempo.
+
+> **Consentimento fica fora do cache.** A decisão de acesso depende do viewer,
+> então roda antes dos helpers abaixo — nunca dentro de um `'use cache'`.
 
 ## Camada 1 — Cache Components (`'use cache'`)
 
@@ -11,16 +15,20 @@ entre Route Handlers e páginas** (abrir o perfil esquenta a API e vice-versa).
 
 | Helper | `cacheLife` (stale/revalidate/expire s) | `cacheTag` |
 | --- | --- | --- |
-| `getCachedPlayerOverview(region,name,tag,size)` | 300 / 1500 / 21600 | `player-overview:{region}:{name}:{tag}:{size}` |
-| `getCachedBreakdownOverview(region,name,tag)` | 300 / 1500 / 21600 | `player-breakdown:{region}:{name}:{tag}` |
-| `getCachedMatchDetail(region,matchId)` | 300 / 3600 / 86400 | `match:{region}:{matchId}` |
-| `getCachedPlayerCard(name,tag)` | 300 / 3600 / 86400 | `player-card:{name}:{tag}` |
+| `getCachedPlayerOverview(region,name,tag,size)` | 300 / 1500 / 21600 | `player-overview:{kind}:{region}:{name}:{tag}:{size}` |
+| `getCachedBreakdownOverview(region,name,tag)` | 300 / 1500 / 21600 | `player-breakdown:{kind}:{region}:{name}:{tag}` |
+| `getCachedMatchDetail(region,matchId,focus?)` | 300 / 3600 / 86400 | `match:{kind}:{region}:{matchId}[:{focus}]` |
+| `getCachedPlayerCard(name,tag)` | 300 / 3600 / 86400 | `player-card:{kind}:{name}:{tag}` |
+
+`{kind}` é a fonte ativa (`mock`, `henrikdev`) — entradas de fontes diferentes
+nunca se misturam. O `focus` (jogador do `?player=`) entra na tag da partida
+porque, na fonte simulada, a partida deriva dele.
 
 O Route Handler de combate tem o próprio wrapper
 `getCachedInsight(region,name,tag,size)` em
 `src/app/api/players/[region]/[name]/[tag]/route.ts`, com
 `stale: 300 / revalidate: 1500 / expire: 21600` e
-`cacheTag('player-combat:{region}:{name}:{tag}:{size}')`.
+`cacheTag('player-combat:{kind}:{region}:{name}:{tag}:{size}')`.
 
 > `revalidate: 1500` **= 25 min**: uma partida ranqueada dura ~30–50 min, então
 > a janela não muda entre navegações e não faz sentido rebuscar antes disso.
@@ -31,7 +39,7 @@ O Route Handler de combate tem o próprio wrapper
 > por ato (até `ACT_SAMPLE_CAP = 30`, fallback `ACT_SAMPLE_FALLBACK = 15`) e
 > tem entrada de cache própria (`player-breakdown:*`).
 
-### Camada 1b — cache POR RECURSO (`cached-client.ts`)
+### Camada 1b — cache POR RECURSO (`cached-client.ts`) — só fonte HenrikDev
 
 O envelope acima é grosso: Perfil e Breakdown são entradas **diferentes**, e
 alternar entre as telas re-buscaria conta/MMR/histórico duas vezes. Para evitar
@@ -59,9 +67,11 @@ os testes injetam um client falso e não tocam `next/cache`.
 No Cache Components o modo dinâmico é opt-in. O health usa
 `await connection()` (`src/app/api/health/route.ts`).
 
-## Camada 2 — Cache durável no Neon
+## Camada 2 — Cache durável no Neon — só fonte HenrikDev
 
-`match_cache` guarda o payload cru da partida por 24h. Ordem em
+A fonte simulada é pura e barata: **não** usa `match_cache` nem grava
+snapshots de combate. Na fonte HenrikDev guardada, `match_cache` guarda o
+payload cru da partida por 24h. Ordem em
 `getMatchDetail`:
 
 1. resolve o `cacheStore` (`null` desliga; `undefined` cria o padrão);
@@ -73,8 +83,10 @@ No Cache Components o modo dinâmico é opt-in. O health usa
 ## Invalidação
 
 - **Páginas após mutações**: Server Actions chamam `revalidatePath`
-  (`/dashboard` para follow/unfollow; `/dashboard/settings` para link/unlink
-  do Riot ID). **Não há uso de `revalidateTag` no código.**
+  (`/dashboard` para follow/unfollow; `/dashboard/settings` e o perfil para
+  `setProfilePublic`; `/dashboard/settings` para `unlinkRiotAccount`). Como o
+  acesso é decidido fora do cache, tornar privado ou desvincular vale na hora.
+  **Não há uso de `revalidateTag` no código.**
 - **`updateTag`/`revalidateTag`** ficam no backlog para quando o cache de
   dados precisar ser invalidado pontualmente.
 

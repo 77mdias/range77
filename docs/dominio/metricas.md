@@ -1,6 +1,6 @@
 # Métricas derivadas
 
-A HenrikDev/Riot não expõem todas as métricas exibidas. As que têm fonte
+A API da Riot não expõe todas as métricas exibidas. As que têm fonte
 derivável são computadas em `src/services/analytics/**` (cobertura **100%**);
 o resto vira `—` ou é omitido — **nunca** um número inventado.
 

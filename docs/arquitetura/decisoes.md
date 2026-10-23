@@ -20,8 +20,10 @@ acidental.
 
 ## Dados e cálculo
 
-- **HenrikDev v4** como fonte; o payload cru é espelhado em
-  `contracts/henrikdev.ts` e **nunca** chega às páginas.
+- **Formato oficial da Riot (VAL-MATCH-V1)** como contrato cru
+  (`contracts/riot.ts`); o payload **nunca** chega às páginas. A HenrikDev
+  (v4) foi a fonte original e está **guardada e desligada** — sai de vez
+  quando a fonte `riot` existir.
 - **Todo cálculo em `src/services/analytics/**`**, com cobertura **100%**;
   componentes apenas renderizam. Isso mantém o cálculo testável e a UI burra.
 - **Nunca fabricar dados.** Métricas ausentes → `—`/omitidas; conteúdo demo
@@ -41,8 +43,8 @@ acidental.
   usa entrada própria `player-breakdown:*`, com amostra por ato).
 - **TTL de 25 min nos dados de jogador** (`revalidate: 1500`): uma partida
   ranqueada dura ~30–50 min, então a janela não muda entre navegações; conta/
-  cartão (mudam raramente) ficam em 1 h. Além disso, cada **recurso** da
-  HenrikDev tem cache próprio (`cached-client.ts`, tags `henrikdev:*`), para
+  cartão (mudam raramente) ficam em 1 h. Na fonte HenrikDev (guardada), cada
+  **recurso** tem cache próprio (`cached-client.ts`, tags `henrikdev:*`), para
   Perfil e Breakdown compartilharem conta/MMR/histórico em vez de rebuscar.
 - **Cache durável `match_cache` (24h)** para partidas imutáveis.
 - **Write-through best-effort**: falha de persistência não derruba a resposta.
@@ -81,10 +83,45 @@ acidental.
 - **Widgets do Stitch com "replay telemétrico"** (affordance não implementada)
   não são exibidos como funcionais.
 
+## Production API Key: dados simulados + consentimento
+
+Contexto: a Riot não emite chave pessoal para VALORANT, e o RSO só é liberado
+após a aprovação de produção. O app precisa provar valor e conformidade
+**antes** da chave. Spec: `docs/superpowers/specs/2026-10-21-riot-production-mock-data-design.md`.
+
+- **Simular no nível do payload cru**, não da tela: o mock gera DTOs
+  VAL-MATCH-V1 e passa pelo mesmo `normalize-riot.ts` da API real. No dia da
+  chave troca-se só a fonte.
+- **Porta única `TrackerSource`** escolhida por `TRACKER_DATA_SOURCE`
+  (default `mock`). Ver [fontes de dados](./fontes-de-dados.md).
+- **Só simular o que a API oficial entrega.** Sem linha do tempo de
+  habilidades (a API só tem contagem por partida); rank/RR atuais não têm
+  endpoint oficial e existem só no mock.
+- **Mock determinístico e fictício**: mesma entrada → mesma saída; nenhum Riot
+  ID real em mock, fixture nova ou tela. Selo `DADOS SIMULADOS` + banner em
+  toda tela simulada — nunca fingir dado real.
+- **Detalhes brutos não atravessam o cache**: ~5 MB por amostra; o serviço
+  calcula `tactical`/`deathHeatmaps` no servidor e expõe só o resultado.
+- **Zonas de morte rotuladas por mapa** ("Lotus · B Site"), para não somar
+  zonas homônimas de mapas diferentes.
+- **Consentimento "a sua própria conta"**: perfil público é opt-in, privado e
+  inexistente respondem igual, checagem fora do `'use cache'`, fail-closed.
+  Vínculos legados não dão acesso. Ver
+  [consentimento e RSO](./consentimento-e-rso.md).
+- **RSO simulado com forma de OAuth** (state em cookie, `code` HMAC, callback).
+  O navegador faz o GET do callback (`window.location.assign`), porque um
+  `redirect()` de Server Action para Route Handler roda no servidor e perde
+  o `Set-Cookie`.
+- **Antes de ligar dados reais**: verificar que a partida pertence ao
+  histórico do jogador do `?player=` (hoje só o consentimento dele é
+  conferido — seguro só com o mock). Checklist completo em
+  [pedido da Production Key](../operacao/pedido-production-key.md).
+
 ## Campos sem suporte (permanecem `—`/omitidos)
 
-ECON rating, dano/HS por arma, tags econômicas por round, probabilidade de
-vitória, narrativa de IA, benchmark por elo, peak rank, server/ticks.
+ECON rating, dano/HS por arma, probabilidade de vitória, narrativa de IA,
+benchmark por elo, peak rank, server/ticks, linha do tempo de habilidades.
+(Economia por round e posições passaram a existir com o formato Riot.)
 
 ## Pendências conhecidas
 
@@ -92,3 +129,9 @@ vitória, narrativa de IA, benchmark por elo, peak rank, server/ticks.
   (`formatRelativeTime`) na rota `/matches/[matchId]` — fora do escopo das
   rodadas de design.
 - `revalidateTag`/`updateTag` para invalidação fina do cache de dados.
+- Ajustes planejados na tela de **perfil** (próxima fase).
+- Do spec, ainda não feitos: filtro por jogador no mapa de abates, heatmap de
+  mortes separado por lado, disciplina econômica em porcentagem.
+- O coach IA é **simulado**: não há cliente de LLM no repositório.
+- `CONTACT_EMAIL` (`src/lib/legal.ts`) ainda é placeholder — trocar antes de
+  enviar o link à Riot.

@@ -1,96 +1,100 @@
 # Fluxo de dados
 
-Da chamada externa até o pixel: como um dado da HenrikDev chega à tela sem
-nunca ser inventado.
+Da fonte até o pixel: como um dado de partida chega à tela sem nunca ser
+inventado.
 
 ## Pipeline geral
 
 ```
-HenrikDev API (v4/v2/v1)
-        │  src/services/henrikdev/client.ts
+Pedido (página / Route Handler)
+        │  src/services/access/profile-access.ts   ← consentimento ANTES de tudo
         ▼
-Payload cru  ──►  src/contracts/henrikdev.ts (espelho do formato externo)
+src/lib/cache/tracker.ts ('use cache', fonte na tag)
         │
-        │  src/services/henrikdev/normalize*.ts
+        ▼
+TrackerSource ativa (TRACKER_DATA_SOURCE) — src/services/tracker/sources/
+        │
+        │  mock (padrão): generate*() → DTO Riot (contracts/riot.ts)
+        │                 → normalize-riot.ts + catalog.ts
         ▼
 Contrato interno  ──►  src/contracts/tracker.ts (estável, vendor-independent)
         │
         │  src/services/analytics/** (cálculo puro, 100% coberto)
         ▼
-Métricas derivadas  (KAST, Rating, ADR, halves, timeline, agregações...)
+Métricas derivadas  (KAST, Rating, ADR, halves, timeline, economia, posições...)
         │
-        ├─ src/services/coaching/**  ──►  CoachInsight de 3 camadas (chatbot)
+        ├─ src/services/coaching/**  ──►  CoachInsight de 3 camadas (+ vetores táticos)
         ▼
 Páginas / Route Handlers  ──►  componentes React (render-only)
 ```
 
 ## Etapas em detalhe
 
-### 1. Integração externa — `src/services/henrikdev/client.ts`
+### 1. Consentimento — `src/services/access/`
 
-`createHenrikDevClient({ apiKey, baseUrl?, timeoutMs?, fetchFn? })` expõe:
+Toda superfície de dado de jogador chama `resolveProfileAccess` com o viewer
+da sessão **antes** de qualquer cache ou fonte. `private` → estado neutro /
+`404 PROFILE_NOT_PUBLIC`, sem tocar a fonte. Ver
+[consentimento e RSO](./consentimento-e-rso.md).
 
-| Método | Endpoint |
-| --- | --- |
-| `fetchPlayerMatches` | `GET /valorant/v4/matches/{affinity}/{platform}/{name}/{tag}` |
-| `fetchMatchById` | `GET /valorant/v4/match/{affinity}/{matchId}` |
-| `fetchMmrHistory` | `GET /valorant/v2/mmr-history/{affinity}/{platform}/{name}/{tag}` |
-| `fetchAccount` | `GET /valorant/v1/account/{name}/{tag}` |
-| `fetchMmr` | `GET /valorant/v2/mmr/{affinity}/{platform}/{name}/{tag}` |
-| `fetchMmrV3` | `GET /valorant/v3/mmr/{affinity}/{platform}/{name}/{tag}` |
+### 2. Fonte — `TrackerSource`
 
-- Autenticação: header `Authorization: <apiKey>` (sem `Bearer`).
-- Timeout de 15s via `AbortSignal.timeout` no mesmo `fetch` que consome o body.
-- Sem retry. Falhas viram `HenrikDevApiError`; o **status é embutido no `name`**
-  (`HenrikDevApiError:404`) porque a fronteira `'use cache'` do Next só
-  preserva `name`/`message` e destrói `instanceof`.
+`getTrackerSource()` devolve a fonte ativa. A padrão é a **simulada**, que
+gera DTOs no formato oficial VAL-MATCH-V1 e os normaliza pelo mesmo caminho
+que a API real vai usar. Detalhes em [fontes de dados](./fontes-de-dados.md).
 
-### 2. Contratos
+### 3. Contratos
 
-- `src/contracts/henrikdev.ts` — espelha o payload cru (extras tolerados).
+- `src/contracts/riot.ts` — espelho do payload oficial da Riot (+ tipos
+  `Mock*` sem equivalente oficial).
 - `src/contracts/tracker.ts` — forma normalizada estável consumida por
-  analytics e páginas.
+  analytics e páginas (inclui posições, spike e economia por round).
+- `src/contracts/access.ts` — copy/código do estado neutro.
 - `src/contracts/coach.ts` — `CoachInsight` + `ApiErrorBody`.
+- `src/contracts/henrikdev.ts` — espelho da HenrikDev (fonte guardada) e
+  `MatchCombatStats`.
 
 Ver [contratos](../dominio/contratos.md).
 
-### 3. Normalização — `src/services/henrikdev/normalize*.ts`
+### 4. Normalização — `src/services/riot/normalize-riot.ts`
 
-- `normalize.ts` → `MatchCombatStats[]` (insumo da analytics de combate).
-- `normalize-tracker.ts` → `MatchSummary`, `MatchScoreboardRow`,
-  `MatchRound`, `RoundOutcome[]`, `KillEvent[]`, `MatchDetail`.
-- Funções tolerantes a ausência: campos não computáveis viram `null`; partidas
-  que não passam nos filtros (não competitivas, incompletas, jogador ausente)
-  são silenciosamente omitidas.
+- `normalizeRiotMatchToSummary` / `ToDetail` / `ToCombat`, `normalizeRiotEconomy`,
+  `normalizeRiotRank`, `normalizeRiotRrHistory`.
+- `roundNum` cru (0-based) → `roundNumber` 1-based; `killerLocation` = entrada
+  do killer em `playerLocations`; partidas não competitivas ou incompletas
+  viram `null`.
+- `catalog.ts` resolve ids de mapa/agente/arma/armadura/tier/temporada por
+  tabela explícita (id desconhecido → `null`).
 
-### 4. Orquestração — `src/services/tracker/**`
+### 5. Orquestração — `src/services/tracker/**`
 
-- `buildPlayerOverview` — um `fetchPlayerMatches` alimenta overview,
-  agregações (agente/mapa/streak/tendência), snapshot de combate, histórico de
-  RR, card e rank (estes três best-effort). No modo **por ato** (Breakdown)
-  pagina em blocos de 10 até a contagem do ato obtida via `fetchMmrV3`.
-- `getMatchDetail` — cache durável Neon (TTL 24h) → miss: HenrikDev → grava e
-  normaliza. Um hit **não** exige `HENRIKDEV_API_KEY`.
-- `getPlayerCard` — best-effort (`null` quando indisponível).
+- `buildPlayerOverview` — `source.getPlayerSample` alimenta overview,
+  agregações (agente/mapa/streak/tendência), envelope de combate, RR, card e
+  rank. Na fonte simulada também calcula, **no servidor**, `tactical`
+  (zonas de morte + disciplina econômica) e `deathHeatmaps`; os `details`
+  brutos (~5 MB) **nunca** saem do serviço nem atravessam o `'use cache'`.
+- `source.getMatchDetail(region, matchId, focus)` — detalhe da partida na
+  perspectiva do jogador do `?player=`.
 
-### 5. Cálculo — `src/services/analytics/**`
+### 6. Cálculo — `src/services/analytics/**`
 
-Funções puras, sem I/O, cobrindo KAST, Rating ValCoach, ADR, entry,
-consistência, evolução, agregações do tracker, timeline de rounds, halves,
-agregações de armas etc. Fórmulas em [métricas](../dominio/metricas.md).
+Funções puras, sem I/O: KAST, Rating ValCoach, ADR, entry, consistência,
+evolução, agregações, timeline, halves, armas, estatísticas Riot por round,
+projeção de minimapa, tipo de compra, disciplina econômica, heatmap de mortes
+e vetores táticos. Fórmulas em [métricas](../dominio/metricas.md).
 
-### 6. Coaching — `src/services/coaching/**`
+### 7. Coaching — `src/services/coaching/**`
 
-Monta o envelope `CoachInsight` (combate e evolução) a partir das métricas.
-A persistência de snapshots é **write-through best-effort**: falha de escrita
-não derruba a resposta.
+Monta o envelope `CoachInsight` a partir das métricas; com dados simulados o
+envelope ganha `tactical` (só rótulos e números). O terminal de coach da tela
+é **simulado**: o repositório ainda não tem cliente de LLM.
 
-### 7. Apresentação
+### 8. Apresentação
 
-Páginas RSC leem via `src/lib/cache/tracker.ts` (`'use cache'`) e passam os
-dados já mastigados para componentes. Componentes de chart usam as
-transformações de `src/services/analytics/chart-transforms.ts` e **apenas
-desenham**.
+Páginas RSC leem via `src/lib/cache/tracker.ts` e passam dados já mastigados
+para componentes, que **apenas desenham** (mapa de abates, economia por
+round, heatmap). Toda tela com dado simulado mostra o selo `DADOS SIMULADOS`
+e o banner global.
 
 ## Regra transversal
 

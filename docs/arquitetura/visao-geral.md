@@ -1,10 +1,12 @@
 # Visão geral da arquitetura
 
-ValCoach é uma aplicação web que busca dados públicos de Valorant na API
-**HenrikDev**, normaliza-os para contrato interno estável, calcula métricas
-derivadas em módulos puros e as apresenta em uma interface teleétrica
-(design system **Protocol Precision**), além de preparar um envelope de
-coaching para um chatbot de baixo custo.
+ValCoach é uma aplicação web de análise e coaching de Valorant. Os dados de
+partida chegam no **formato oficial da Riot (VAL-MATCH-V1)** — hoje
+**simulados**, enquanto a Production API Key não é aprovada — e passam por
+normalização para um contrato interno estável, cálculo em módulos puros e uma
+interface telemétrica (design system **Protocol Precision**). Dados de um
+jogador só aparecem com o **consentimento** dele (Riot Sign-On simulado +
+perfil público opt-in).
 
 ## Stack
 
@@ -22,33 +24,39 @@ coaching para um chatbot de baixo custo.
 ## Princípios estruturais
 
 1. **Separação estrita de responsabilidades.**
-   - `src/services/henrikdev/**` — integração HTTP crua com a HenrikDev.
-   - `src/services/tracker/**` — normalização + orquestração + persistência.
+   - `src/services/tracker/sources/**` — fontes de dados atrás da porta
+     `TrackerSource` (`mock` padrão; `henrikdev` guardada). Ver
+     [fontes de dados](./fontes-de-dados.md).
+   - `src/services/riot/**` — gerador simulado + normalizador do formato Riot.
+   - `src/services/tracker/**` — orquestração + persistência.
+   - `src/services/access/**` — política de consentimento (quem vê o quê).
    - `src/services/analytics/**` — **cálculo puro** (sem I/O), cobertura 100%.
    - `src/services/coaching/**` — orquestração do envelope de coaching.
    - `src/components/**` e `src/app/**` — **apresentação**; componentes de
      chart apenas desenham.
 
-2. **Dados normalizados antes de tudo.** O payload cru (`snake_case`, campos
-   nulos, ids Riot) é espelhado em `src/contracts/henrikdev.ts` e convertido
-   para o contrato interno estável (`camelCase`, valores derivados) de
-   `src/contracts/tracker.ts`. Nenhuma página conhece o formato externo.
+2. **Dados normalizados antes de tudo.** O payload cru da Riot é espelhado
+   em `src/contracts/riot.ts` e convertido por `normalize-riot.ts` para o
+   contrato interno estável de `src/contracts/tracker.ts`. Nenhuma página
+   conhece o formato externo.
 
 3. **Inversão de dependência (DIP).** Tudo que toca rede, banco ou auth é
    injetável: as fábricas `create*(...)` recebem `client`, `store`, `getSession`
    ou `db` por parâmetro. Os testes injetam fakes sem rede nem banco.
 
-4. **Fail-fast de configuração.** `HENRIKDEV_API_KEY` só é exigida no caminho
-   que realmente chama a API (um *cache hit* de partida não precisa dela);
-   `DATABASE_URL` só na criação da conexão. A leitura de segredos passa sempre
+4. **Fail-fast de configuração.** `TRACKER_DATA_SOURCE` inválido falha no
+   `loadAppEnv`; `DATABASE_URL` só é exigida na criação da conexão. A leitura de segredos passa sempre
    por `loadAppEnv()` + `requireEnv()` (`src/config/env.ts`).
 
 5. **Nunca fabricar dados.** Métricas não computáveis ficam `null`/omitidas —
    jamais `0` enganoso. Ver [convenções](../desenvolvimento/convencoes.md).
 
 6. **Cache em camadas.** Cache Components (`'use cache'` + `cacheLife` +
-   `cacheTag`) protege a cota da HenrikDev; um segundo nível durável no Neon
-   (`match_cache`) guarda partidas por 24h.
+   `cacheTag`, com a fonte na tag) compartilhado entre páginas e API.
+
+7. **Consentimento antes de dado.** Toda superfície de dado de jogador chama
+   `resolveProfileAccess` antes da fonte, fora do `'use cache'`. Ver
+   [consentimento e RSO](./consentimento-e-rso.md).
 
 ## Camadas (de fora para dentro)
 
@@ -62,9 +70,11 @@ Navegador
   │     │
   │     ├─ src/lib/cache/tracker.ts ..... 'use cache' compartilhado com a API
   │     │
+  │     ├─ src/services/access/* ........ consentimento (antes do cache)
   │     └─ src/services/**
-  │           ├─ tracker/* ...... orquestra: cache durável → HenrikDev → normaliza
-  │           ├─ henrikdev/* .... client HTTP + normalizadores
+  │           ├─ tracker/* ...... orquestra a fonte ativa (TrackerSource)
+  │           ├─ tracker/sources/ mock (padrão) · henrikdev (guardada)
+  │           ├─ riot/* ......... gerador simulado + normalizador Riot
   │           ├─ analytics/* .... cálculo puro (100%)
   │           └─ coaching/* ..... envelope de 3 camadas
   │
@@ -89,7 +99,7 @@ Detalhes em [contratos](../dominio/contratos.md).
 | --- | --- | --- |
 | `test` | Vitest local/CI | nenhum — serviços externos 100% mockados |
 | `dev` | Container Docker local | injetados pelo Infisical do host |
-| `prod` *(futuro)* | Vercel | configurados manualmente no painel |
+| `prod` | Vercel (subdomínio do domínio próprio) | configurados manualmente no painel |
 
 Ver [variáveis de ambiente](../desenvolvimento/variaveis-de-ambiente.md) e
 [deploy](../operacao/deploy.md).
