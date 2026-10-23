@@ -1,20 +1,23 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { HENRIKDEV_AFFINITIES } from '@/contracts/henrikdev';
 import { getUserRiotStore } from '@/lib/db/user-riot-store';
 import { getSession } from '@/lib/session';
-import { LinkRiotForm } from './link-riot-form';
 import { LogoutButton } from './logout-button';
+import { ProfilePublicToggle } from './profile-public-toggle';
 import { UnlinkRiotButton } from './unlink-riot-button';
 
 /**
  * PÁGINA: /dashboard/settings (protegida)
  *
- * Perfil do usuário (nome/avatar/email do provedor social) + Riot ID
- * vinculado (self-tracking) + logout. Conteúdo dinâmico em <Suspense>
- * (Cache Components); sem sessão → /login.
+ * Perfil do usuário (nome/avatar/email do provedor social) + conta Riot
+ * (vínculo SÓ via RSO simulado, perfil público, desvincular) + logout.
+ * Conteúdo dinâmico em <Suspense> (Cache Components); sem sessão → /login.
+ * `?rso=linked|denied|error` vem do callback/consentimento do RSO.
  */
 
 export const instant = false;
@@ -28,14 +31,51 @@ function SettingsSkeleton() {
   );
 }
 
+type SearchParams = Promise<{ rso?: string | string[] }>;
+
+const RSO_MESSAGES: Record<string, { readonly text: string; readonly ok: boolean }> = {
+  linked: { text: 'Conta Riot conectada.', ok: true },
+  denied: { text: 'Autorização negada. Nada foi gravado.', ok: false },
+  error: { text: 'Não foi possível conectar a conta Riot. Tente novamente.', ok: false },
+};
+
+/** Início do RSO simulado: GET nativo (sem JS) para o authorize. */
+function ConnectRiotForm() {
+  return (
+    <form action="/api/rso/authorize" method="get" className="flex flex-wrap items-end gap-2">
+      <label className="flex flex-col gap-1 text-label uppercase text-text-secondary">
+        Região
+        <select
+          name="region"
+          defaultValue="br"
+          className="rounded-md border border-line bg-surface px-2 py-1.5 font-hud text-text-primary"
+        >
+          {HENRIKDEV_AFFINITIES.map((affinity) => (
+            <option key={affinity} value={affinity}>
+              {affinity.toUpperCase()}
+            </option>
+          ))}
+        </select>
+      </label>
+      <Button type="submit" size="sm">
+        Entrar com Riot
+      </Button>
+    </form>
+  );
+}
+
 /** Conteúdo dinâmico (sessão) — exportado para os testes. */
-export async function SettingsContent() {
+export async function SettingsContent({ searchParams }: { searchParams: SearchParams }) {
+  const { rso } = await searchParams;
+  const rsoStatus = typeof rso === 'string' && Object.hasOwn(RSO_MESSAGES, rso) ? RSO_MESSAGES[rso] : undefined;
+
   const session = await getSession();
   if (session === null) {
     redirect('/login?next=%2Fdashboard%2Fsettings');
   }
 
   const linked = await getUserRiotStore().get(session.user.id);
+  const rsoLinked = linked !== null && linked.linkedVia !== 'legacy' ? linked : null;
 
   return (
     <div data-settings-page className="mx-auto w-full max-w-2xl px-4 py-10">
@@ -81,28 +121,40 @@ export async function SettingsContent() {
         </div>
       </Card>
 
-      <Card label="Riot ID" className="mt-6">
-        {linked !== null ? (
+      <Card label="Conta Riot" className="mt-6">
+        {rsoStatus !== undefined ? (
+          <p
+            data-rso-status
+            role={rsoStatus.ok ? 'status' : 'alert'}
+            className={`mb-4 text-body ${rsoStatus.ok ? 'text-text-primary' : 'text-loss'}`}
+          >
+            {rsoStatus.text}
+          </p>
+        ) : null}
+        {rsoLinked !== null ? (
           <div data-riot-linked className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-label uppercase text-text-secondary">
-                  {linked.region.toUpperCase()}
+                  {rsoLinked.region.toUpperCase()}
                 </p>
                 <p className="font-display text-heading-lg text-text-primary">
-                  {linked.displayName}
-                  <span className="text-text-secondary">#{linked.tagKey}</span>
+                  {rsoLinked.displayName}
+                  <span className="text-text-secondary">#{rsoLinked.tagKey}</span>
                 </p>
               </div>
               <UnlinkRiotButton />
             </div>
+            <ProfilePublicToggle initialValue={rsoLinked.profilePublic} />
           </div>
         ) : (
           <div data-riot-empty className="flex flex-col gap-3">
             <p className="text-body text-text-secondary">
-              Vincule seu Riot ID para acompanhar sua própria evolução.
+              {linked !== null
+                ? 'Reconecte com Riot: o Riot ID digitado antes não vale como autorização.'
+                : 'Conecte sua conta Riot para acompanhar sua própria evolução.'}
             </p>
-            <LinkRiotForm />
+            <ConnectRiotForm />
           </div>
         )}
       </Card>
@@ -114,11 +166,11 @@ export async function SettingsContent() {
   );
 }
 
-export default function SettingsPage() {
+export default function SettingsPage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <main data-settings-page>
       <Suspense fallback={<SettingsSkeleton />}>
-        <SettingsContent />
+        <SettingsContent searchParams={searchParams} />
       </Suspense>
     </main>
   );

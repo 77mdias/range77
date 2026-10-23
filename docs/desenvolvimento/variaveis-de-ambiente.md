@@ -11,7 +11,8 @@ e `.dockerignore` bloqueiam `.env*`; o código lê estritamente
 | `APP_ENV` | sim* | ambiente canônico (`dev \| test \| prod`), precedência sobre `NODE_ENV` |
 | `NODE_ENV` | — | derivado de `APP_ENV` quando ausente |
 | `DATABASE_URL` | fail-fast | Neon Postgres (Drizzle + driver `neon-http`) |
-| `HENRIKDEV_API_KEY` | fail-fast | API externa de dados de Valorant |
+| `HENRIKDEV_API_KEY` | fail-fast (só com `TRACKER_DATA_SOURCE=henrikdev`) | API externa de dados de Valorant (guardada; fora do caminho padrão) |
+| `TRACKER_DATA_SOURCE` | opcional | fonte do tracker: `mock` (padrão — partidas simuladas no formato Riot), `riot` (exige a Production API Key; ainda indisponível) ou `henrikdev`. Valor desconhecido → erro de configuração |
 | `MINIMAX_API_KEY` | fail-fast | chatbot MiniMax |
 | `BETTER_AUTH_SECRET` | fail-fast | segredo do Better Auth |
 | `BETTER_AUTH_URL` | fail-fast | URL base do auth (`http://localhost:3000` em dev) |

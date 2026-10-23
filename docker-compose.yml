@@ -28,6 +28,8 @@ services:
       - NODE_ENV
       - DATABASE_URL
       - HENRIKDEV_API_KEY
+      # Fonte de dados do tracker (mock | riot | henrikdev; padrão mock).
+      - TRACKER_DATA_SOURCE
       - MINIMAX_API_KEY
       # Better Auth (fase 3): secret/URL exigidos no boot do primeiro uso;
       # provedores sociais por credencial (configure só um se quiser).

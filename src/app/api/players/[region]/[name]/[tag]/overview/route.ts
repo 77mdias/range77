@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getCachedPlayerOverview } from '@/lib/cache/tracker';
-import { errorResponse, hasErrorName, mapUpstreamError } from '@/lib/http/api-error';
+import {
+  errorResponse,
+  hasErrorName,
+  mapUpstreamError,
+  profileNotPublicResponse,
+} from '@/lib/http/api-error';
+import { getViewerUserId } from '@/lib/session';
 import { parsePlayerRouteParams } from '@/lib/validation/player-params';
+import { resolveProfileAccess } from '@/services/access/profile-access';
 
 /**
  * ROTA: GET /api/players/[region]/[name]/[tag]/overview
@@ -45,6 +52,12 @@ export async function GET(
     size = candidate;
   }
 
+  // Consentimento ANTES da fonte: sem opt-in, nada de dado pessoal.
+  const viewerUserId = await getViewerUserId(request.headers);
+  if ((await resolveProfileAccess(viewerUserId, parsed)) === 'private') {
+    return profileNotPublicResponse();
+  }
+
   try {
     const overview = await getCachedPlayerOverview(parsed.region, parsed.name, parsed.tag, size);
     return NextResponse.json(overview);
@@ -61,7 +74,7 @@ export async function GET(
       error,
       {
         notFoundCode: 'PLAYER_NOT_FOUND',
-        notFoundMessage: 'Jogador não encontrado na HenrikDev.',
+        notFoundMessage: 'Jogador não encontrado.',
         notFoundHint: 'Confira o Riot ID (nome#tag) e a região da conta.',
       },
       'api/players/overview',

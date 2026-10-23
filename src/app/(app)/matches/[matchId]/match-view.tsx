@@ -1,8 +1,12 @@
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/states';
+import { minimapFor } from '@/lib/valorant-maps';
+import { MatchRoundSelector } from './round-selector';
 import {
+  KillMap,
   MatchMetaBar,
   MvpCallout,
+  RoundEconomy,
   RoundTimeline,
   ScoreBanner,
   ScoreboardTable,
@@ -24,6 +28,7 @@ import {
 } from '@/services/analytics/match-breakdown';
 import { computePerformanceRating } from '@/services/analytics/rating';
 import { agentArtSrc, agentIconSrc, mapMinimapSrc, rankIconSrc } from '@/lib/valorant-assets';
+import { SimulatedBadge } from '@/components/ui/simulated-badge';
 import { formatRelativeTime } from '@/lib/format/relative-time';
 
 /**
@@ -64,9 +69,11 @@ export interface MatchViewProps {
   readonly viewer?: MatchViewer | null;
   /** Card in-game do MVP (quadrado); ausente → fallback ao ícone do agente. */
   readonly mvpCardSrc?: string | null;
+  /** Fonte simulada → selo DADOS SIMULADOS junto à identidade da partida. */
+  readonly simulated?: boolean;
 }
 
-export function MatchView({ detail, viewer, mvpCardSrc }: MatchViewProps) {
+export function MatchView({ detail, viewer, mvpCardSrc, simulated = false }: MatchViewProps) {
   const teamIds =
     detail.teams.length > 0
       ? detail.teams.map((team) => team.teamId)
@@ -242,8 +249,20 @@ export function MatchView({ detail, viewer, mvpCardSrc }: MatchViewProps) {
     };
   });
 
+  // Mapa de abates só com minimapa conhecido E posições reais nos abates.
+  const sortedRounds = [...detail.rounds].sort((a, b) => a.roundNumber - b.roundNumber);
+  const showKillMap =
+    sortedRounds.length > 0 &&
+    minimapFor(detail.mapId ?? detail.map) !== null &&
+    detail.kills.some((kill) => kill.victimLocation != null);
+
   return (
     <div data-match-detail className="flex flex-col">
+      {simulated ? (
+        <div className="border-b border-line bg-surface px-4 py-2 md:px-6 xl:px-8">
+          <SimulatedBadge />
+        </div>
+      ) : null}
       <MatchMetaBar
         queue={detail.queue.toUpperCase()}
         map={detail.map}
@@ -313,6 +332,43 @@ export function MatchView({ detail, viewer, mvpCardSrc }: MatchViewProps) {
             <RoundTimeline rounds={roundCells} summary={timeline?.summary} />
           )}
         </Card>
+
+        {/* Mapa de abates por round (só fontes com posições: Riot/mock) */}
+        {showKillMap ? (
+          <Card label="// Mapa de abates • posições no instante de cada abate">
+            <MatchRoundSelector
+              rounds={sortedRounds.map((round) => ({
+                id: String(round.roundNumber),
+                label: `R${round.roundNumber}`,
+              }))}
+              panels={sortedRounds.map((round) => (
+                <KillMap
+                  key={round.roundNumber}
+                  detail={detail}
+                  roundNumber={round.roundNumber}
+                  focusPuuid={viewerRow?.puuid}
+                />
+              ))}
+            />
+          </Card>
+        ) : null}
+
+        {/* Economia por round (só fontes com economia: Riot/mock) */}
+        {(detail.economy?.length ?? 0) > 0 ? (
+          <Card label="// Economia por round • loadout, gasto e sobra">
+            <div className="flex flex-col gap-6">
+              {teams.map((team, index) => (
+                <RoundEconomy
+                  key={orderedTeamIds[index]}
+                  detail={detail}
+                  teamId={orderedTeamIds[index] ?? ''}
+                  label={team.label}
+                  focusPuuid={viewerRow?.puuid}
+                />
+              ))}
+            </div>
+          </Card>
+        ) : null}
 
         {/* Eficiência de arsenal do jogador buscado (ou da partida, sem ele) */}
         {weapons.length > 0 ? (

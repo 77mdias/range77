@@ -1,84 +1,105 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { UserRiotStore } from '@/lib/db/user-riot-store';
+import type { UserRiotAccountRow, UserRiotStore } from '@/lib/db/user-riot-store';
 
 /**
- * SUITE TDD — vincular/desvincular o Riot ID do USUÁRIO LOGADO
- * (self-tracking): sessão + validação (afinidade HenrikDev + parseRiotId) +
- * store + revalidação das settings. Dependências injetadas (sem DB).
+ * SUITE TDD — perfil público e desvínculo da conta Riot do USUÁRIO LOGADO.
+ * O vínculo em si só nasce do RSO (callback); aqui: sessão + store +
+ * revalidação. Dependências injetadas (sem DB).
  */
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
 import { revalidatePath } from 'next/cache';
-import { linkRiotAccount, unlinkRiotAccount } from '@/services/tracker/user-riot-service';
+import { setProfilePublic, unlinkRiotAccount } from '@/services/tracker/user-riot-service';
 
 const sessionUser = { id: 'user-1', name: 'U', email: null, image: null };
 
-const makeDeps = (options: { session: boolean } = { session: true }) => {
+const rsoRow = {
+  id: 'row-1',
+  userId: 'user-1',
+  region: 'br',
+  nameKey: 'kairo4821',
+  tagKey: 'br1',
+  displayName: 'Kairo4821',
+  puuid: 'puuid-1',
+  linkedVia: 'rso_mock',
+  profilePublic: false,
+  createdAt: new Date('2026-10-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-10-01T00:00:00.000Z'),
+} as UserRiotAccountRow;
+
+const makeDeps = (
+  options: { session?: boolean; row?: UserRiotAccountRow | null } = {},
+) => {
   const store: UserRiotStore = {
-    get: vi.fn(async () => null),
+    get: vi.fn(async () => (options.row === undefined ? rsoRow : options.row)),
     upsert: vi.fn(async () => {}),
     remove: vi.fn(async () => {}),
+    getByRiotId: vi.fn(async () => null),
+    setProfilePublic: vi.fn(async () => {}),
   };
   return {
     store,
     deps: {
-      getSession: vi.fn(async () => (options.session ? { user: sessionUser } : null)),
+      getSession: vi.fn(async () => (options.session === false ? null : { user: sessionUser })),
       store,
     },
   };
 };
 
-const INPUT = { region: 'BR', name: 'Player One', tag: 'BR1' };
-
 beforeEach(() => {
   vi.mocked(revalidatePath).mockClear();
 });
 
-describe('linkRiotAccount', () => {
+describe('setProfilePublic', () => {
   it('exige sessão (UNAUTHENTICATED) sem tocar no store', async () => {
     const { deps, store } = makeDeps({ session: false });
 
-    const result = await linkRiotAccount(deps, INPUT);
+    const result = await setProfilePublic(deps, true);
 
     expect(result).toMatchObject({ ok: false, error: 'UNAUTHENTICATED' });
-    expect(store.upsert).not.toHaveBeenCalled();
+    expect(store.setProfilePublic).not.toHaveBeenCalled();
   });
 
-  it('rejeita região fora das afinidades da HenrikDev (INVALID_PARAMS)', async () => {
+  it('rejeita valor não booleano vindo do cliente (INVALID_PARAMS)', async () => {
     const { deps, store } = makeDeps();
 
-    const result = await linkRiotAccount(deps, { ...INPUT, region: 'mars' });
+    const result = await setProfilePublic(deps, 'true' as unknown as boolean);
 
     expect(result).toMatchObject({ ok: false, error: 'INVALID_PARAMS' });
-    expect(result.message).toContain('mars');
-    expect(store.upsert).not.toHaveBeenCalled();
+    expect(store.setProfilePublic).not.toHaveBeenCalled();
   });
 
-  it('rejeita Riot ID inválido via parseRiotId (INVALID_PARAMS)', async () => {
-    const { deps, store } = makeDeps();
+  it('sem vínculo → NOT_LINKED', async () => {
+    const { deps, store } = makeDeps({ row: null });
 
-    const result = await linkRiotAccount(deps, { ...INPUT, tag: 'toolong1' });
+    const result = await setProfilePublic(deps, true);
 
-    expect(result).toMatchObject({ ok: false, error: 'INVALID_PARAMS' });
-    expect(result.message).toContain('alfanuméricos');
-    expect(store.upsert).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ ok: false, error: 'NOT_LINKED' });
+    expect(store.setProfilePublic).not.toHaveBeenCalled();
   });
 
-  it('persiste chaves em minúsculas e revalida as settings', async () => {
+  it('vínculo legado não é consentimento → NOT_LINKED', async () => {
+    const { deps, store } = makeDeps({
+      row: { ...rsoRow, linkedVia: 'legacy', puuid: null } as UserRiotAccountRow,
+    });
+
+    const result = await setProfilePublic(deps, true);
+
+    expect(result).toMatchObject({ ok: false, error: 'NOT_LINKED' });
+    expect(store.setProfilePublic).not.toHaveBeenCalled();
+  });
+
+  it('vínculo RSO: grava para o usuário DA SESSÃO e revalida settings + perfil', async () => {
     const { deps, store } = makeDeps();
 
-    const result = await linkRiotAccount(deps, INPUT);
+    const result = await setProfilePublic(deps, true);
 
     expect(result).toMatchObject({ ok: true });
-    expect(store.upsert).toHaveBeenCalledWith({
-      userId: 'user-1',
-      region: 'br',
-      nameKey: 'player one',
-      tagKey: 'br1',
-      displayName: 'Player One',
-    });
+    expect(store.get).toHaveBeenCalledWith('user-1');
+    expect(store.setProfilePublic).toHaveBeenCalledWith('user-1', true);
     expect(revalidatePath).toHaveBeenCalledWith('/dashboard/settings');
+    expect(revalidatePath).toHaveBeenCalledWith('/players/br/kairo4821/br1');
   });
 });
 

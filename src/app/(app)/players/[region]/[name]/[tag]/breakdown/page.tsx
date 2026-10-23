@@ -1,14 +1,18 @@
 import { Suspense } from 'react';
 import type { ReactNode } from 'react';
+import { headers } from 'next/headers';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ErrorState, UpstreamErrorState } from '@/components/ui/states';
+import { ErrorState, PrivateProfileState, UpstreamErrorState } from '@/components/ui/states';
 import { getCachedBreakdownOverview } from '@/lib/cache/tracker';
 import {
   describeUpstreamError,
   hasErrorName,
   mappedToApiErrorBody,
 } from '@/lib/http/api-error';
+import { getViewerUserId } from '@/lib/session';
 import { parsePlayerPageParams } from '@/lib/validation/player-params';
+import { resolveProfileAccess } from '@/services/access/profile-access';
+import { isSimulatedDataSource } from '@/services/tracker/sources';
 import { BreakdownView } from '../breakdown-view';
 
 /**
@@ -56,9 +60,15 @@ export async function BreakdownData({
   readonly name: string;
   readonly tag: string;
 }) {
+  // Consentimento ANTES da fonte. `headers()` fora do try/catch: o sinal de
+  // dinâmico do Cache Components não pode ser capturado.
+  const viewerUserId = await getViewerUserId(await headers());
+  if ((await resolveProfileAccess(viewerUserId, { region, name, tag })) === 'private') {
+    return <PrivateProfileState />;
+  }
   try {
     const overview = await getCachedBreakdownOverview(region, name, tag);
-    return <BreakdownView overview={overview} />;
+    return <BreakdownView overview={overview} simulated={isSimulatedDataSource()} />;
   } catch (error) {
     if (hasErrorName(error, 'PlayerNoMatchesError')) {
       return (
@@ -76,7 +86,7 @@ export async function BreakdownData({
 
     const mapped = describeUpstreamError(error, {
       notFoundCode: 'PLAYER_NOT_FOUND',
-      notFoundMessage: 'Jogador não encontrado na HenrikDev.',
+      notFoundMessage: 'Jogador não encontrado.',
       notFoundHint: 'Confira o Riot ID (nome#tag) e a região da conta.',
     });
     console.error(

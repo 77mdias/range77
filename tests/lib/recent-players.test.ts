@@ -5,7 +5,7 @@ import {
   parseRecentPlayers,
   rankSnapshotFromOverview,
   readRecentPlayers,
-  recentPlayersMissingRank,
+  fetchRecentPlayerRank,
   saveRecentPlayer,
   saveRecentPlayerRank,
   serializeRecentPlayers,
@@ -29,7 +29,7 @@ const localStorageStub = {
 };
 
 beforeEach(() => {
-  STORE['valcoach.recent-players.v1'] = '';
+  STORE['valcoach.recent-players.v2'] = '';
   vi.stubGlobal('window', { localStorage: localStorageStub });
 });
 
@@ -181,22 +181,22 @@ describe('snapshot de rank/RR', () => {
     expect(rankSnapshotFromOverview({ rank: null, rrHistory: [] })).toEqual({});
   });
 
-  it('recentPlayersMissingRank: só quem não tem rank nem RR', () => {
-    expect(
-      recentPlayersMissingRank([
-        { riotId: 'a#aaa', region: 'br' },
-        { riotId: 'b#bbb', region: 'br', rank: 'Gold 1' },
-        { riotId: 'c#ccc', region: 'br', rr: 0 },
-      ]),
-    ).toEqual([{ riotId: 'a#aaa', region: 'br' }]);
+  it('saveRecentPlayerRank sem rank/RR apaga o snapshot guardado', () => {
+    STORE['valcoach.recent-players.v2'] = serializeRecentPlayers([
+      { riotId: 'privado#BR1', region: 'br', rank: 'Gold 1', rr: 40 },
+    ]);
+    saveRecentPlayerRank({ riotId: 'privado#BR1', region: 'br' });
+    expect(JSON.parse(STORE['valcoach.recent-players.v2'])).toEqual([
+      { riotId: 'privado#BR1', region: 'br' },
+    ]);
   });
 
   it('saveRecentPlayerRank persiste o snapshot', () => {
-    STORE['valcoach.recent-players.v1'] = serializeRecentPlayers([
+    STORE['valcoach.recent-players.v2'] = serializeRecentPlayers([
       { riotId: 'nexus#BR1', region: 'br' },
     ]);
     saveRecentPlayerRank({ riotId: 'nexus#BR1', region: 'br', rank: 'Ascendant 3', rr: 78 });
-    expect(JSON.parse(STORE['valcoach.recent-players.v1'])).toEqual([
+    expect(JSON.parse(STORE['valcoach.recent-players.v2'])).toEqual([
       { riotId: 'nexus#BR1', region: 'br', rank: 'Ascendant 3', rr: 78 },
     ]);
   });
@@ -214,19 +214,19 @@ describe('serialize/parse roundtrip', () => {
 
 describe('storage (fail-soft)', () => {
   it('readRecentPlayers lê o histórico do navegador', () => {
-    STORE['valcoach.recent-players.v1'] = serializeRecentPlayers([
+    STORE['valcoach.recent-players.v2'] = serializeRecentPlayers([
       { riotId: 'twmz#tower', region: 'br' },
     ]);
     expect(readRecentPlayers()).toEqual([{ riotId: 'twmz#tower', region: 'br' }]);
   });
 
   it('saveRecentPlayer persiste e devolve a lista atualizada (recente primeiro)', () => {
-    STORE['valcoach.recent-players.v1'] = serializeRecentPlayers([
+    STORE['valcoach.recent-players.v2'] = serializeRecentPlayers([
       { riotId: 'old#one', region: 'br' },
     ]);
     const updated = saveRecentPlayer({ riotId: 'novo#dois', region: 'na' });
     expect(updated[0]).toEqual({ riotId: 'novo#dois', region: 'na' });
-    expect(JSON.parse(STORE['valcoach.recent-players.v1'])).toEqual(updated);
+    expect(JSON.parse(STORE['valcoach.recent-players.v2'])).toEqual(updated);
   });
 
   it('storage quebrado (throw) → [] sem lançar', () => {
@@ -244,8 +244,16 @@ describe('storage (fail-soft)', () => {
     expect(() => saveRecentPlayer({ riotId: 'a#aaa', region: 'br' })).not.toThrow();
   });
 
+  it('histórico v1 (Riot IDs reais da era HenrikDev) é ignorado', () => {
+    STORE['valcoach.recent-players.v2'] = '';
+    STORE['valcoach.recent-players.v1'] = serializeRecentPlayers([
+      { riotId: 'legado#OLD', region: 'br', rank: 'Diamond 2', rr: 10 },
+    ]);
+    expect(readRecentPlayers()).toEqual([]);
+  });
+
   it('JSON corrompido → [] sem lançar', () => {
-    STORE['valcoach.recent-players.v1'] = '{não é json';
+    STORE['valcoach.recent-players.v2'] = '{não é json';
     expect(readRecentPlayers()).toEqual([]);
   });
 });
@@ -257,5 +265,45 @@ describe('sem window (SSR/node)', () => {
     expect(saveRecentPlayer({ riotId: 'a#aaa', region: 'br' })).toEqual([
       { riotId: 'a#aaa', region: 'br' },
     ]);
+  });
+});
+
+describe('fetchRecentPlayerRank (revalidação fail-soft)', () => {
+  const stale: RecentPlayer = { riotId: 'Alvo#BR1', region: 'br', rank: 'Gold 1', rr: 40 };
+  const signal = new AbortController().signal;
+
+  it('sucesso → snapshot atualizado, consultando o overview do jogador', async () => {
+    const fetchMock = vi.fn(async () =>
+      Response.json({ rank: { tier: 'Platinum 2', rrInTier: 12 }, rrHistory: [] }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(fetchRecentPlayerRank(stale, signal)).resolves.toEqual({
+      riotId: 'Alvo#BR1',
+      region: 'br',
+      rank: 'Platinum 2',
+      rr: 12,
+    });
+    expect(fetchMock).toHaveBeenCalledWith('/api/players/br/Alvo/BR1/overview?size=1', { signal });
+  });
+
+  it('404 (perfil privado) → entrada sem rank/RR', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 404 })));
+    await expect(fetchRecentPlayerRank(stale, signal)).resolves.toEqual({
+      riotId: 'Alvo#BR1',
+      region: 'br',
+    });
+  });
+
+  it('falha de rede → entrada sem rank/RR, sem lançar', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new TypeError('network');
+      }),
+    );
+    await expect(fetchRecentPlayerRank(stale, signal)).resolves.toEqual({
+      riotId: 'Alvo#BR1',
+      region: 'br',
+    });
   });
 });

@@ -1,9 +1,5 @@
-import { loadAppEnv, requireEnv } from '@/config/env';
 import type { CoachInsight } from '@/contracts/coach';
-import {
-  COMPETITIVE_QUEUE_ID,
-  type HenrikDevMatchV4,
-} from '@/contracts/henrikdev';
+import type { HenrikDevMatchV4, MatchCombatStats } from '@/contracts/henrikdev';
 import {
   buildCombatCoachInsight,
   calculateCombatMetrics,
@@ -11,11 +7,11 @@ import {
   type CombatRawMetrics,
   type ImpactClass,
 } from '@/services/analytics/combat';
-import {
-  createHenrikDevClient,
-  type HenrikDevClient,
-} from '@/services/henrikdev/client';
+import type { HenrikDevClient } from '@/services/henrikdev/client';
 import { normalizeMatchesToCombat } from '@/services/henrikdev/normalize';
+import type { TacticalVectors } from '@/services/analytics/tactical-vectors';
+import type { TrackerSource } from '@/services/tracker/source';
+import { createHenrikDevSource, getTrackerSource } from '@/services/tracker/sources';
 import {
   createCombatSnapshotStore,
   type CombatSnapshotRecord,
@@ -25,11 +21,9 @@ import {
 /**
  * PASSO 3 — IMPLEMENTAÇÃO: orquestração de coaching do jogador.
  *
- * Pipeline: HenrikDev (client injetável — DIP) → normalização → analytics
- * pura → envelope CoachInsight de 3 camadas + identidade/avaliação.
- *
- * A chave `HENRIKDEV_API_KEY` só é exigida quando nenhum client é injetado
- * (produção/rota real); testes injetam um client falso e rodam sem rede.
+ * Pipeline: `TrackerSource` (porta injetável — DIP; padrão simulado) →
+ * amostra canônica de combate → analytics pura → envelope CoachInsight de 3
+ * camadas + identidade/avaliação.
  */
 
 export class PlayerNoMatchesError extends Error {
@@ -59,6 +53,8 @@ export interface PlayerCombatInsight extends CoachInsight<CombatRawMetrics> {
     readonly aimClass: AimClass;
     readonly impactClass: ImpactClass;
   };
+  /** Vetores táticos (só rótulos/números); ausente quando a fonte não os fornece. */
+  readonly tactical?: TacticalVectors;
 }
 
 export interface BuildPlayerCombatInsightParams {
@@ -66,14 +62,33 @@ export interface BuildPlayerCombatInsightParams {
   readonly name: string;
   readonly tag: string;
   readonly size?: number;
-  /** Client injetado (testes). Sem ele, cria um com HENRIKDEV_API_KEY do env. */
+  /** Fonte do tracker. Padrão: `getTrackerSource()` (`TRACKER_DATA_SOURCE`). */
+  readonly source?: TrackerSource;
+  /** Atalho legado (testes): client HenrikDev → fonte `henrikdev`. */
   readonly client?: HenrikDevClient;
   /**
    * Store de snapshots: `undefined` cria o padrão (exige DATABASE_URL —
-   * fail fast); `null` desliga a persistência explicitamente (contextos
-   * sem DB); implementação própria é injetada nos testes.
+   * fail fast) para fontes reais e DESLIGA para a fonte simulada; `null`
+   * desliga explicitamente; implementação própria é injetada nos testes.
    */
   readonly snapshotStore?: CombatSnapshotStore | null;
+}
+
+/**
+ * Resolve o store de snapshots: o cache durável (Neon) é só das fontes reais —
+ * a fonte simulada não polui a evolução (`/history`) com dados fabricados.
+ */
+export function resolveSnapshotStore(
+  source: TrackerSource,
+  snapshotStore: CombatSnapshotStore | null | undefined,
+): CombatSnapshotStore | null {
+  if (snapshotStore === null) {
+    return null;
+  }
+  if (snapshotStore !== undefined) {
+    return snapshotStore;
+  }
+  return source.kind === 'mock' ? null : createCombatSnapshotStore();
 }
 
 export async function buildPlayerCombatInsight(
@@ -81,28 +96,18 @@ export async function buildPlayerCombatInsight(
 ): Promise<PlayerCombatInsight> {
   const { region, name, tag, size = DEFAULT_MATCH_SAMPLE_SIZE } = params;
 
+  const source =
+    params.source ??
+    (params.client !== undefined ? createHenrikDevSource(params.client) : getTrackerSource());
+
   // Fail fast de CONFIGURAÇÃO antes de qualquer I/O caro: um problema de
   // variável de ambiente deve falhar em milissegundos (com remediação),
-  // nunca depois de um fetch de 10s na HenrikDev.
-  const store =
-    params.snapshotStore === null
-      ? null
-      : (params.snapshotStore ?? createCombatSnapshotStore());
+  // nunca depois de um fetch de 10s upstream.
+  const store = resolveSnapshotStore(source, params.snapshotStore);
 
-  const client =
-    params.client ??
-    createHenrikDevClient({ apiKey: requireEnv(loadAppEnv(), 'HENRIKDEV_API_KEY') });
+  const sample = await source.getPlayerSample({ region, name, tag, size });
 
-  const rawMatches: readonly HenrikDevMatchV4[] = await client.fetchPlayerMatches({
-    affinity: region.toLowerCase(),
-    platform: 'pc',
-    name,
-    tag,
-    mode: COMPETITIVE_QUEUE_ID,
-    size,
-  });
-
-  return buildCombatInsightFromMatches(rawMatches, {
+  return buildCombatInsightFromCombatStats(sample.combat, {
     region,
     name,
     tag,
@@ -118,6 +123,7 @@ export interface FinalizeCombatInsightParams {
   readonly size: number;
   /** `null` desliga a persistência; implementação injetável nos testes. */
   readonly snapshotStore: CombatSnapshotStore | null;
+  readonly tactical?: TacticalVectors | null;
 }
 
 /**
@@ -129,9 +135,21 @@ export async function buildCombatInsightFromMatches(
   rawMatches: readonly HenrikDevMatchV4[],
   params: FinalizeCombatInsightParams,
 ): Promise<PlayerCombatInsight> {
-  const { region, name, tag, size, snapshotStore } = params;
+  const { name, tag } = params;
+  return buildCombatInsightFromCombatStats(normalizeMatchesToCombat(rawMatches, { name, tag }), params);
+}
 
-  const combatMatches = normalizeMatchesToCombat(rawMatches, { name, tag });
+/**
+ * Calcula as métricas/envelope de coaching sobre a amostra canônica de
+ * combate JÁ normalizada (qualquer fonte) e persiste um snapshot
+ * (best-effort).
+ */
+export async function buildCombatInsightFromCombatStats(
+  combatMatches: readonly MatchCombatStats[],
+  params: FinalizeCombatInsightParams,
+): Promise<PlayerCombatInsight> {
+  const { region, name, tag, size, snapshotStore, tactical } = params;
+
   if (combatMatches.length === 0) {
     throw new PlayerNoMatchesError();
   }
@@ -148,6 +166,8 @@ export async function buildCombatInsightFromMatches(
       aimClass: metrics.evaluation.aimClass,
       impactClass: metrics.evaluation.impactClass,
     },
+    // Chave omitida sem tactical: payload idêntico ao anterior.
+    ...(tactical != null ? { tactical } : {}),
   };
 
   // Write-through best-effort: falhas de ESCRITA não derrubam o envelope.

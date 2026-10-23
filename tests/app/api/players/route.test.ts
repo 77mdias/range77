@@ -21,6 +21,18 @@ vi.mock('@/services/coaching/player-combat', () => {
   return { buildPlayerCombatInsight: vi.fn(), PlayerNoMatchesError };
 });
 
+// Política de consentimento: por padrão o perfil é público (vínculo RSO com
+// opt-in) e o visitante é anônimo; cada teste de acesso sobrescreve.
+const access = vi.hoisted(() => ({ getByRiotId: vi.fn(), viewer: vi.fn() }));
+vi.mock('@/lib/db/user-riot-store', () => ({
+  getUserRiotStore: () => ({ getByRiotId: access.getByRiotId }),
+}));
+vi.mock('@/lib/session', () => ({ getViewerUserId: access.viewer }));
+const PUBLIC_LINK = { userId: 'u-owner', linkedVia: 'rso_mock', profilePublic: true };
+const PRIVATE_BODY = {
+  error: { code: 'PROFILE_NOT_PUBLIC', message: 'Este jogador não tornou o perfil público.' },
+};
+
 import { GET } from '@/app/api/players/[region]/[name]/[tag]/route';
 import {
   buildPlayerCombatInsight,
@@ -47,6 +59,8 @@ const context = (
 
 beforeEach(() => {
   vi.mocked(buildPlayerCombatInsight).mockReset();
+  access.getByRiotId.mockReset().mockResolvedValue(PUBLIC_LINK);
+  access.viewer.mockReset().mockResolvedValue(null);
 });
 
 describe('GET /api/players/[region]/[name]/[tag]', () => {
@@ -198,5 +212,29 @@ describe('GET /api/players/[region]/[name]/[tag]', () => {
     } finally {
       errorSpy.mockRestore();
     }
+  });
+
+  it('perfil privado ou inexistente → mesmo 404 PROFILE_NOT_PUBLIC, sem chamar a fonte', async () => {
+    access.getByRiotId.mockResolvedValueOnce(null);
+    const missing = await GET(request(), context());
+    access.getByRiotId.mockResolvedValueOnce({ ...PUBLIC_LINK, profilePublic: false });
+    const optedOut = await GET(request(), context());
+
+    expect(missing.status).toBe(404);
+    expect(optedOut.status).toBe(404);
+    expect(await missing.json()).toEqual(PRIVATE_BODY);
+    expect(await optedOut.json()).toEqual(PRIVATE_BODY);
+    expect(vi.mocked(buildPlayerCombatInsight)).not.toHaveBeenCalled();
+  });
+
+  it('dono do perfil privado e conta demo → passam pela política', async () => {
+    access.viewer.mockResolvedValueOnce('u-owner');
+    access.getByRiotId.mockResolvedValueOnce({ ...PUBLIC_LINK, profilePublic: false });
+    const owner = await GET(request(), context());
+    const demo = await GET(request(), context('br', 'ValCoachDemo', 'DEMO'));
+
+    expect(owner.status).not.toBe(404);
+    expect(demo.status).not.toBe(404);
+    expect(vi.mocked(buildPlayerCombatInsight)).toHaveBeenCalledTimes(2);
   });
 });

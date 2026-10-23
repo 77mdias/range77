@@ -3,34 +3,26 @@
 import { useId, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { linkRiotAccount } from '@/app/actions/user-riot';
 import { CheckboxRow } from '@/components/auth/checkbox-row';
-import { Field, FIELD_CONTROL_CLASS } from '@/components/auth/field';
+import { Field } from '@/components/auth/field';
 import { PasswordField } from '@/components/auth/password-field';
 import { SubmitButton } from '@/components/auth/submit-button';
-import { HENRIKDEV_AFFINITIES, type HenrikDevAffinity } from '@/contracts/henrikdev';
 import {
   parseEmail,
   parseName,
   parsePassword,
   parsePasswordConfirmation,
 } from '@/lib/validation/credentials';
-import { parseRiotId } from '@/lib/validation/riot-id';
-import { cx } from '@/lib/cx';
 
 /**
- * SignupForm — tela 8: nome, e-mail, Riot ID opcional (+ região), senha,
- * confirmação e aceite de termos.
+ * SignupForm — tela 8: nome, e-mail, senha, confirmação e aceite de termos.
+ * A conta Riot NÃO é coletada aqui: o vínculo só nasce do RSO, depois, em
+ * Configurações.
  *
- * DUAS decisões de contrato:
- *
- * 1. `signUp.email` é chamado SEM `callbackURL`: o cliente do Better Auth traz
- *    um `redirectPlugin` LIGADO por padrão — com `callbackURL` ele navega o
- *    navegador assim que a resposta chega, atropelando o vínculo do Riot ID e
- *    a navegação final. A navegação é nossa, no fim de `submit()`.
- * 2. Falha no vínculo NÃO invalida a conta (que já foi criada). O usuário vai
- *    para `/dashboard/settings`, onde o formulário de vínculo já existe e
- *    mostra o erro.
+ * `signUp.email` é chamado SEM `callbackURL`: o cliente do Better Auth traz
+ * um `redirectPlugin` LIGADO por padrão — com `callbackURL` ele navega o
+ * navegador assim que a resposta chega. A navegação é nossa, no fim de
+ * `submit()`.
  */
 
 export interface SignupFormProps {
@@ -42,25 +34,11 @@ const EMAIL_IN_USE = 'Este e-mail já está cadastrado. Tente entrar.';
 const GENERIC_SIGNUP_ERROR = 'Não foi possível criar a conta. Tente novamente.';
 const TERMS_REQUIRED = 'Aceite os termos para continuar.';
 
-/** Rótulos do Stitch (4 opções) expandidos para as 6 afinidades REAIS do
- * contrato HenrikDev — o backend rejeita `KR / ASIA PACIFIC` como valor único
- * e LATAM não estava representado. */
-const REGION_LABELS: Record<HenrikDevAffinity, string> = {
-  br: 'BR',
-  latam: 'LATAM',
-  na: 'NA (NORTH AMER)',
-  eu: 'EU (EUROPE)',
-  ap: 'AP (ASIA PACIFIC)',
-  kr: 'KR (KOREA)',
-};
-
 export function SignupForm({ callbackPath, className }: SignupFormProps) {
   const router = useRouter();
 
   const nameId = useId();
   const emailId = useId();
-  const riotId = useId();
-  const regionId = useId();
   const passwordId = useId();
   const confirmationId = useId();
   const termsId = useId();
@@ -68,8 +46,6 @@ export function SignupForm({ callbackPath, className }: SignupFormProps) {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [riotName, setRiotName] = useState('');
-  const [region, setRegion] = useState<HenrikDevAffinity>('br');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -103,13 +79,6 @@ export function SignupForm({ callbackPath, className }: SignupFormProps) {
       return;
     }
 
-    const trimmedRiot = riotName.trim();
-    const parsedRiot = trimmedRiot === '' ? null : parseRiotId(trimmedRiot);
-    if (parsedRiot !== null && !parsedRiot.ok) {
-      setError(parsedRiot.message);
-      return;
-    }
-
     setError(null);
     setLoading(true);
     try {
@@ -134,17 +103,7 @@ export function SignupForm({ callbackPath, className }: SignupFormProps) {
         return;
       }
 
-      if (parsedRiot === null) {
-        router.push(callbackPath);
-        return;
-      }
-
-      const linked = await linkRiotAccount({
-        region,
-        name: parsedRiot.value.name,
-        tag: parsedRiot.value.tag,
-      });
-      router.push(linked.ok ? callbackPath : '/dashboard/settings');
+      router.push(callbackPath);
     } catch {
       setError('Falha de rede ao contatar o servidor de autenticação.');
     } finally {
@@ -189,51 +148,10 @@ export function SignupForm({ callbackPath, className }: SignupFormProps) {
         />
 
         <div className="flex flex-col gap-1.5">
-          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[1fr_auto]">
-            <Field
-              id={riotId}
-              name="riotId"
-              label="03 // RIOT ID INICIAL (IMPORTAÇÃO AUTOMÁTICA)"
-              badge="OPCIONAL • IMPORTAÇÃO IMEDIATA"
-              placeholder="ex: Aspas#LEV ou SeuNick#TAG"
-              value={riotName}
-              disabled={loading}
-              onChange={(event) => setRiotName(event.target.value)}
-            />
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor={regionId}
-                className="font-hud text-label-md uppercase text-text-primary"
-              >
-                REGIÃO
-              </label>
-              <select
-                id={regionId}
-                name="region"
-                value={region}
-                disabled={loading}
-                onChange={(event) => setRegion(event.target.value as HenrikDevAffinity)}
-                className={cx(FIELD_CONTROL_CLASS, 'pl-2 pr-6')}
-              >
-                {HENRIKDEV_AFFINITIES.map((affinity) => (
-                  <option key={affinity} value={affinity}>
-                    {`REGIÃO: ${REGION_LABELS[affinity]}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <p className="text-body-sm text-text-secondary">
-            Importa automaticamente as últimas 20 partidas competitivas e partidas personalizadas no
-            primeiro acesso para geração do primeiro relatório telemétrico.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
           <PasswordField
             id={passwordId}
             name="password"
-            label="04 // SENHA DE ACESSO"
+            label="03 // SENHA DE ACESSO"
             badge="COMPLEXIDADE: FORTE"
             autoComplete="new-password"
             showStrength
@@ -244,7 +162,7 @@ export function SignupForm({ callbackPath, className }: SignupFormProps) {
           <PasswordField
             id={confirmationId}
             name="passwordConfirmation"
-            label="05 // CONFIRMAR SENHA"
+            label="04 // CONFIRMAR SENHA"
             badge="VALIDADO"
             autoComplete="new-password"
             value={confirmation}

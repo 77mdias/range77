@@ -83,7 +83,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
                 Armazenamento zero-knowledge. Suas credenciais de jogo nunca são expostas em texto
                 puro.
               </InfoRow>
-              <InfoRow icon="refresh" title="Riot API & HenrikDev Live Sync">
+              <InfoRow icon="refresh" title="Riot API Live Sync">
                 Sincronização imediata de MMR, split de danos de headshot e KAST por rodada.
               </InfoRow>
               <InfoRow icon="target" title="Diagnósticos Instantâneos <150ms">

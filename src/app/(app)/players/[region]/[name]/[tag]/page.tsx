@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ErrorState, UpstreamErrorState } from '@/components/ui/states';
+import { ErrorState, PrivateProfileState, UpstreamErrorState } from '@/components/ui/states';
 import { getCachedPlayerOverview } from '@/lib/cache/tracker';
 import { getTrackedPlayersStore } from '@/lib/db/tracked-players-store';
 import {
@@ -10,9 +11,11 @@ import {
   hasErrorName,
   mappedToApiErrorBody,
 } from '@/lib/http/api-error';
-import { getSession } from '@/lib/session';
+import { getSession, getViewerUserId } from '@/lib/session';
 import { parsePlayerPageParams } from '@/lib/validation/player-params';
 import { FollowButton } from './follow-button';
+import { resolveProfileAccess } from '@/services/access/profile-access';
+import { isSimulatedDataSource } from '@/services/tracker/sources';
 import { PlayerProfileView } from './profile-view';
 
 /**
@@ -94,6 +97,12 @@ export async function PlayerProfileData({
   readonly name: string;
   readonly tag: string;
 }) {
+  // Consentimento ANTES da fonte. `headers()` fora do try/catch: o sinal de
+  // dinâmico do Cache Components não pode ser capturado.
+  const viewerUserId = await getViewerUserId(await headers());
+  if ((await resolveProfileAccess(viewerUserId, { region, name, tag })) === 'private') {
+    return <PrivateProfileState />;
+  }
   try {
     // A visão geral (HenrikDev + cache) e a ação "Seguir" (sessão + DB) são
     // independentes — rodam em paralelo em vez de somar as duas latências.
@@ -101,7 +110,13 @@ export async function PlayerProfileData({
       getCachedPlayerOverview(region, name, tag, PROFILE_SAMPLE_SIZE),
       FollowSection({ region, name, tag }),
     ]);
-    return <PlayerProfileView overview={overview} headerAction={headerAction} />;
+    return (
+      <PlayerProfileView
+        overview={overview}
+        headerAction={headerAction}
+        simulated={isSimulatedDataSource()}
+      />
+    );
   } catch (error) {
     if (hasErrorName(error, 'PlayerNoMatchesError')) {
       return (
@@ -119,7 +134,7 @@ export async function PlayerProfileData({
 
     const mapped = describeUpstreamError(error, {
       notFoundCode: 'PLAYER_NOT_FOUND',
-      notFoundMessage: 'Jogador não encontrado na HenrikDev.',
+      notFoundMessage: 'Jogador não encontrado.',
       notFoundHint: 'Confira o Riot ID (nome#tag) e a região da conta.',
     });
     // Diagnóstico no servidor (o ErrorState não vaza a causa ao cliente).

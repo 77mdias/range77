@@ -9,11 +9,15 @@ import { renderToStaticMarkup } from 'react-dom/server';
 const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
   listByUser: vi.fn(),
+  resolveProfileAccess: vi.fn(async () => 'public'),
 }));
 
 vi.mock('@/lib/session', () => ({ getSession: mocks.getSession }));
 vi.mock('@/lib/db/tracked-players-store', () => ({
   getTrackedPlayersStore: () => ({ listByUser: mocks.listByUser }),
+}));
+vi.mock('@/services/access/profile-access', () => ({
+  resolveProfileAccess: mocks.resolveProfileAccess,
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
@@ -56,6 +60,27 @@ describe('DashboardContent (conteúdo dinâmico)', () => {
     expect(html).toContain('/players/br/player%20one/br1');
     expect(html).toContain('Deixar de seguir');
     expect(html).toContain('Configurações');
+  });
+
+  it('seguido que ficou privado vira card neutro (sem link) mantendo o unfollow', async () => {
+    mocks.getSession.mockResolvedValueOnce({
+      user: { id: 'user-1', name: 'U', email: null, image: null },
+    });
+    mocks.listByUser.mockResolvedValueOnce([trackedPlayer]);
+    mocks.resolveProfileAccess.mockResolvedValueOnce('private');
+
+    const html = renderToStaticMarkup(await DashboardContent());
+
+    expect(mocks.resolveProfileAccess).toHaveBeenLastCalledWith('user-1', {
+      region: 'br',
+      name: 'player one',
+      tag: 'br1',
+    });
+    expect(html).toContain('Este jogador não tornou o perfil público.');
+    // O nome é o do próprio registro do usuário (para saber o que remover).
+    expect(html).toContain('Player One');
+    expect(html).not.toContain('/players/br/player%20one/br1');
+    expect(html).toContain('Deixar de seguir');
   });
 
   it('estado vazio quando o usuário não segue ninguém', async () => {

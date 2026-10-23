@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TrackedPlayersStore } from '@/lib/db/tracked-players-store';
+import type { ProfileAccess } from '@/services/access/profile-access';
 
 /**
  * SUITE TDD — seguir/deixar de seguir (sessão + validação + store +
@@ -13,7 +14,10 @@ import { followPlayer, unfollowPlayer } from '@/services/tracker/tracked-players
 
 const sessionUser = { id: 'user-1', name: 'U', email: null, image: null };
 
-const makeDeps = (options: { session: boolean } = { session: true }) => {
+const makeDeps = (
+  options: { session?: boolean; access?: ProfileAccess } = {},
+) => {
+  const { session = true, access = 'public' } = options;
   const store: TrackedPlayersStore = {
     listByUser: vi.fn(async () => []),
     add: vi.fn(async () => {}),
@@ -24,9 +28,10 @@ const makeDeps = (options: { session: boolean } = { session: true }) => {
     store,
     deps: {
       getSession: vi.fn(async () =>
-        options.session ? { user: sessionUser } : null,
+        session ? { user: sessionUser } : null,
       ),
       store,
+      resolveAccess: vi.fn(async () => access),
     },
   };
 };
@@ -70,6 +75,33 @@ describe('followPlayer', () => {
       displayName: 'Player One',
     });
     expect(revalidatePath).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('recusa perfil não público (PROFILE_NOT_PUBLIC) sem tocar no store', async () => {
+    const { deps, store } = makeDeps({ access: 'private' });
+
+    const result = await followPlayer(deps, INPUT);
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: 'PROFILE_NOT_PUBLIC',
+      message: 'Este jogador não tornou o perfil público.',
+    });
+    expect(deps.resolveAccess).toHaveBeenCalledWith('user-1', {
+      region: 'br',
+      name: 'Player One',
+      tag: 'BR1',
+    });
+    expect(store.add).not.toHaveBeenCalled();
+  });
+
+  it.each(['owner', 'demo', 'public'] as const)('permite seguir perfil %s', async (access) => {
+    const { deps, store } = makeDeps({ access });
+
+    const result = await followPlayer(deps, INPUT);
+
+    expect(result).toMatchObject({ ok: true, code: 'OK' });
+    expect(store.add).toHaveBeenCalled();
   });
 });
 

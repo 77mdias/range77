@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { SimulatedBadge } from '@/components/ui/simulated-badge';
 import { cx } from '@/lib/cx';
 
 /**
@@ -21,6 +22,8 @@ export interface PlayerHeaderProps {
   readonly meta?: readonly { readonly label: string; readonly value: string }[];
   /** Slot de ações (sync, compartilhar...). */
   readonly actions?: React.ReactNode;
+  /** Fonte simulada → selo DADOS SIMULADOS ao lado do nome. */
+  readonly simulated?: boolean;
   readonly className?: string;
 }
 
@@ -34,6 +37,7 @@ export function PlayerHeader({
   verified = false,
   meta,
   actions,
+  simulated = false,
   className,
 }: PlayerHeaderProps) {
   const initials = name.slice(0, 2).toUpperCase();
@@ -79,6 +83,7 @@ export function PlayerHeader({
               {name}
               <span className="text-text-secondary">#{tag}</span>
             </h1>
+            {simulated ? <SimulatedBadge /> : null}
             {verified ? <Badge variant="neutral">Verificado</Badge> : null}
             {rank !== undefined ? (
               <span

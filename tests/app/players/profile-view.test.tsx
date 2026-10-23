@@ -116,6 +116,8 @@ const overview: PlayerOverview = {
       date: '2026-10-03T00:00:00.000Z',
     },
   ],
+  tactical: null,
+  deathHeatmaps: [],
 };
 
 describe('PlayerProfileView', () => {
@@ -231,6 +233,12 @@ describe('PlayerProfileView', () => {
     const html = renderToStaticMarkup(<PlayerProfileView overview={comAgentes} />);
     expect(html).toContain('main: Jett');
     expect(html).toContain('gargalo: Cypher');
+  });
+
+  it('dado simulado: strip de pipeline não cita a HenrikDev', () => {
+    const html = renderToStaticMarkup(<PlayerProfileView overview={overview} simulated />);
+    expect(html).toContain('Fontes: Riot API (simulada)');
+    expect(html).not.toContain('HenrikDev');
   });
 
   it('mostra "Sem sequência" quando não há streak atual', () => {

@@ -1,11 +1,13 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import type { ApiErrorBody } from '@/contracts/coach';
-import { hasErrorName } from '@/lib/http/api-error';
+import { hasErrorName, profileNotPublicResponse } from '@/lib/http/api-error';
+import { getViewerUserId } from '@/lib/session';
+import { resolveProfileAccess } from '@/services/access/profile-access';
 import { parsePlayerRouteParams } from '@/lib/validation/player-params';
 import { buildPlayerCombatInsight } from '@/services/coaching/player-combat';
-import { createCachedHenrikDevClient } from '@/services/henrikdev/cached-client';
 import { henrikDevErrorStatus } from '@/services/henrikdev/client';
+import { getTrackerSource } from '@/services/tracker/sources';
 
 /**
  * ROTA: GET /api/players/[region]/[name]/[tag]
@@ -13,8 +15,8 @@ import { henrikDevErrorStatus } from '@/services/henrikdev/client';
  * Next 16 (App Router): `params` é uma Promise e DEVE ser aguardada.
  * Cache Components: o envelope é cacheado via helper `'use cache'` com
  * `cacheLife`/`cacheTag` (stale 5min / revalidate 25min / expire 6h),
- * protegendo nossos limites da HenrikDev contra o tráfego do chatbot. O client
- * injetado adiciona o cache POR RECURSO (`henrikdev:*`).
+ * protegendo os limites upstream contra o tráfego do chatbot. Os dados vêm da
+ * `TrackerSource` de `TRACKER_DATA_SOURCE` (padrão `mock`); o `kind` entra na tag.
  */
 
 const MIN_SAMPLE = 1;
@@ -34,14 +36,11 @@ async function getCachedInsight(
 ) {
   'use cache';
   cacheLife({ stale: 300, revalidate: 1500, expire: 21600 });
-  cacheTag(`player-combat:${region}:${name.toLowerCase()}:${tag.toLowerCase()}:${size}`);
-  return buildPlayerCombatInsight({
-    region,
-    name,
-    tag,
-    size,
-    client: createCachedHenrikDevClient(),
-  });
+  const source = getTrackerSource();
+  cacheTag(
+    `player-combat:${source.kind}:${region}:${name.toLowerCase()}:${tag.toLowerCase()}:${size}`,
+  );
+  return buildPlayerCombatInsight({ region, name, tag, size, source });
 }
 
 function errorResponse(
@@ -74,7 +73,7 @@ function describeError(error: unknown): MappedErrorDescriptor {
       return {
         status: 404,
         code: 'PLAYER_NOT_FOUND',
-        message: 'Jogador não encontrado na HenrikDev.',
+        message: 'Jogador não encontrado.',
         hint: 'Confira o Riot ID (nome#tag) e a região da conta.',
         detail,
       };
@@ -83,7 +82,7 @@ function describeError(error: unknown): MappedErrorDescriptor {
       return {
         status: 503,
         code: 'UPSTREAM_RATE_LIMITED',
-        message: 'Limite de requisições da HenrikDev atingido.',
+        message: 'Limite de requisições do provedor de dados atingido.',
         hint: 'Aguarde alguns segundos e tente novamente.',
         detail,
       };
@@ -92,7 +91,7 @@ function describeError(error: unknown): MappedErrorDescriptor {
       return {
         status: 500,
         code: 'CONFIG_ERROR',
-        message: 'A HenrikDev rejeitou a chave da API.',
+        message: 'O provedor de dados rejeitou a chave da API.',
         hint: 'Verifique a variável HENRIKDEV_API_KEY no Infisical (dev) ou no painel da Vercel (prod).',
         detail,
       };
@@ -101,7 +100,7 @@ function describeError(error: unknown): MappedErrorDescriptor {
       return {
         status: 502,
         code: 'UPSTREAM_UNREACHABLE',
-        message: 'Não foi possível contactar a HenrikDev.',
+        message: 'Não foi possível contactar o provedor de dados.',
         hint: 'Falha de rede ou timeout — tente novamente em instantes.',
         detail,
       };
@@ -109,7 +108,7 @@ function describeError(error: unknown): MappedErrorDescriptor {
     return {
       status: 502,
       code: 'UPSTREAM_ERROR',
-      message: `Erro upstream da HenrikDev: ${
+      message: `Erro upstream do provedor de dados: ${
         error instanceof Error ? error.message : String(error)
       }`,
       detail,
@@ -175,6 +174,12 @@ export async function GET(
       );
     }
     size = parsed;
+  }
+
+  // Consentimento ANTES da fonte: sem opt-in, nada de dado pessoal.
+  const viewerUserId = await getViewerUserId(request.headers);
+  if ((await resolveProfileAccess(viewerUserId, parsed)) === 'private') {
+    return profileNotPublicResponse();
   }
 
   try {

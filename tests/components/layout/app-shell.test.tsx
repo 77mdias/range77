@@ -20,8 +20,15 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-const renderShell = (user?: React.ReactNode) =>
-  renderToStaticMarkup(<AppShell user={user}>CONTEUDO</AppShell>);
+const renderShell = (user?: React.ReactNode, simulated?: boolean) =>
+  renderToStaticMarkup(
+    <AppShell user={user} simulated={simulated}>
+      CONTEUDO
+    </AppShell>,
+  );
+
+const BANNER =
+  'Protótipo aguardando a Production API Key da Riot — todos os dados de partida são simulados.';
 
 describe('AppShell', () => {
   it('renderiza o header global com a marca ValCoach', () => {
@@ -93,5 +100,16 @@ describe('AppShell', () => {
 
   it('renderiza o slot de usuário no header quando fornecido', () => {
     expect(renderShell(<span aria-label="Usuário">USER-SLOT</span>)).toContain('USER-SLOT');
+  });
+
+  it('simulated renderiza o banner global com o texto exato', () => {
+    const html = renderShell(undefined, true);
+    expect(html).toContain('data-simulated-banner');
+    expect(html).toContain(BANNER);
+  });
+
+  it('simulated=false (ou ausente) não renderiza o banner', () => {
+    expect(renderShell(undefined, false)).not.toContain('data-simulated-banner');
+    expect(renderShell()).not.toContain(BANNER);
   });
 });

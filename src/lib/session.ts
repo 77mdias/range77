@@ -43,6 +43,20 @@ export async function getSessionFromHeaders(
   };
 }
 
+/**
+ * Id do visitante para decisões de acesso. Falha de auth/DB vira anônimo —
+ * anônimo só enxerga o que é público/demo, então isto é fail-closed.
+ * `headers()` fica com o chamador, FORA de qualquer try/catch.
+ */
+export async function getViewerUserId(resolvedHeaders: Headers): Promise<string | null> {
+  try {
+    return (await getSessionFromHeaders(resolvedHeaders))?.user.id ?? null;
+  } catch (error) {
+    console.error('[session] falha ao ler a sessão; tratando como anônimo', error);
+    return null;
+  }
+}
+
 export async function getSession(): Promise<SessionView | null> {
   // `headers()` PRIMEIRO: em prerender ele lança o sinal de "dinâmico" que o
   // Cache Components usa para abrir o hole — antes de qualquer custo de DB.

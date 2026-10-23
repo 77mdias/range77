@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import { createDatabase, type ValCoachDatabase } from './index';
 import { userRiotAccounts } from './schema';
 
@@ -14,7 +14,7 @@ import { userRiotAccounts } from './schema';
 
 export type UserRiotAccountRow = typeof userRiotAccounts.$inferSelect;
 
-export interface UserRiotAccountInput {
+interface UserRiotAccountBase {
   readonly userId: string;
   readonly region: string;
   readonly nameKey: string;
@@ -22,9 +22,18 @@ export interface UserRiotAccountInput {
   readonly displayName: string;
 }
 
+/** Legado (padrão) não tem puuid; vínculo RSO exige. */
+export type UserRiotAccountInput =
+  | (UserRiotAccountBase & { readonly puuid?: undefined; readonly linkedVia?: 'legacy' })
+  | (UserRiotAccountBase & { readonly puuid: string; readonly linkedVia: 'rso_mock' | 'rso' });
+
 export interface UserRiotStore {
   /** Riot ID vinculado ao usuário (ou `null` quando não há vínculo). */
   get(userId: string): Promise<UserRiotAccountRow | null>;
+  /** Dono de um Riot ID (chaves já em minúsculas). */
+  getByRiotId(region: string, nameKey: string, tagKey: string): Promise<UserRiotAccountRow | null>;
+  /** Liga/desliga o perfil público do usuário. */
+  setProfilePublic(userId: string, value: boolean): Promise<void>;
   /** Vincular/substituir (idempotente sobre o unique de `user_id`). */
   upsert(input: UserRiotAccountInput): Promise<void>;
   /** Desvincular. */
@@ -42,7 +51,38 @@ export function createUserRiotStore(db: ValCoachDatabase = createDatabase()): Us
       return rows[0] ?? null;
     },
 
+    async getByRiotId(region, nameKey, tagKey) {
+      const rows = await db
+        .select()
+        .from(userRiotAccounts)
+        .where(
+          and(
+            eq(userRiotAccounts.region, region),
+            eq(userRiotAccounts.nameKey, nameKey),
+            eq(userRiotAccounts.tagKey, tagKey),
+            // Legado nunca concede acesso e pode "squatar" um Riot ID: fora da busca.
+            ne(userRiotAccounts.linkedVia, 'legacy'),
+          ),
+        )
+        .limit(1);
+      return rows[0] ?? null;
+    },
+
+    async setProfilePublic(userId, value) {
+      await db
+        .update(userRiotAccounts)
+        .set({ profilePublic: value, updatedAt: new Date() })
+        .where(eq(userRiotAccounts.userId, userId));
+    },
+
     async upsert(input) {
+      const linkedVia = input.linkedVia ?? 'legacy';
+      // Trocar o puuid (inclusive relink legado -> null) revoga o consentimento.
+      const rsoSet = {
+        puuid: input.puuid ?? null,
+        linkedVia,
+        profilePublic: sql`CASE WHEN ${userRiotAccounts.puuid} IS NOT DISTINCT FROM ${input.puuid ?? null} THEN ${userRiotAccounts.profilePublic} ELSE false END`,
+      };
       await db
         .insert(userRiotAccounts)
         .values({
@@ -51,6 +91,8 @@ export function createUserRiotStore(db: ValCoachDatabase = createDatabase()): Us
           nameKey: input.nameKey,
           tagKey: input.tagKey,
           displayName: input.displayName,
+          puuid: input.puuid,
+          linkedVia,
         })
         .onConflictDoUpdate({
           target: userRiotAccounts.userId,
@@ -59,6 +101,7 @@ export function createUserRiotStore(db: ValCoachDatabase = createDatabase()): Us
             nameKey: input.nameKey,
             tagKey: input.tagKey,
             displayName: input.displayName,
+            ...rsoSet,
             updatedAt: new Date(),
           },
         });

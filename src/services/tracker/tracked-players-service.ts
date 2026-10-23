@@ -5,6 +5,8 @@ import {
   type TrackedPlayersStore,
 } from '@/lib/db/tracked-players-store';
 import type { SessionView } from '@/lib/session';
+import { PRIVATE_PROFILE_MESSAGE, PROFILE_NOT_PUBLIC_CODE } from '@/contracts/access';
+import { resolveProfileAccess } from '@/services/access/profile-access';
 
 /**
  * Lógica de seguir/deixar de seguir (consumida pelas Server Actions).
@@ -16,7 +18,7 @@ import type { SessionView } from '@/lib/session';
 
 export interface ActionResult {
   readonly ok: boolean;
-  readonly code: 'OK' | 'UNAUTHENTICATED' | 'INVALID_PARAMS';
+  readonly code: 'OK' | 'UNAUTHENTICATED' | 'INVALID_PARAMS' | typeof PROFILE_NOT_PUBLIC_CODE;
   readonly message: string;
 }
 
@@ -29,6 +31,7 @@ export interface FollowPlayerInput {
 export interface TrackedPlayerDeps {
   readonly getSession: () => Promise<SessionView | null>;
   readonly store?: TrackedPlayersStore;
+  readonly resolveAccess?: typeof resolveProfileAccess;
 }
 
 function storeOf(deps: TrackedPlayerDeps): TrackedPlayersStore {
@@ -47,6 +50,16 @@ export async function followPlayer(
   const parsed = parsePlayerRouteParams({ region: input.region, name: input.name, tag: input.tag });
   if (!parsed.ok) {
     return { ok: false, code: 'INVALID_PARAMS', message: parsed.message };
+  }
+
+  // Seguir só com consentimento: dono, demo ou perfil público.
+  const access = await (deps.resolveAccess ?? resolveProfileAccess)(session.user.id, {
+    region: parsed.region,
+    name: parsed.name,
+    tag: parsed.tag,
+  });
+  if (access === 'private') {
+    return { ok: false, code: PROFILE_NOT_PUBLIC_CODE, message: PRIVATE_PROFILE_MESSAGE };
   }
 
   await storeOf(deps).add({

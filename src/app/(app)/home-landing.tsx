@@ -18,12 +18,10 @@ import { SearchBar, type SearchQuery } from '@/components/ui/search-bar';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/ui/section-header';
 import {
-  rankSnapshotFromOverview,
+  fetchRecentPlayerRank,
   readRecentPlayers,
-  recentPlayersMissingRank,
   saveRecentPlayer,
   saveRecentPlayerRank,
-  type RankSource,
   type RecentPlayer,
 } from '@/lib/recents/recent-players';
 import { parseRiotId } from '@/lib/validation/riot-id';
@@ -39,20 +37,15 @@ import { parseRiotId } from '@/lib/validation/riot-id';
 
 const DEMO_REGION = 'br' as const;
 
-/** Perfil demo real (HenrikDev): nome verdadeiro — nada de Riot ID fictício. */
-const DEMO_RIOT_ID = 'twmz#tower' as const;
+/**
+ * Perfil demo FICTÍCIO (espelha `DEMO_ACCOUNT` do mock): o único sempre
+ * público. Nada de Riot ID real — perfis reais só com consentimento.
+ */
+const DEMO_RIOT_ID = 'ValCoachDemo#DEMO' as const;
 
 /** Fallback da grade: catálogo exibido quando NÃO há buscas recentes. */
-const FALLBACK_PROFILES: readonly DemoProfile[] = [
-  {
-    riotId: DEMO_RIOT_ID,
-    region: DEMO_REGION,
-    regionChip: 'BR',
-    rank: 'Diamond 2',
-    rr: '10 RR',
-    highlighted: true,
-  },
-  { riotId: 'next to nothing#NOWAY', region: 'na', regionChip: 'NA' },
+export const FALLBACK_PROFILES: readonly DemoProfile[] = [
+  { riotId: DEMO_RIOT_ID, region: DEMO_REGION, regionChip: 'BR', highlighted: true },
 ];
 
 /** RecentPlayer → card da grade (rank/RR só com snapshot do perfil visitado). */
@@ -66,46 +59,13 @@ function toDemoProfile(recent: RecentPlayer): DemoProfile {
   };
 }
 
-/** Amostra mínima do overview: o backfill só precisa do elo, não das partidas. */
-const RANK_BACKFILL_SIZE = 1;
-
-/**
- * Busca o elo de um recente sem snapshot (cache compartilhado com o perfil).
- * Fail-soft: qualquer falha (404, 429, rede, abort) devolve `null`.
- */
-async function fetchRankSnapshot(
-  player: RecentPlayer,
-  signal: AbortSignal,
-): Promise<RecentPlayer | null> {
-  const parsed = parseRiotId(player.riotId);
-  if (!parsed.ok) {
-    return null;
-  }
-  const { name, tag } = parsed.value;
-  try {
-    const response = await fetch(
-      `/api/players/${player.region}/${encodeURIComponent(name)}/${encodeURIComponent(tag)}/overview?size=${RANK_BACKFILL_SIZE}`,
-      { signal },
-    );
-    if (!response.ok) {
-      return null;
-    }
-    const snapshot = rankSnapshotFromOverview((await response.json()) as RankSource);
-    return snapshot.rank === undefined && snapshot.rr === undefined
-      ? null
-      : { riotId: player.riotId, region: player.region, ...snapshot };
-  } catch {
-    return null;
-  }
-}
-
 const STEP_DELAYS_MS = [600, 1400, 2200];
 
 const INITIAL_STEPS: readonly IngestionStepState[] = ['pending', 'pending', 'pending'];
 
 function stepLabels(target: string): readonly string[] {
   return [
-    `CAMADA 1: handshake HenrikDev API para ${target}`,
+    `CAMADA 1: handshake Riot API (simulada) para ${target}`,
     'CAMADA 2: pipeline compilou os ticks em vetores táticos',
     'CAMADA 3: MiniMax LLM gerando diagnóstico (420 tokens)...',
   ];
@@ -116,7 +76,7 @@ const PIPELINE_STEPS = [
     phase: 'FASE 01',
     metric: '~420 KB',
     icon: 'download',
-    title: 'Ingestão HenrikDev API',
+    title: 'Ingestão Riot API (simulada)',
     description:
       'Extração completa de ticks oficiais da Riot Games: eliminações x/y, aberturas de ângulo, timings de defuse e fluxo econômico do saguão.',
     output: 'raw_match_timeline.json',
@@ -193,8 +153,8 @@ export function HomeLanding() {
   const [stepStates, setStepStates] = useState<readonly IngestionStepState[]>(INITIAL_STEPS);
   // Histórico só existe no navegador: `null` = ainda não lido (SSR e 1º
   // render da hidratação pintam placeholders, nunca o catálogo — evita o
-  // flash catálogo → recentes). Recentes sem elo ganham o snapshot via
-  // overview (uma vez: depois fica persistido).
+  // flash catálogo → recentes). TODO recente é revalidado no overview a cada
+  // montagem: perfil que ficou privado (404) perde o elo guardado.
   const [recents, setRecents] = useState<readonly RecentPlayer[] | null>(null);
 
   useEffect(() => {
@@ -202,9 +162,9 @@ export function HomeLanding() {
     setRecents(stored);
 
     const controller = new AbortController();
-    for (const player of recentPlayersMissingRank(stored)) {
-      void fetchRankSnapshot(player, controller.signal).then((snapshot) => {
-        if (snapshot !== null && !controller.signal.aborted) {
+    for (const player of stored) {
+      void fetchRecentPlayerRank(player, controller.signal).then((snapshot) => {
+        if (!controller.signal.aborted) {
           setRecents(saveRecentPlayerRank(snapshot));
         }
       });

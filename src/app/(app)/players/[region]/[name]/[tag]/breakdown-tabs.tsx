@@ -129,7 +129,7 @@ export function BreakdownTabs({ matchCount, agentsMaps, history }: BreakdownTabs
 
         <div className="hidden items-center gap-1.5 pb-1 font-hud text-label uppercase text-text-secondary sm:flex">
           <Icon name="refresh" size="xs" className="text-accent-ink" />
-          Histórico atualizado via HenrikDev API
+          Histórico atualizado via API de partidas
         </div>
       </div>
 

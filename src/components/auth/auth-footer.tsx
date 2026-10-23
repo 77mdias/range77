@@ -1,18 +1,16 @@
 import Link from 'next/link';
 import { cx } from '@/lib/cx';
+import { RIOT_LEGAL_NOTICE } from '@/lib/legal';
 
 /**
  * AuthFooter — rodapé das telas de auth. Estrutura do Stitch (build +
- * copyright + 3 links), com a redação de NÃO-afiliação que o app já publica
- * em `app-footer.tsx` — o literal do Stitch ("RIOT GAMES AFFILIATE PROTOCOL")
+ * copyright + 3 links), com o aviso legal da Riot (`RIOT_LEGAL_NOTICE`, o mesmo
+ * de `app-footer.tsx`) — o literal do Stitch ("RIOT GAMES AFFILIATE PROTOCOL")
  * afirmaria uma afiliação inexistente.
- *
- * TODO(rotas-publicas): Termos de Serviço, Privacidade & Telemetria e Status
- * do Sistema não existem como rotas (spec §10). `#` até existirem.
  */
 const FOOTER_LINKS = [
-  { href: '#', label: 'Termos de Serviço' },
-  { href: '#', label: 'Privacidade & Telemetria' },
+  { href: '/termos', label: 'Termos de Serviço' },
+  { href: '/privacidade', label: 'Privacidade & Telemetria' },
   { href: '#', label: 'Status do Sistema' },
 ] as const;
 
@@ -38,7 +36,6 @@ export function AuthFooter({
           <span>{buildLabel}</span>
           <span aria-hidden="true">//</span>
           <span>© 2024 VALCOACH TELEMETRY SYSTEMS.</span>
-          <span>Não afiliado à Riot Games.</span>
         </span>
         <span className="flex flex-wrap items-center gap-4">
           {FOOTER_LINKS.map((link) => (
@@ -48,6 +45,9 @@ export function AuthFooter({
           ))}
         </span>
       </div>
+      <p data-riot-legal className="mt-1.5 px-4 text-center font-hud text-label-xs text-text-secondary">
+        {RIOT_LEGAL_NOTICE}
+      </p>
     </footer>
   );
 }

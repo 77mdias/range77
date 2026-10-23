@@ -76,6 +76,35 @@ export function parseAppEnvironment(input: ParseAppEnvironmentInput = {}): AppEn
   );
 }
 
+/**
+ * Fontes de dados do tracker (`TRACKER_DATA_SOURCE`). `mock` é o padrão: o
+ * protótipo roda com partidas SIMULADAS no formato Riot enquanto a Production
+ * API Key não chega; `henrikdev` fica guardada no repo, fora do caminho padrão.
+ */
+export const TRACKER_SOURCE_KINDS = ['mock', 'riot', 'henrikdev'] as const;
+
+export type TrackerSourceKind = (typeof TRACKER_SOURCE_KINDS)[number];
+
+export const DEFAULT_TRACKER_SOURCE_KIND: TrackerSourceKind = 'mock';
+
+/**
+ * Resolve `TRACKER_DATA_SOURCE`: ausente/vazio → `mock`; caixa ignorada;
+ * valor desconhecido → erro explícito (fail fast — nunca cai silenciosamente
+ * em outra fonte).
+ */
+export function parseTrackerDataSource(value: string | undefined): TrackerSourceKind {
+  const normalized = value?.trim().toLowerCase();
+  if (normalized === undefined || normalized === '') {
+    return DEFAULT_TRACKER_SOURCE_KIND;
+  }
+  if ((TRACKER_SOURCE_KINDS as readonly string[]).includes(normalized)) {
+    return normalized as TrackerSourceKind;
+  }
+  throw new EnvironmentValidationError(
+    `TRACKER_DATA_SOURCE inválido: "${value}". Valores aceitos: ${TRACKER_SOURCE_KINDS.join(', ')} (padrão: ${DEFAULT_TRACKER_SOURCE_KIND}).`,
+  );
+}
+
 /** Fonte de leitura de variáveis (injetada nos testes; padrão: process.env). */
 export type EnvSource = Readonly<Record<string, string | undefined>>;
 
@@ -83,6 +112,8 @@ export type EnvSource = Readonly<Record<string, string | undefined>>;
 export interface AppEnv {
   readonly APP_ENV: AppEnvironment;
   readonly NODE_ENV: string;
+  /** Fonte de dados do tracker (padrão `mock`). */
+  readonly TRACKER_DATA_SOURCE: TrackerSourceKind;
   readonly DATABASE_URL?: string | undefined;
   readonly HENRIKDEV_API_KEY?: string | undefined;
   readonly MINIMAX_API_KEY?: string | undefined;
@@ -112,6 +143,7 @@ export function loadAppEnv(source: EnvSource = process.env): AppEnv {
   return {
     APP_ENV,
     NODE_ENV: pickDefined(source['NODE_ENV']) ?? APP_ENV_TO_NODE_ENV[APP_ENV],
+    TRACKER_DATA_SOURCE: parseTrackerDataSource(pickDefined(source['TRACKER_DATA_SOURCE'])),
     DATABASE_URL: pickDefined(source['DATABASE_URL']),
     HENRIKDEV_API_KEY: pickDefined(source['HENRIKDEV_API_KEY']),
     MINIMAX_API_KEY: pickDefined(source['MINIMAX_API_KEY']),

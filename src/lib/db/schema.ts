@@ -191,6 +191,13 @@ export const userRiotAccounts = pgTable(
     nameKey: text('name_key').notNull(),
     tagKey: text('tag_key').notNull(),
     displayName: text('display_name').notNull(),
+    /** Nulo nos vínculos legados (sem consentimento RSO). */
+    puuid: text('puuid').unique(),
+    linkedVia: text('linked_via', { enum: ['legacy', 'rso_mock', 'rso'] })
+      .notNull()
+      .default('legacy'),
+    /** Opt-in: perfil só é público após o dono ligar o toggle. */
+    profilePublic: boolean('profile_public').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

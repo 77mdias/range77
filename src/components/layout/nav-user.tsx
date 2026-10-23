@@ -10,7 +10,8 @@ import { getSessionFromHeaders, type SessionView } from '@/lib/session';
  * inferior com ponto-live + região; à direita, avatar circular com a
  * inicial. Sem dado de elo no store, a segunda linha mostra a REGIÃO —
  * nunca inventamos rank. Estados sem perfil: "Entrar", convite para
- * conectar o Riot ID e o chip neutro de indisponível (mesma linguagem
+ * conectar o Riot ID, "Reconecte com Riot" (vínculo legado) e o chip
+ * neutro de indisponível (mesma linguagem
  * visual do design system).
  *
  * Dinâmico por natureza (auth + DB): sempre dentro de <Suspense> no layout
@@ -78,7 +79,20 @@ export async function NavUser() {
         data-nav-connect-riot
         className="rounded-md border border-line bg-surface-raised px-3 py-1.5 font-hud text-label uppercase text-text-secondary transition-colors duration-[var(--duration-fast)] hover:bg-surface-hover hover:text-text-primary"
       >
-        Conectar Riot ID
+        Entrar com Riot
+      </Link>
+    );
+  }
+
+  // Riot ID digitado antes do RSO não é consentimento: pede reconexão.
+  if (linked.linkedVia === 'legacy') {
+    return (
+      <Link
+        href="/dashboard/settings"
+        data-nav-reconnect-riot
+        className="rounded-md border border-line bg-surface-raised px-3 py-1.5 font-hud text-label uppercase text-text-secondary transition-colors duration-[var(--duration-fast)] hover:bg-surface-hover hover:text-text-primary"
+      >
+        Reconecte com Riot
       </Link>
     );
   }

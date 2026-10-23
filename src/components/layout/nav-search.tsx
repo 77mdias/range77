@@ -88,7 +88,7 @@ export function NavSearch() {
           autoComplete="off"
           value={riotId}
           onChange={(event) => setRiotId(event.target.value)}
-          placeholder="Player#Tag (ex: Tenz#0001)"
+          placeholder="Player#Tag (ex: ValCoachDemo#DEMO)"
           aria-invalid={error !== null ? true : undefined}
           aria-describedby={error !== null ? errorId : undefined}
           className="w-44 bg-transparent font-body text-body-sm text-text-primary placeholder:text-text-secondary focus:outline-none"

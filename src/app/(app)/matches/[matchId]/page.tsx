@@ -1,13 +1,17 @@
 import { Suspense } from 'react';
 import type { ReactNode } from 'react';
+import { headers } from 'next/headers';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ErrorState, UpstreamErrorState } from '@/components/ui/states';
+import { ErrorState, PrivateProfileState, UpstreamErrorState } from '@/components/ui/states';
 import { getCachedMatchDetail, getCachedPlayerCard } from '@/lib/cache/tracker';
 import { describeUpstreamError, mappedToApiErrorBody } from '@/lib/http/api-error';
+import { getViewerUserId } from '@/lib/session';
 import { parseMatchRouteParams } from '@/lib/validation/match-params';
 import { parseRiotId } from '@/lib/validation/riot-id';
+import { resolveProfileAccess } from '@/services/access/profile-access';
 import { selectMatchMvp } from '@/services/analytics/match-breakdown';
 import { BackButton } from './back-button';
+import { isSimulatedDataSource } from '@/services/tracker/sources';
 import { MatchView, type MatchViewer } from './match-view';
 
 /**
@@ -54,17 +58,45 @@ export async function MatchDetailData({
   readonly matchId: string;
   readonly viewer: MatchViewer | null;
 }) {
+  // Consentimento ANTES da fonte: a partida exige um foco (`?player=`) cujo
+  // perfil não seja privado. `headers()` fora do try/catch (Cache Components).
+  if (viewer === null) {
+    return <PrivateProfileState />;
+  }
+  const viewerUserId = await getViewerUserId(await headers());
+  const access = await resolveProfileAccess(viewerUserId, {
+    region,
+    name: viewer.name,
+    tag: viewer.tag,
+  });
+  if (access === 'private') {
+    return <PrivateProfileState />;
+  }
+
+  const simulated = isSimulatedDataSource();
   try {
-    const detail = await getCachedMatchDetail(region, matchId);
+    // O jogador em foco (`?player=`) vai junto: a fonte simulada regenera a
+    // partida a partir dele (fontes reais o ignoram).
+    const detail = await getCachedMatchDetail(region, matchId, {
+      name: viewer.name,
+      tag: viewer.tag,
+    });
     const mvp = selectMatchMvp(detail.scoreboard);
     const mvpCardSrc =
       mvp === null || mvp.tag === '' ? null : await getCachedPlayerCard(mvp.name, mvp.tag);
-    return <MatchView detail={detail} viewer={viewer} mvpCardSrc={mvpCardSrc} />;
+    return (
+      <MatchView
+        detail={detail}
+        viewer={viewer}
+        mvpCardSrc={mvpCardSrc}
+        simulated={simulated}
+      />
+    );
   } catch (error) {
     const mapped = describeUpstreamError(error, {
       notFoundCode: 'MATCH_NOT_FOUND',
-      notFoundMessage: 'Partida não encontrada na HenrikDev.',
-      notFoundHint: 'Confira o match ID e a região da partida.',
+      notFoundMessage: 'Partida não encontrada.',
+      notFoundHint: 'Abra a partida pelo histórico do jogador (o link inclui o jogador) e confira a região.',
     });
     return (
       <UpstreamErrorState
@@ -89,7 +121,8 @@ export default async function MatchPage({ params, searchParams }: PageProps) {
     );
   }
 
-  // `player` (Riot ID) é opcional: sem ele a página segue neutra (sem "VOCÊ").
+  // `player` (Riot ID) define o foco; sem ele (ou inválido) o dado vira o
+  // estado neutro de perfil privado — nenhuma partida sem consentimento.
   const rawPlayer = typeof query.player === 'string' ? query.player : undefined;
   const parsedPlayer = rawPlayer === undefined ? null : parseRiotId(rawPlayer);
   const viewer: MatchViewer | null =

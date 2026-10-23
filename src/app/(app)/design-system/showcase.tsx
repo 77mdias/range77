@@ -305,10 +305,10 @@ export function DesignSystemShowcase() {
   const [minGames, setMinGames] = useState(true);
   const [chatLog, setChatLog] = useState<readonly string[]>([]);
   const [ingestionOpen, setIngestionOpen] = useState(false);
-  const [ingestionTarget, setIngestionTarget] = useState('twmz#tower');
+  const [ingestionTarget, setIngestionTarget] = useState('ValCoachDemo#DEMO');
 
   const DEMO_PROFILES: readonly DemoProfile[] = [
-    { riotId: 'twmz#tower', regionChip: 'BR', rank: 'Diamond 2', rr: '10 RR', highlighted: true },
+    { riotId: 'ValCoachDemo#DEMO', regionChip: 'BR', highlighted: true },
   ];
 
   return (
@@ -514,7 +514,7 @@ export function DesignSystemShowcase() {
             hsPercentage={31}
             playedAt="2026-10-06T18:00:00.000Z"
             now={new Date('2026-10-08T18:00:00.000Z')}
-            href="/matches/example-1"
+            href="/matches/example-1?player=ValCoachDemo%23DEMO"
           />
           <MatchRow
             map="Haven"
@@ -740,7 +740,7 @@ export function DesignSystemShowcase() {
           <MatchHistoryTable
             matches={SHOWCASE_HISTORY.map((match) => ({
               ...match,
-              href: `/matches/${match.id}`,
+              href: `/matches/${match.id}?player=ValCoachDemo%23DEMO`,
             }))}
           />
         </div>
@@ -1092,7 +1092,7 @@ export function DesignSystemShowcase() {
           <PipelineFlow
             stages={[
               {
-                label: 'Camada 01: Raw HenrikDev',
+                label: 'Camada 01: Raw Riot API (simulada)',
                 sizeChip: '420 KB',
                 title: 'Payload bruto da API',
                 meta: '27 endpoints monitorados',
@@ -1206,7 +1206,7 @@ export function DesignSystemShowcase() {
                 phase="FASE 01"
                 metric="~420 KB"
                 icon="download"
-                title="Ingestão HenrikDev API"
+                title="Ingestão Riot API (simulada)"
                 description="Extração completa de ticks oficiais da Riot Games: eliminações x/y, ângulos, timings de defuse e fluxo econômico."
                 output="raw_match_timeline.json"
               />
@@ -1300,7 +1300,7 @@ export function DesignSystemShowcase() {
         onOpenReport={() => setIngestionOpen(false)}
         onClose={() => setIngestionOpen(false)}
         steps={[
-          { label: 'CAMADA 1: Handshake HenrikDev API concluído', state: 'done' },
+          { label: 'CAMADA 1: Handshake Riot API (simulada) concluído', state: 'done' },
           { label: 'CAMADA 2: Pipeline Rust compilou 412KB de ticks em 85KB de vetores', state: 'done' },
           { label: 'CAMADA 3: Minimax LLM gerando diagnóstico tático (420 tokens)...', state: 'done' },
         ]}

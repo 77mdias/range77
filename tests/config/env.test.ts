@@ -4,6 +4,7 @@ import {
   EnvironmentValidationError,
   loadAppEnv,
   parseAppEnvironment,
+  parseTrackerDataSource,
   requireEnv,
   type AppEnv,
 } from '@/config/env';
@@ -100,10 +101,39 @@ describe('loadAppEnv', () => {
   });
 });
 
+describe('TRACKER_DATA_SOURCE', () => {
+  it('ausente ou vazio → mock (padrão)', () => {
+    expect(loadAppEnv({ APP_ENV: 'test' }).TRACKER_DATA_SOURCE).toBe('mock');
+    expect(loadAppEnv({ APP_ENV: 'test', TRACKER_DATA_SOURCE: '   ' }).TRACKER_DATA_SOURCE).toBe(
+      'mock',
+    );
+  });
+
+  it.each([
+    ['MOCK', 'mock'],
+    [' henrikdev ', 'henrikdev'],
+    ['Riot', 'riot'],
+  ] as const)('normaliza %j → %s', (raw, expected) => {
+    expect(loadAppEnv({ APP_ENV: 'test', TRACKER_DATA_SOURCE: raw }).TRACKER_DATA_SOURCE).toBe(
+      expected,
+    );
+  });
+
+  it('valor desconhecido → EnvironmentValidationError listando os aceitos', () => {
+    const attempt = () => parseTrackerDataSource('xpto');
+    expect(attempt).toThrowError(EnvironmentValidationError);
+    expect(attempt).toThrowError(/TRACKER_DATA_SOURCE inválido: "xpto".*mock, riot, henrikdev/);
+    expect(() => loadAppEnv({ APP_ENV: 'test', TRACKER_DATA_SOURCE: 'xpto' })).toThrowError(
+      EnvironmentValidationError,
+    );
+  });
+});
+
 describe('requireEnv', () => {
   const baseEnv: AppEnv = {
     APP_ENV: 'dev',
     NODE_ENV: 'development',
+    TRACKER_DATA_SOURCE: 'mock',
     DATABASE_URL: 'postgres://ok',
     HENRIKDEV_API_KEY: undefined,
     MINIMAX_API_KEY: undefined,

@@ -38,7 +38,7 @@ describe('ConsoleView', () => {
   it('renderiza os três estágios da pipeline', () => {
     const output = html();
     expect(output).toContain('data-component="pipeline-flow"');
-    expect(output).toContain('Camada 01: Raw HenrikDev');
+    expect(output).toContain('Camada 01: Raw Riot API (simulada)');
     expect(output).toContain('Camada 02: Motor de KPIs');
     expect(output).toContain('Camada 03: Contexto MiniMax');
     expect(output).toContain('1.8 KB / 420 TOKENS');
@@ -48,7 +48,7 @@ describe('ConsoleView', () => {
     const output = html();
     expect(output).toContain('data-console-inspector');
     expect(output).toContain('SCHEMA: PROTOCOL_V4.JSON');
-    expect(output).toContain('raw_henrikdev.payload.json');
+    expect(output).toContain('raw_riot_match.payload.json');
     expect(output).toContain('raw_kill_events');
     // Payload ilustrativo é rotulado como simulado (regra: nada passa por real)
     expect(output).toContain('data-payload-simulated');

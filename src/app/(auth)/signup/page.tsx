@@ -96,9 +96,9 @@ export default async function SignupPage({ searchParams }: PageProps) {
 
             <RiotCallout variant="status" title="STATUS HOMOLOGAÇÃO RIOT GAMES OAUTH DIRECT">
               Riot Sign-On (OAuth direto) em processo de homologação de produção com a Riot Games.
-              Você pode vincular seu Riot ID (ex:{' '}
-              <span className="font-hud text-text-primary">TenZ#0001</span>) imediatamente após a
-              criação da conta.
+              Depois de criar a conta, conecte sua conta Riot em{' '}
+              <span className="font-hud text-text-primary">Configurações</span> pelo botão
+              &ldquo;Entrar com Riot&rdquo; (simulado).
             </RiotCallout>
 
             <AuthDivider label="OU PREENCHA O FORMULÁRIO DE REGISTRO" />

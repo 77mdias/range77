@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
+import { PRIVATE_PROFILE_MESSAGE, PROFILE_NOT_PUBLIC_CODE } from '@/contracts/access';
 import type { ApiErrorBody } from '@/contracts/coach';
 import { henrikDevErrorStatus, henrikDevRetryAfterSeconds } from '@/services/henrikdev/client';
+import { TRACKER_NOT_FOUND_ERROR_NAME } from '@/services/tracker/source';
 
 /**
  * Mapeamento HTTP compartilhado (Route Handlers) — traduz erros das camadas
@@ -59,6 +61,11 @@ export function errorResponse(
   );
 }
 
+/** 404 neutro: o mesmo corpo para perfil privado e conta inexistente. */
+export function profileNotPublicResponse(): NextResponse<ApiErrorBody> {
+  return errorResponse(404, PROFILE_NOT_PUBLIC_CODE, PRIVATE_PROFILE_MESSAGE);
+}
+
 export function describeUpstreamError(
   error: unknown,
   labels: UpstreamLabels,
@@ -82,7 +89,7 @@ export function describeUpstreamError(
       return {
         status: 503,
         code: 'UPSTREAM_RATE_LIMITED',
-        message: 'Limite de requisições da HenrikDev atingido.',
+        message: 'Limite de requisições do provedor de dados atingido.',
         hint: 'Aguarde alguns segundos e tente novamente.',
         ...(retryAfterSeconds !== null ? { retryAfterSeconds } : {}),
         detail,
@@ -92,7 +99,7 @@ export function describeUpstreamError(
       return {
         status: 500,
         code: 'CONFIG_ERROR',
-        message: 'A HenrikDev rejeitou a chave da API.',
+        message: 'O provedor de dados rejeitou a chave da API.',
         hint: 'Verifique a variável HENRIKDEV_API_KEY no Infisical (dev) ou no painel da Vercel (prod).',
         detail,
       };
@@ -101,7 +108,7 @@ export function describeUpstreamError(
       return {
         status: 502,
         code: 'UPSTREAM_UNREACHABLE',
-        message: 'Não foi possível contactar a HenrikDev.',
+        message: 'Não foi possível contactar o provedor de dados.',
         hint: 'Falha de rede ou timeout — tente novamente em instantes.',
         detail,
       };
@@ -109,10 +116,22 @@ export function describeUpstreamError(
     return {
       status: 502,
       code: 'UPSTREAM_ERROR',
-      message: `Erro upstream da HenrikDev: ${
+      message: `Erro upstream do provedor de dados: ${
         error instanceof Error ? error.message : String(error)
       }`,
       detail,
+    };
+  }
+
+  // Recurso inexistente na fonte do tracker (ex.: partida simulada sem foco
+  // ou fora do histórico do foco) — mesmo 404 rotulado da rota.
+  if (hasErrorName(error, TRACKER_NOT_FOUND_ERROR_NAME)) {
+    return {
+      status: 404,
+      code: labels.notFoundCode,
+      message: labels.notFoundMessage,
+      ...(labels.notFoundHint !== undefined ? { hint: labels.notFoundHint } : {}),
+      detail: `${error.name}: ${error.message}`,
     };
   }
 

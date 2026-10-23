@@ -3,6 +3,7 @@ import type { HenrikDevMatchV4 } from '@/contracts/henrikdev';
 import type { CombatSnapshotStore } from '@/lib/db/combat-snapshot-store';
 import { PlayerNoMatchesError } from '@/services/coaching/player-combat';
 import { buildPlayerOverview } from '@/services/tracker/player-overview';
+import { createHenrikDevSource } from '@/services/tracker/sources/henrikdev-source';
 
 /**
  * SUITE TDD — visão geral do jogador (um único fetch → envelope + agregações).
@@ -159,7 +160,7 @@ describe('buildPlayerOverview', () => {
       name: 'Player',
       tag: 'BR1',
       size: 5,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: store as CombatSnapshotStore,
     });
 
@@ -237,7 +238,7 @@ describe('buildPlayerOverview', () => {
       region: 'br',
       name: 'Player',
       tag: 'BR1',
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -258,7 +259,7 @@ describe('buildPlayerOverview', () => {
       region: 'br',
       name: 'Player',
       tag: 'BR1',
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -278,7 +279,7 @@ describe('buildPlayerOverview', () => {
       region: 'br',
       name: 'Player',
       tag: 'BR1',
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -299,7 +300,7 @@ describe('buildPlayerOverview', () => {
         region: 'br',
         name: 'Player',
         tag: 'BR1',
-        client: client as never,
+        source: createHenrikDevSource(client as never),
         snapshotStore: null,
       }),
     ).rejects.toBeInstanceOf(PlayerNoMatchesError);
@@ -334,7 +335,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
       name: 'Player',
       tag: 'BR1',
       actSample: ACT_OPTS,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -404,7 +405,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
       name: 'Player',
       tag: 'BR1',
       actSample: ACT_OPTS,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -428,7 +429,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
       name: 'Player',
       tag: 'BR1',
       actSample: ACT_OPTS,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -453,7 +454,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
       name: 'Player',
       tag: 'BR1',
       actSample: ACT_OPTS,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -478,7 +479,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
       name: 'Player',
       tag: 'BR1',
       actSample: ACT_OPTS,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -503,7 +504,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
       name: 'Player',
       tag: 'BR1',
       actSample: ACT_OPTS,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: null,
     });
 
@@ -520,7 +521,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
         name: 'Player',
         tag: 'BR1',
         actSample: ACT_OPTS,
-        client: client as never,
+        source: createHenrikDevSource(client as never),
         snapshotStore: null,
       });
       expect(overview.matches).toHaveLength(15);
@@ -536,7 +537,7 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
         name: 'Player',
         tag: 'BR1',
         actSample: ACT_OPTS,
-        client: client as never,
+        source: createHenrikDevSource(client as never),
         snapshotStore: null,
       }),
     ).rejects.toBeInstanceOf(PlayerNoMatchesError);
@@ -555,12 +556,60 @@ describe('buildPlayerOverview — amostra por ATO (Breakdown)', () => {
       name: 'Player',
       tag: 'BR1',
       actSample: ACT_OPTS,
-      client: client as never,
+      source: createHenrikDevSource(client as never),
       snapshotStore: store as CombatSnapshotStore,
     });
 
     expect(overview.matches).toHaveLength(25);
     expect(store.insertSnapshot).toHaveBeenCalledTimes(1);
     expect(store.insertSnapshot).toHaveBeenCalledWith(expect.objectContaining({ sampleSize: 5 }));
+  });
+});
+
+describe('buildPlayerOverview — vetores táticos (Riot/mock)', () => {
+  it('mock: calcula tactical e um heatmap 16×16 por mapa com minimapa, sem expor details', async () => {
+    const { createMockSource } = await import('@/services/tracker/sources/mock-source');
+    const overview = await buildPlayerOverview({
+      region: 'br',
+      name: 'valcoachdemo',
+      tag: 'demo',
+      size: 10,
+      source: createMockSource(),
+      snapshotStore: null,
+    });
+
+    expect(overview).not.toHaveProperty('details');
+    expect(overview.combat.tactical).toEqual(overview.tactical);
+    expect(overview.combat.tactical!.topDeathZones[0]!.label).toBe(overview.tactical!.topDeathZones[0]!.label);
+    expect(overview.tactical).not.toBeNull();
+    expect(overview.tactical!.discipline.rounds).toBeGreaterThan(0);
+    expect(overview.tactical!.topDeathZones.length).toBeGreaterThan(0);
+    const labels = overview.tactical!.topDeathZones.map((z) => z.label);
+    expect(labels.every((label) => label.includes(' · '))).toBe(true);
+    expect(new Set(labels).size).toBe(labels.length);
+    expect(overview.deathHeatmaps.length).toBeGreaterThan(0);
+    const ids = overview.deathHeatmaps.map((h) => h.mapId);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const heatmap of overview.deathHeatmaps) {
+      expect(heatmap.mapName).not.toBe('');
+      expect(heatmap.grid).toHaveLength(16);
+      expect(heatmap.grid.every((r) => r.length === 16)).toBe(true);
+    }
+    const deaths = overview.deathHeatmaps.flatMap((h) => h.grid.flat()).reduce((a, b) => a + b, 0);
+    expect(deaths).toBeGreaterThan(0);
+  });
+
+  it('henrikdev (details vazio): tactical null e sem heatmaps', async () => {
+    const client = makeClient([win, loss]);
+    const overview = await buildPlayerOverview({
+      region: 'br',
+      name: 'Player',
+      tag: 'BR1',
+      source: createHenrikDevSource(client as never),
+      snapshotStore: null,
+    });
+    expect(overview.tactical).toBeNull();
+    expect(overview.combat).not.toHaveProperty('tactical');
+    expect(overview.deathHeatmaps).toEqual([]);
   });
 });
