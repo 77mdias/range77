@@ -188,7 +188,7 @@ export function ScoreboardTable({
             All roles computed
           </span>
           <span className="bg-surface-highest px-1 py-0.5 font-hud text-label-xs uppercase text-text-secondary">
-            Fonte HenrikDev v4
+            Fonte: API de partidas
           </span>
         </div>
         {rankRange == null ? null : (

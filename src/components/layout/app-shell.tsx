@@ -26,7 +26,7 @@ export function AppShell({ children, user, simulated = false }: AppShellProps) {
         <SimulatedBanner visible={simulated} />
         {children}
       </main>
-      <AppFooter protocolText={`VALCOACH // TELEMETRY MATRIX • ${simulated ? 'DADOS SIMULADOS' : 'DADOS HENRIKDEV'}`} />
+      <AppFooter protocolText={`VALCOACH // TELEMETRY MATRIX • ${simulated ? 'DADOS SIMULADOS' : 'DADOS DA API'}`} />
     </div>
   );
 }

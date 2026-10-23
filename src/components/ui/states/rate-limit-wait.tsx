@@ -72,7 +72,7 @@ export function RateLimitWait({ retryAfterSeconds, className }: RateLimitWaitPro
             Limite de consultas atingido
           </p>
           <p className="mt-1 font-display text-heading-sm text-text-primary">
-            A HenrikDev libera 30 consultas por minuto. Estamos aguardando a cota reabrir.
+            O provedor de dados limita as consultas por minuto. Estamos aguardando a cota reabrir.
           </p>
           <p className="mt-2 text-body text-text-secondary">
             Tentando novamente em{' '}

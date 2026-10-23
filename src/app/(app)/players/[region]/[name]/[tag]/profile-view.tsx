@@ -218,7 +218,7 @@ export function PlayerProfileView({ overview, headerAction, simulated = false }:
         <div className="flex flex-wrap items-center gap-x-4">
           <span className="inline-flex items-center gap-1.5 text-text-primary">
             <span aria-hidden="true" className="size-1.5 rounded-full bg-accent" />
-            {simulated ? 'Fonte simulada: OK' : 'HenrikDev API: OK'}
+            {simulated ? 'Fonte simulada: OK' : 'API de partidas: OK'}
           </span>
           <span>Sync: cache</span>
         </div>
@@ -404,7 +404,7 @@ export function PlayerProfileView({ overview, headerAction, simulated = false }:
       >
         <div className="flex flex-wrap items-center gap-x-4">
           <span className="font-bold text-text-primary">Match pipeline status:</span>
-          <span>{simulated ? 'Fontes: Riot API (simulada)' : 'Fontes: HenrikDev'}</span>
+          <span>{simulated ? 'Fontes: Riot API (simulada)' : 'Fontes: API de partidas'}</span>
           <span>Cálculo: analytics local</span>
         </div>
         <div className="flex flex-wrap items-center gap-x-4">
