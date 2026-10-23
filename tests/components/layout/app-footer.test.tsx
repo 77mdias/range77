@@ -1,7 +1,7 @@
-import { RIOT_LEGAL_NOTICE } from '@/lib/legal';
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AppFooter } from '@/components/layout/app-footer';
+import { RIOT_LEGAL_NOTICE } from '@/lib/legal';
 
 describe('AppFooter', () => {
   it('renderiza protocolo padrão e copyright da Riot', () => {

@@ -61,4 +61,5 @@ tráfego real; o cliente deve respeitar os limites da chave (hoje sem rate limit
 - [ ] 3. Substituir rank/RR simulados (ver acima: sem endpoint oficial).
 - [ ] 4. Coach de IA: o repositório não tem cliente MiniMax hoje; o terminal do coach é simulado.
 - [ ] 5. Implementar a fonte `TRACKER_DATA_SOURCE=riot` e colocar a chave no Infisical (dev) e na Vercel (prod), seguindo a cadeia do `AGENTS.md` (`env.ts`, `docker-compose.yml`).
-- [ ] 6. Rodar `npm run db:migrate` (migração `drizzle/0004`).
+- [ ] 6. Definir o e-mail de contato real (`CONTACT_EMAIL` em `src/lib/legal.ts`) antes de publicar.
+- [ ] 7. Rodar `npm run db:migrate` (migração `drizzle/0004`).

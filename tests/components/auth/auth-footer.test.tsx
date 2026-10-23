@@ -1,7 +1,7 @@
-import { RIOT_LEGAL_NOTICE } from '@/lib/legal';
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AuthFooter } from '@/components/auth/auth-footer';
+import { RIOT_LEGAL_NOTICE } from '@/lib/legal';
 
 describe('AuthFooter', () => {
   it('traz build, copyright de não-afiliação e os três links do Stitch', () => {

@@ -18,13 +18,21 @@ export default function PrivacidadePage() {
           público (começa privado).
         </li>
         <li>Jogadores que você segue (lista de acompanhamento).</li>
-        <li>Resumos de desempenho calculados (snapshots de combate) usados pelo coach.</li>
+        <li>
+          Resumos de desempenho calculados (snapshots de combate), por jogador e não por conta, usados
+          pelo coach.
+        </li>
+        <li>
+          Cache de partidas: o conteúdo bruto de cada partida aberta, que inclui dados dos demais
+          participantes, é guardado por 24 horas para evitar consultas repetidas e depois expira.
+        </li>
         <li>Jogadores buscados recentemente, guardados só no armazenamento local do seu navegador.</li>
       </ul>
       <h2 className={H2}>Retenção</h2>
       <p>
-        Mantemos os dados enquanto a conta existir. Ao desvincular a conta Riot, o vínculo é
-        apagado. Os recentes ficam no seu navegador até você limpá-lo.
+        Mantemos os dados enquanto a conta existir. Ao desvincular a conta Riot, apenas o vínculo
+        (PUUID, Riot ID e região) é apagado; os resumos de desempenho são por jogador, não por conta, e
+        não são removidos pelo desvínculo. Os recentes ficam no seu navegador até você limpá-lo.
       </p>
       <h2 className={H2}>Seu controle</h2>
       <ul className="list-disc space-y-2 pl-5">
@@ -34,8 +42,10 @@ export default function PrivacidadePage() {
         </li>
         <li>Desvincular: em Configurações, use &quot;Desvincular conta Riot&quot;.</li>
         <li>
-          Apagar a conta: solicite pelo e-mail de contato {CONTACT_EMAIL} (TODO do dono: definir o
-          endereço real). A exclusão remove também vínculo e jogadores seguidos.
+          Apagar a conta: não há exclusão automática; é um processo manual, solicitado por e-mail
+          para {CONTACT_EMAIL}. A exclusão remove a conta, o vínculo Riot e os jogadores seguidos.
+          Os resumos de desempenho por jogador e o cache de partidas (que expira em 24 horas) não
+          pertencem à conta e não são apagados com ela.
         </li>
       </ul>
       <h2 className={H2}>Compartilhamento</h2>

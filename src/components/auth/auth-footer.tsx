@@ -4,8 +4,8 @@ import { RIOT_LEGAL_NOTICE } from '@/lib/legal';
 
 /**
  * AuthFooter — rodapé das telas de auth. Estrutura do Stitch (build +
- * copyright + 3 links), com a redação de NÃO-afiliação que o app já publica
- * em `app-footer.tsx` — o literal do Stitch ("RIOT GAMES AFFILIATE PROTOCOL")
+ * copyright + 3 links), com o aviso legal da Riot (`RIOT_LEGAL_NOTICE`, o mesmo
+ * de `app-footer.tsx`) — o literal do Stitch ("RIOT GAMES AFFILIATE PROTOCOL")
  * afirmaria uma afiliação inexistente.
  */
 const FOOTER_LINKS = [
