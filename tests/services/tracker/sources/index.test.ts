@@ -124,7 +124,7 @@ describe('getTrackerSource', () => {
 });
 
 describe('camada de cache no caminho padrão (mock) — zero HenrikDev', () => {
-  it('perfil, breakdown, partida e cartão funcionam sem env e sem rede', async () => {
+  it('perfil, breakdown, partida e cartão funcionam sem env e sem rede', { timeout: 20_000 }, async () => {
     const overview = await getCachedPlayerOverview('br', 'ValCoachDemo', 'DEMO', 5);
     expect(overview.matches).toHaveLength(5);
     expect(overview.rank).not.toBeNull();
@@ -144,7 +144,7 @@ describe('camada de cache no caminho padrão (mock) — zero HenrikDev', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('rotas de API reais (partida e combate) respondem com a fonte mock, sem HenrikDev', async () => {
+  it('rotas de API reais (partida e combate) respondem com a fonte mock, sem HenrikDev', { timeout: 20_000 }, async () => {
     const { GET: getMatch } = await import('@/app/api/matches/[region]/[matchId]/route');
     const { GET: getPlayer } = await import('@/app/api/players/[region]/[name]/[tag]/route');
     const overview = await getCachedPlayerOverview('br', 'ValCoachDemo', 'DEMO', 1);

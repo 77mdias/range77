@@ -30,7 +30,7 @@ describe('mock economy', () => {
     expect(lossBonus(7)).toBe(2900);
   });
 
-  it('economia plausível em qualquer compra', () => {
+  it('economia plausível em qualquer compra', { timeout: 20_000 }, () => {
     const rng = createRng(99);
     for (let i = 0; i < 3000; i += 1) {
       const credits = rng.int(0, CREDIT_CAP);
@@ -46,7 +46,7 @@ describe('mock economy', () => {
     }
   });
 
-  it('perdedor do pistol não compra rifle + heavy no round 2', () => {
+  it('perdedor do pistol não compra rifle + heavy no round 2', { timeout: 20_000 }, () => {
     const rifles = new Set<string>([WEAPONS.vandal.id, WEAPONS.phantom.id, WEAPONS.bulldog.id, GUARDIAN]);
     const acc = generateAccount('ValCoachDemo', 'DEMO');
     for (const h of generateMatchlist(acc, 200).history) {

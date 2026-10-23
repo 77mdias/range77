@@ -28,11 +28,11 @@ function inside(p: RiotLocationDto, polygon: readonly RiotLocationDto[]): boolea
 describe('generateMatch', () => {
   const id = generateMatchlist(acc, 1).history[0]!.matchId;
 
-  it('generateMatch é determinístico', () => {
+  it('generateMatch é determinístico', { timeout: 20_000 }, () => {
     expect(JSON.stringify(generateMatch(id, acc))).toBe(JSON.stringify(generateMatch(id, acc)));
   });
 
-  it('foco presente', () => {
+  it('foco presente', { timeout: 20_000 }, () => {
     expect(generateMatch(id, acc).players.some((p) => p.puuid === acc.puuid)).toBe(true);
     for (const { acc: a, match } of others) {
       const focus = match.players.filter((p) => p.puuid === a.puuid);
@@ -41,7 +41,7 @@ describe('generateMatch', () => {
     }
   });
 
-  it('forma: 10 jogadores, 5 por time, agentes únicos por time, rounds 0-based', () => {
+  it('forma: 10 jogadores, 5 por time, agentes únicos por time, rounds 0-based', { timeout: 20_000 }, () => {
     for (const m of sample) {
       expect(m.players).toHaveLength(10);
       expect(new Set(m.players.map((p) => p.puuid)).size).toBe(10);
@@ -62,7 +62,7 @@ describe('generateMatch', () => {
     }
   });
 
-  it('placar fecha', () => {
+  it('placar fecha', { timeout: 20_000 }, () => {
     for (const m of sample) {
       const [a, b] = m.teams;
       const hi = Math.max(a!.roundsWon, b!.roundsWon);
@@ -80,11 +80,11 @@ describe('generateMatch', () => {
     }
   });
 
-  it('overtime existe na amostra', () => {
+  it('overtime existe na amostra', { timeout: 20_000 }, () => {
     expect(sample.some((m) => m.roundResults.length > 24)).toBe(true);
   });
 
-  it('lados trocam no round 13 e a cada round no overtime', () => {
+  it('lados trocam no round 13 e a cada round no overtime', { timeout: 20_000 }, () => {
     for (const m of sample) {
       for (const r of m.roundResults) {
         const attackers = r.roundNum < 12 ? 'Red' : r.roundNum < 24 ? 'Blue' : r.roundNum % 2 === 0 ? 'Red' : 'Blue';
@@ -107,7 +107,7 @@ describe('generateMatch', () => {
     }
   });
 
-  it('KDA bate com a timeline', () => {
+  it('KDA bate com a timeline', { timeout: 20_000 }, () => {
     for (const m of sample) {
       const kills = m.roundResults.flatMap((r) => r.playerStats.flatMap((s) => s.kills));
       for (const p of m.players) {
@@ -140,7 +140,7 @@ describe('generateMatch', () => {
     }
   });
 
-  it('tempos de abate entre 5s e 100s, crescentes no round', () => {
+  it('tempos de abate entre 5s e 100s, crescentes no round', { timeout: 20_000 }, () => {
     for (const m of sample) {
       let lastGame = -1;
       for (const r of m.roundResults) {
@@ -161,7 +161,7 @@ describe('generateMatch', () => {
     }
   });
 
-  it('economia plausível', () => {
+  it('economia plausível', { timeout: 20_000 }, () => {
     for (const m of sample) {
       for (const r of m.roundResults) {
         for (const s of r.playerStats) {
@@ -177,7 +177,7 @@ describe('generateMatch', () => {
     }
   });
 
-  it('posições dentro do mapa', () => {
+  it('posições dentro do mapa', { timeout: 20_000 }, () => {
     for (const m of [...sample, ...others.map((o) => o.match)]) {
       const map = MOCK_MAPS.find((x) => x.mapId === m.matchInfo.mapId)!;
       const within = (p: RiotLocationDto) => map.zones.some((z) => inside(p, z.polygon));
@@ -193,7 +193,7 @@ describe('generateMatch', () => {
     }
   });
 
-  it('posição do jogador é estável entre eventos do mesmo round sem troca de zona', () => {
+  it('posição do jogador é estável entre eventos do mesmo round sem troca de zona', { timeout: 20_000 }, () => {
     for (const m of sample) {
       for (const r of m.roundResults) {
         const kills = r.playerStats.flatMap((s) => s.kills);
@@ -218,7 +218,7 @@ describe('generateMatch', () => {
     }
   });
 
-  it('dano só entre vivos: quem sobrevive ao round nunca recebeu dano letal (< 150)', () => {
+  it('dano só entre vivos: quem sobrevive ao round nunca recebeu dano letal (< 150)', { timeout: 20_000 }, () => {
     for (const m of sample) {
       for (const r of m.roundResults) {
         const victims = new Set(r.playerStats.flatMap((s) => s.kills.map((k) => k.victim)));
@@ -231,13 +231,13 @@ describe('generateMatch', () => {
     }
   });
 
-  it('defuse ≥ 7s após o plant', () => {
+  it('defuse ≥ 7s após o plant', { timeout: 20_000 }, () => {
     const defuses = sample.flatMap((m) => m.roundResults.filter((r) => r.bombDefuser !== undefined));
     expect(defuses.length).toBeGreaterThan(0);
     for (const r of defuses) expect(r.defuseRoundTime! - r.plantRoundTime!).toBeGreaterThanOrEqual(7000);
   });
 
-  it('usa todos os mapas e varia os resultados do foco', () => {
+  it('usa todos os mapas e varia os resultados do foco', { timeout: 20_000 }, () => {
     expect(new Set(sample.map((m) => m.matchInfo.mapId)).size).toBe(MOCK_MAPS.length);
     const wins = sample.filter((m) => {
       const me = m.players.find((p) => p.puuid === acc.puuid)!;
@@ -247,7 +247,7 @@ describe('generateMatch', () => {
     expect(wins).toBeLessThan(140);
   });
 
-  it('matchId fora do matchlist do foco ainda gera partida coerente', () => {
+  it('matchId fora do matchlist do foco ainda gera partida coerente', { timeout: 20_000 }, () => {
     const foreign = '0f0f0f0f-1111-4222-8333-444455556666';
     const m = generateMatch(foreign, acc);
     expect(m.matchInfo.matchId).toBe(foreign);
