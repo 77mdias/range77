@@ -1,4 +1,5 @@
 import { HENRIKDEV_AFFINITIES, type HenrikDevAffinity } from '@/contracts/henrikdev';
+import { parseRiotId } from '@/lib/validation/riot-id';
 
 /**
  * Perfis buscados recentemente (client-only, persistido em `localStorage`).
@@ -30,7 +31,8 @@ export interface RecentPlayer {
 /** Capacidade da grade da home (uma linha em `sm`, 2 colunas no mobile). */
 export const MAX_RECENT_PLAYERS = 4;
 
-const STORAGE_KEY = 'valcoach.recent-players.v1';
+// v2: descarta o histórico v1 (Riot IDs reais com elo da era HenrikDev).
+const STORAGE_KEY = 'valcoach.recent-players.v2';
 
 /** Riot ID plausível: `#` interno com nome e tag não vazios (limite da rota). */
 const RIOT_ID_PATTERN = /^.{1,32}#.{1,6}$/;
@@ -150,9 +152,36 @@ export function rankSnapshotFromOverview(
   };
 }
 
-/** Puro: recentes ainda sem snapshot de elo (candidatos ao backfill). */
-export function recentPlayersMissingRank(list: readonly RecentPlayer[]): RecentPlayer[] {
-  return list.filter((player) => player.rank === undefined && player.rr === undefined);
+/** Amostra mínima do overview: a revalidação só precisa do elo, não das partidas. */
+const RANK_REFRESH_SIZE = 1;
+
+/**
+ * Revalida o elo de um recente pelo overview (gate de consentimento incluso).
+ * Sucesso → snapshot atual; 404 (perfil privado), 429, rede ou JSON ruim →
+ * entrada SEM rank/RR (o card cai para só o nome). Nunca lança.
+ */
+export async function fetchRecentPlayerRank(
+  player: RecentPlayer,
+  signal: AbortSignal,
+): Promise<RecentPlayer> {
+  const cleared: RecentPlayer = { riotId: player.riotId, region: player.region };
+  const parsed = parseRiotId(player.riotId);
+  if (!parsed.ok) {
+    return cleared;
+  }
+  const { name, tag } = parsed.value;
+  try {
+    const response = await fetch(
+      `/api/players/${player.region}/${encodeURIComponent(name)}/${encodeURIComponent(tag)}/overview?size=${RANK_REFRESH_SIZE}`,
+      { signal },
+    );
+    if (!response.ok) {
+      return cleared;
+    }
+    return { ...cleared, ...rankSnapshotFromOverview((await response.json()) as RankSource) };
+  } catch {
+    return cleared;
+  }
 }
 
 /** Puro: serializa para persistência. */
